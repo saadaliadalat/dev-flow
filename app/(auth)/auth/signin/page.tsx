@@ -1,15 +1,40 @@
 'use client'
 
+import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { Github, Code2, Zap, Shield, TrendingUp } from 'lucide-react'
+import { Github, Code2, Zap, Shield, TrendingUp, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
-export default function SignInPage() {
+function SignInContent() {
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard'
+
   const handleGitHubSignIn = async () => {
-    await signIn('github', { callbackUrl: '/dashboard' })
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      // signIn with redirect: true will redirect on success,
+      // or return undefined if there's an error
+      await signIn('github', {
+        callbackUrl,
+        redirect: true,
+      })
+
+      // If we reach here, something went wrong (no redirect happened)
+      setError('Failed to sign in with GitHub. Please try again.')
+      setIsLoading(false)
+    } catch (err) {
+      console.error('Sign in error:', err)
+      setError('An unexpected error occurred. Please try again.')
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -84,13 +109,28 @@ export default function SignInPage() {
               </p>
             </div>
 
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3"
+              >
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-red-400 text-sm font-medium">{error}</p>
+                </div>
+              </motion.div>
+            )}
+
             <Button
               onClick={handleGitHubSignIn}
               size="lg"
-              icon={<Github className="w-6 h-6" />}
+              loading={isLoading}
+              disabled={isLoading}
+              icon={!isLoading && <Github className="w-6 h-6" />}
               className="w-full mb-6"
             >
-              Continue with GitHub
+              {isLoading ? 'Connecting...' : 'Continue with GitHub'}
             </Button>
 
             <div className="space-y-3 text-sm text-slate-400">
@@ -135,5 +175,17 @@ export default function SignInPage() {
         </motion.div>
       </div>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-white text-lg">Loading...</div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   )
 }
