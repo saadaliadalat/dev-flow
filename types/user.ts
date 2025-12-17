@@ -1,3 +1,6 @@
+import type { Repository } from './repository'
+import type { Achievement } from './achievement'
+
 export interface User {
   id: string
   github_id: string

@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
@@ -7,7 +8,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { AlertTriangle, Home, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
-export default function AuthErrorPage() {
+function AuthErrorContent() {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
 
@@ -110,5 +111,13 @@ export default function AuthErrorPage() {
         </GlassCard>
       </motion.div>
     </div>
+  )
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white">Loading...</div></div>}>
+      <AuthErrorContent />
+    </Suspense>
   )
 }

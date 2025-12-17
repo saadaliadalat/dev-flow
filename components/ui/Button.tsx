@@ -1,11 +1,17 @@
 'use client'
 
 import { ButtonHTMLAttributes, forwardRef, ReactNode } from 'react'
-import { motion } from 'framer-motion'
+import { motion, MotionProps } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+// Omit conflicting props between HTML button and Framer Motion
+type ButtonBaseProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'onAnimationStart' | 'onDragStart' | 'onDragEnd' | 'onDrag' | 'style'
+>
+
+interface ButtonProps extends ButtonBaseProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
   size?: 'sm' | 'md' | 'lg'
   loading?: boolean

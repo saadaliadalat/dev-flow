@@ -189,7 +189,7 @@ export async function fetchContributionStats(
     // Fetch user events to count contributions
     const { data: events } = await octokit.activity.listEventsForAuthenticatedUser({
       per_page: 100,
-    })
+    } as any)
 
     let commits = 0
     let prs = 0
