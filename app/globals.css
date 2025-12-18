@@ -2,19 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-}
+@layer base {
+  :root {
+    /* Background Layers */
+    --bg-deepest: #0a0a0f;
+    --bg-deep: #0f1116;
+    --bg-mid: #1a1d29;
+    --bg-elevated: #252936;
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+    /* Glass Elements */
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-hover-bg: rgba(255, 255, 255, 0.06);
+    --glass-hover-border: rgba(6, 182, 212, 0.3);
+
+    /* Accent Colors */
+    --cyan-primary: #06b6d4;
+    --cyan-light: #22d3ee;
+    --cyan-glow: rgba(6, 182, 212, 0.4);
+
+    --purple-secondary: #a855f7;
+    --purple-light: #c084fc;
+    --purple-glow: rgba(168, 85, 247, 0.3);
+
+    /* Status Colors */
+    --green-success: #10b981;
+    --orange-warning: #f59e0b;
+    --red-danger: #ef4444;
+
+    /* Text Hierarchy */
+    --text-primary: #f8fafc;
+    --text-secondary: #e2e8f0;
+    --text-tertiary: #94a3b8;
+    --text-muted: #64748b;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #a855f7 100%);
+    --gradient-secondary: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    --gradient-mesh: radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.15), transparent 50%),
+      radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15), transparent 50%);
+  }
+
+  body {
+    @apply bg-[var(--bg-deepest)] text-[var(--text-primary)] font-body antialiased selection:bg-cyan-500/30 selection:text-cyan-100;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display tracking-tight text-[var(--text-primary)];
+  }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .glass-card {
+    @apply bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-xl shadow-lg;
+  }
+
+  .glass-card-hover {
+    @apply hover:bg-[var(--glass-hover-bg)] hover:border-[var(--glass-hover-border)] transition-all duration-300;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500;
+  }
+
+  .glow-cyan {
+    box-shadow: 0 0 20px var(--cyan-glow);
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 20px var(--purple-glow);
+  }
+
+  .mask-gradient {
+    mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
   }
 }
