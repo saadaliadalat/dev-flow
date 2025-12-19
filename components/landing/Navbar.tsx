@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
-import { GradientButton } from '@/components/ui/GradientButton'
-import { Github, Menu, X, LogOut, LayoutDashboard, Sparkles } from 'lucide-react'
+import { Github, Menu, X, LogOut, LayoutDashboard, Sparkles, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useSession, signOut } from 'next-auth/react'
@@ -94,31 +93,37 @@ const DevFlowLogo = ({ className = '' }: { className?: string }) => (
     </motion.svg>
 )
 
-// --- Navigation Link Component ---
-const NavLink = ({ href, children }: { href: string, children: React.ReactNode }) => (
-    <Link
-        href={href}
-        className="relative px-4 py-2 text-sm font-medium text-white/60 hover:text-white transition-all duration-300 group"
-    >
-        <span className="relative z-10">{children}</span>
-        {/* Hover Background */}
-        <span className="absolute inset-0 rounded-lg bg-white/0 group-hover:bg-white/5 transition-colors duration-300" />
-        {/* Underline */}
-        <motion.span
-            className="absolute bottom-0 left-1/2 h-[2px] w-0 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 group-hover:w-[calc(100%-16px)] transition-all duration-300"
-            style={{ transform: 'translateX(-50%)' }}
-        />
-    </Link>
-)
+// --- Magnetic Nav Link ---
+const MagneticLink = ({ href, children, onMouseEnter, onMouseLeave, isActive }: any) => {
+    return (
+        <Link
+            href={href}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            className="relative px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors duration-200 z-10"
+        >
+            {children}
+            {isActive && (
+                <motion.div
+                    layoutId="activeNavBackground"
+                    className="absolute inset-0 bg-white/10 rounded-full -z-10"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+            )}
+        </Link>
+    )
+}
 
 export function Navbar() {
     const { data: session, status } = useSession()
     const [isScrolled, setIsScrolled] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const [hoveredNav, setHoveredNav] = useState<string | null>(null)
     const { scrollY } = useScroll()
 
-    const navOpacity = useTransform(scrollY, [0, 100], [0, 1])
-    const navBlur = useTransform(scrollY, [0, 100], [0, 16])
+    const navWidth = useTransform(scrollY, [0, 100], ['100%', '80%'])
+    const navTop = useTransform(scrollY, [0, 100], ['24px', '16px'])
+    const navBorderRadius = useTransform(scrollY, [0, 100], ['16px', '50px'])
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20)
@@ -128,149 +133,178 @@ export function Navbar() {
 
     return (
         <>
-            <motion.nav
-                className={cn(
-                    "fixed top-4 left-4 right-4 z-50 transition-all duration-500 rounded-2xl border",
-                    isScrolled
-                        ? "border-white/10 bg-[#0a0612]/80 shadow-2xl shadow-purple-500/10"
-                        : "border-transparent bg-transparent"
-                )}
-                style={{
-                    backdropFilter: useTransform(scrollY, [0, 100], ['blur(0px)', 'blur(20px)']),
-                }}
+            <motion.div
+                className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
+                style={{ top: navTop }}
             >
-                {/* Animated Border Gradient on Scroll */}
-                <motion.div
-                    className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-cyan-500/20 opacity-0 pointer-events-none"
-                    style={{ opacity: navOpacity }}
-                />
+                <motion.nav
+                    style={{
+                        width: isScrolled ? 'auto' : '100%',
+                        maxWidth: isScrolled ? 'fit-content' : '1280px',
+                        borderRadius: navBorderRadius
+                    }}
+                    className={cn(
+                        "pointer-events-auto transition-all duration-500 border backdrop-blur-xl mx-4",
+                        isScrolled
+                            ? "border-white/10 bg-[#0a0612]/70 shadow-[0_8px_32px_rgb(0,0,0,0.4)] px-6 py-2" // Compact Island
+                            : "border-transparent bg-transparent px-6 py-4" // Full Width
+                    )}
+                >
+                    <div className="flex items-center justify-between gap-8">
 
-                <div className="relative container mx-auto px-6 py-3 flex items-center justify-between">
-
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <DevFlowLogo className="w-10 h-10" />
-                        <div className="flex flex-col">
-                            <span className="font-display font-bold text-lg text-white tracking-tight leading-none">
-                                DevFlow
-                            </span>
-                            <span className="text-[10px] text-purple-400 font-mono tracking-widest uppercase">
-                                Analytics
-                            </span>
-                        </div>
-                    </Link>
-
-                    {/* Center Navigation */}
-                    <div className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                        <NavLink href="/#features">Features</NavLink>
-                        <NavLink href="/#how-it-works">How it Works</NavLink>
-                        <NavLink href="/#pricing">Pricing</NavLink>
-                        <NavLink href="/blog">Blog</NavLink>
-                    </div>
-
-                    {/* Right Side CTAs */}
-                    <div className="hidden md:flex items-center gap-3">
-                        {status === 'loading' ? (
-                            <div className="w-28 h-10 bg-white/5 animate-pulse rounded-xl" />
-                        ) : session ? (
-                            <div className="flex items-center gap-3">
-                                <Link href="/dashboard">
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-shadow"
+                        {/* Logo Area */}
+                        <Link href="/" className="flex items-center gap-3 group shrink-0">
+                            <DevFlowLogo className="w-9 h-9" />
+                            <AnimatePresence>
+                                {!isScrolled && (
+                                    <motion.div
+                                        initial={{ opacity: 0, width: 0 }}
+                                        animate={{ opacity: 1, width: 'auto' }}
+                                        exit={{ opacity: 0, width: 0 }}
+                                        className="flex flex-col overflow-hidden whitespace-nowrap"
                                     >
-                                        <LayoutDashboard className="w-4 h-4" />
-                                        Dashboard
-                                    </motion.button>
-                                </Link>
-                                <button
-                                    onClick={() => signOut()}
-                                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all text-white/60 hover:text-white"
-                                    title="Sign Out"
-                                >
-                                    <LogOut size={18} />
-                                </button>
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 p-[1px]">
-                                    <div className="w-full h-full rounded-[10px] overflow-hidden bg-[#0a0612]">
-                                        {session.user?.image ? (
-                                            <img src={session.user.image} alt={session.user.name || 'User'} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-white/10 text-sm font-bold text-white">
-                                                {session.user?.name?.charAt(0) || 'U'}
-                                            </div>
-                                        )}
+                                        <span className="font-display font-bold text-lg text-white tracking-tight leading-none">
+                                            DevFlow
+                                        </span>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </Link>
+
+                        {/* Center Island Navigation */}
+                        <div className="hidden md:flex items-center gap-1">
+                            {['Features', 'How it Works', 'Pricing', 'Blog'].map((item) => {
+                                const slug = item.toLowerCase().replace(/\s+/g, '-')
+                                const href = slug === 'blog' ? '/blog' : `/#${slug}`
+                                return (
+                                    <MagneticLink
+                                        key={item}
+                                        href={href}
+                                        onMouseEnter={() => setHoveredNav(item)}
+                                        onMouseLeave={() => setHoveredNav(null)}
+                                        isActive={hoveredNav === item}
+                                    >
+                                        {item}
+                                    </MagneticLink>
+                                )
+                            })}
+                        </div>
+
+                        {/* Right Actions */}
+                        <div className="flex items-center gap-3 shrink-0">
+                            {status === 'loading' ? (
+                                <div className="w-24 h-9 bg-white/5 animate-pulse rounded-full" />
+                            ) : session ? (
+                                <div className="flex items-center gap-3">
+                                    <Link href="/dashboard">
+                                        <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-white text-sm font-medium border border-white/5 transition-all"
+                                        >
+                                            <LayoutDashboard className="w-3.5 h-3.5" />
+                                            Dashboard
+                                        </motion.button>
+                                    </Link>
+                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 p-[1px] cursor-pointer" onClick={() => signOut()}>
+                                        <div className="w-full h-full rounded-full overflow-hidden bg-[#0a0612]">
+                                            {session.user?.image ? (
+                                                <img src={session.user.image} alt={session.user.name || 'User'} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-white/10 text-xs font-bold text-white">
+                                                    {session.user?.name?.charAt(0) || 'U'}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-3">
-                                <Link
-                                    href="/login"
-                                    className="px-4 py-2 text-sm font-medium text-white/60 hover:text-white transition-colors"
-                                >
-                                    Sign In
-                                </Link>
-                                <Link href="/login">
-                                    <motion.button
-                                        whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(168,85,247,0.4)" }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] animate-gradient-x text-white text-sm font-medium shadow-lg shadow-purple-500/25 border border-white/10"
-                                    >
-                                        <Sparkles className="w-4 h-4" />
-                                        Get Started
-                                    </motion.button>
-                                </Link>
-                            </div>
-                        )}
+                            ) : (
+                                <>
+                                    <Link href="/login" className="text-sm font-medium text-white/70 hover:text-white transition-colors hidden sm:block">
+                                        Sign In
+                                    </Link>
+                                    <Link href="/login">
+                                        <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className="group relative flex items-center gap-2 px-5 py-2 rounded-full bg-white text-black text-sm font-bold shadow-lg shadow-white/20 hover:shadow-white/40 transition-shadow overflow-hidden"
+                                        >
+                                            <span className="relative z-10 flex items-center gap-2">
+                                                Get Started <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                                            </span>
+                                            <div className="absolute inset-0 bg-gradient-to-r from-purple-200 via-cyan-200 to-purple-200 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </motion.button>
+                                    </Link>
+                                </>
+                            )}
+
+                            {/* Mobile Toggle */}
+                            <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                className="md:hidden w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-white/80"
+                                onClick={() => setMobileMenuOpen(true)}
+                            >
+                                <Menu size={18} />
+                            </motion.button>
+                        </div>
                     </div>
+                </motion.nav>
+            </motion.div>
 
-                    {/* Mobile Toggle */}
-                    <motion.button
-                        whileTap={{ scale: 0.9 }}
-                        className="md:hidden w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white"
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    >
-                        {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-                    </motion.button>
-                </div>
-            </motion.nav>
-
-            {/* Mobile Menu */}
+            {/* Mobile Menu Overlay */}
             <AnimatePresence>
                 {mobileMenuOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.2 }}
-                        className="fixed top-24 left-4 right-4 z-40 bg-[#0a0612]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col gap-4 shadow-2xl"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-md md:hidden"
+                        onClick={() => setMobileMenuOpen(false)}
                     >
-                        <Link href="/#features" className="py-3 text-white/70 hover:text-white border-b border-white/5" onClick={() => setMobileMenuOpen(false)}>
-                            Features
-                        </Link>
-                        <Link href="/#how-it-works" className="py-3 text-white/70 hover:text-white border-b border-white/5" onClick={() => setMobileMenuOpen(false)}>
-                            How it Works
-                        </Link>
-                        <Link href="/#pricing" className="py-3 text-white/70 hover:text-white border-b border-white/5" onClick={() => setMobileMenuOpen(false)}>
-                            Pricing
-                        </Link>
-                        <Link href="/blog" className="py-3 text-white/70 hover:text-white border-b border-white/5" onClick={() => setMobileMenuOpen(false)}>
-                            Blog
-                        </Link>
-                        <div className="flex flex-col gap-3 mt-4">
-                            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                <button className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-medium">
-                                    Sign In
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                            className="absolute top-0 right-0 bottom-0 w-[300px] bg-[#0a0612] border-l border-white/10 p-6 flex flex-col shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between mb-8">
+                                <div className="flex items-center gap-2">
+                                    <DevFlowLogo className="w-8 h-8" />
+                                    <span className="font-display font-bold text-lg text-white">DevFlow</span>
+                                </div>
+                                <button onClick={() => setMobileMenuOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-white/60 hover:text-white">
+                                    <X size={18} />
                                 </button>
-                            </Link>
-                            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                <button className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium flex items-center justify-center gap-2">
-                                    <Sparkles className="w-4 h-4" />
-                                    Get Started
-                                </button>
-                            </Link>
-                        </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                {['Features', 'How it Works', 'Pricing', 'Blog'].map((item) => (
+                                    <Link
+                                        key={item}
+                                        href={item === 'Blog' ? '/blog' : `/#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                                        className="py-3 px-4 rounded-xl text-white/70 hover:text-white hover:bg-white/5 transition-colors font-medium text-lg"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        {item}
+                                    </Link>
+                                ))}
+                            </div>
+
+                            <div className="mt-auto flex flex-col gap-3">
+                                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                                    <button className="w-full py-3 rounded-xl bg-white text-black font-bold">
+                                        Sign In
+                                    </button>
+                                </Link>
+                                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                                    <button className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold shadow-lg shadow-purple-500/20">
+                                        Get Started
+                                    </button>
+                                </Link>
+                            </div>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
