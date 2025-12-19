@@ -1,7 +1,8 @@
 'use client'
 
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
+import { motion, useScroll, useTransform, useSpring, useVelocity } from 'framer-motion'
 import { Play, ArrowRight, Sparkles } from 'lucide-react'
+import { GradientButton } from '@/components/ui/GradientButton'
 import { useRouter } from 'next/navigation'
 import { DashboardPreview } from '@/components/landing/DashboardPreview'
 import { useRef } from 'react'
@@ -30,82 +31,99 @@ export function Hero() {
     const containerRef = useRef<HTMLDivElement>(null)
     const { scrollY } = useScroll()
 
-    // Smooth spring physics for parallax
-    const smoothY = useSpring(useTransform(scrollY, [0, 800], [0, 180]), { stiffness: 50, damping: 18 })
-    const smoothRotateX = useSpring(useTransform(scrollY, [0, 600], [14, 0]), { stiffness: 45, damping: 18 })
-    const smoothScale = useSpring(useTransform(scrollY, [0, 600], [0.92, 1.01]), { stiffness: 45, damping: 18 })
-    const bgY = useSpring(useTransform(scrollY, [0, 800], [0, 100]), { stiffness: 35, damping: 18 })
-    const contentOpacity = useTransform(scrollY, [0, 400], [1, 0.3])
+    // Smooth spring physics for enhanced parallax
+    const smoothY = useSpring(useTransform(scrollY, [0, 800], [0, 250]), { stiffness: 40, damping: 20 })
+    const smoothRotateX = useSpring(useTransform(scrollY, [0, 800], [15, 40]), { stiffness: 40, damping: 20 })
+    const smoothScale = useSpring(useTransform(scrollY, [0, 800], [0.95, 0.85]), { stiffness: 40, damping: 20 })
+    const smoothOpacity = useSpring(useTransform(scrollY, [0, 400], [1, 0.5]), { stiffness: 40, damping: 20 })
 
-    // Generate static lines
-    const lines = Array.from({ length: 56 }).map((_, i) => ({
-        angle: (i * 360) / 56,
+    // Background parallax
+    const bgY = useSpring(useTransform(scrollY, [0, 800], [0, 150]), { stiffness: 30, damping: 30 })
+
+    // Generate static lines (Refined for "Event Horizon")
+    const lines = Array.from({ length: 64 }).map((_, i) => ({
+        angle: (i * 360) / 64,
     }))
 
-    // Generate particles
-    const particles = Array.from({ length: 20 }).map((_, i) => ({
-        delay: i * 0.3,
-        size: 2 + (i % 3),
-        left: `${(i * 5.1) % 100}%`,
-        top: `${(i * 4.7) % 100}%`,
+    // Generate "Ash" particles
+    const particles = Array.from({ length: 30 }).map((_, i) => ({
+        delay: i * 0.2,
+        size: 1 + Math.random() * 2,
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        duration: 5 + Math.random() * 5
     }))
 
     return (
         <section
             ref={containerRef}
-            className="relative min-h-screen flex flex-col items-center pt-28 md:pt-36 lg:pt-40 overflow-hidden bg-[#08061A]"
+            className="relative min-h-screen flex flex-col items-center pt-32 md:pt-40 lg:pt-48 overflow-hidden bg-black perspective-[2000px]"
         >
-            {/* Background Layers */}
+            {/* --- BACKGROUND LAYERS --- */}
             <div className="absolute inset-0 pointer-events-none z-0">
-                {/* Primary Glow */}
-                <motion.div
-                    style={{ y: bgY }}
-                    className="absolute top-[-25%] left-[5%] w-[600px] h-[600px] md:w-[800px] md:h-[800px] bg-white/5 blur-[180px] rounded-full"
-                />
-                {/* Secondary Glow */}
-                <motion.div
-                    style={{ y: bgY }}
-                    className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] md:w-[700px] md:h-[700px] bg-fuchsia-500/15 blur-[150px] rounded-full"
-                />
-                {/* Accent Glow */}
-                <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[300px] h-[300px] bg-cyan-500/10 blur-[100px] rounded-full" />
+                {/* 1. The Event Horizon (Spotlight) */}
+                <div className="absolute top-[-30%] left-1/2 -translate-x-1/2 w-[120%] h-[80%] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08)_0%,transparent_70%)] blur-[80px]" />
 
-                {/* Radiating Lines */}
-                <div className="absolute inset-0 opacity-15 md:opacity-20">
+                {/* 2. Secondary Ambient Glow */}
+                <motion.div
+                    style={{ y: bgY }}
+                    className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-white/[0.02] blur-[120px] rounded-full"
+                />
+
+                {/* 3. Radiating Lines (The Grid) */}
+                <div className="absolute inset-0 opacity-[0.15]">
                     <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
                         <defs>
                             <radialGradient id="linesFade" cx="50%" cy="50%" r="50%">
-                                <stop offset="0%" stopColor="transparent" />
-                                <stop offset="35%" stopColor="transparent" />
-                                <stop offset="100%" stopColor="white" />
+                                <stop offset="0%" stopColor="white" stopOpacity="1" />
+                                <stop offset="100%" stopColor="transparent" stopOpacity="0" />
                             </radialGradient>
+                            <mask id="fadeMask">
+                                <circle cx="50" cy="50" r="50" fill="url(#linesFade)" />
+                            </mask>
                         </defs>
-                        {lines.map((line, i) => (
-                            <line
-                                key={i}
-                                x1="50"
-                                y1="50"
-                                x2={50 + 85 * Math.cos((line.angle * Math.PI) / 180)}
-                                y2={50 + 85 * Math.sin((line.angle * Math.PI) / 180)}
-                                stroke="rgba(168, 85, 247, 0.35)"
-                                strokeWidth="0.025"
-                            />
-                        ))}
+                        <g mask="url(#fadeMask)">
+                            {lines.map((line, i) => (
+                                <line
+                                    key={i}
+                                    x1="50"
+                                    y1="50"
+                                    x2={50 + 100 * Math.cos((line.angle * Math.PI) / 180)}
+                                    y2={50 + 100 * Math.sin((line.angle * Math.PI) / 180)}
+                                    stroke="white"
+                                    strokeWidth="0.02" // Ultra thin
+                                />
+                            ))}
+                        </g>
                     </svg>
                 </div>
 
-                {/* Floating Particles */}
+                {/* 4. Ash Particles */}
                 {particles.map((p, i) => (
-                    <FloatingParticle key={i} {...p} />
+                    <motion.div
+                        key={i}
+                        className="absolute rounded-full bg-white/30"
+                        style={{ width: p.size, height: p.size, left: p.left, top: p.top }}
+                        animate={{
+                            y: [0, -40, 0],
+                            opacity: [0, 0.5, 0],
+                        }}
+                        transition={{
+                            duration: p.duration,
+                            repeat: Infinity,
+                            delay: p.delay,
+                            ease: "easeInOut"
+                        }}
+                    />
                 ))}
 
-                {/* Noise texture overlay */}
-                <div className="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNhKSIvPjwvc3ZnPg==')]" />
+                {/* 5. Noise Overlay (Grain) */}
+                <div className="absolute inset-0 opacity-[0.04] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
             </div>
 
-            {/* Content */}
+            {/* --- CONTENT --- */}
             <motion.div
-                style={{ opacity: contentOpacity }}
+                style={{ opacity: smoothOpacity }}
                 className="container mx-auto px-4 sm:px-6 relative z-10 flex flex-col items-center text-center"
             >
                 {/* Badge */}
@@ -113,11 +131,11 @@ export function Hero() {
                     initial={{ opacity: 0, y: -20, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
-                    className="mb-6 md:mb-8"
+                    className="mb-8"
                 >
-                    <span className="group inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-gradient-to-r from-white/10 to-white/5 border border-white/10 text-[11px] md:text-xs font-semibold tracking-widest text-zinc-300 uppercase backdrop-blur-md shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:border-white/30 transition-all duration-300 cursor-default">
-                        <Sparkles className="w-3.5 h-3.5 text-white animate-pulse" />
-                        Developer Analytics Platform
+                    <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-[11px] font-mono tracking-widest text-zinc-400 uppercase backdrop-blur-md shadow-2xl">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        v2.0 Obsidian
                     </span>
                 </motion.div>
 
@@ -126,12 +144,12 @@ export function Hero() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                    className="text-[2.5rem] sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] font-display font-bold tracking-[-0.02em] text-white leading-[1.08] mb-5 md:mb-7"
+                    className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-display font-bold tracking-tight text-white leading-[1.05] mb-6 drop-shadow-2xl"
                 >
                     Build Faster With
                     <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-400 to-white bg-[length:200%_auto] animate-text-shimmer">
-                        DevFlow Insights
+                    <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-500">
+                        DevFlow Insights.
                     </span>
                 </motion.h1>
 
@@ -140,9 +158,9 @@ export function Hero() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
-                    className="text-[15px] sm:text-lg md:text-xl text-zinc-400 max-w-lg md:max-w-2xl mx-auto mb-9 md:mb-12 leading-relaxed tracking-[-0.01em]"
+                    className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed"
                 >
-                    Transform your GitHub activity into actionable insights. Track velocity, prevent burnout, and celebrate achievements — making every commit count.
+                    Transform your GitHub activity into actionable insights. Track velocity, prevent burnout, and celebrate achievements in style.
                 </motion.p>
 
                 {/* CTAs */}
@@ -150,63 +168,68 @@ export function Hero() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
-                    className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-16 md:mb-24 w-full sm:w-auto"
+                    className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 w-full sm:w-auto"
                 >
                     <button
                         onClick={() => router.push('/login')}
-                        className="group w-full sm:w-auto px-8 py-3.5 sm:py-4 rounded-full bg-white text-[#08061A] font-semibold text-sm sm:text-[15px] hover:bg-zinc-50 active:scale-[0.97] transition-all duration-200 shadow-[0_0_30px_rgba(255,255,255,0.2),0_4px_20px_rgba(0,0,0,0.3)] flex items-center justify-center gap-2.5"
+                        className="group w-full sm:w-auto px-8 py-4 rounded-full bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition-all duration-200 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] flex items-center justify-center gap-2"
                     >
                         Get Started
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                     <button
                         onClick={() => router.push('/#demo')}
-                        className="group w-full sm:w-auto px-8 py-3.5 sm:py-4 rounded-full bg-white/[0.03] text-white font-medium text-sm sm:text-[15px] border border-white/10 hover:bg-white/[0.07] hover:border-white/20 active:scale-[0.97] transition-all duration-200 flex items-center justify-center gap-2.5 backdrop-blur-sm"
+                        className="group w-full sm:w-auto px-8 py-4 rounded-full bg-transparent text-white font-medium text-sm border border-white/10 hover:bg-white/5 transition-all duration-200 flex items-center justify-center gap-2"
                     >
-                        <Play className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
+                        <Play className="w-4 h-4 group-hover:scale-110 transition-transform fill-white" />
                         Watch Demo
                     </button>
                 </motion.div>
 
-                {/* 3D Dashboard Preview */}
+                {/* --- 3D BOARD --- */}
                 <motion.div
                     style={{
                         y: smoothY,
                         rotateX: smoothRotateX,
                         scale: smoothScale,
-                        transformPerspective: 1400,
+                        rotateY: 0,
+                        transformPerspective: 1200, // Deeper perspective
                     }}
-                    className="w-full relative z-20 max-w-5xl xl:max-w-6xl origin-top"
+                    className="w-full relative z-20 max-w-6xl"
                 >
-                    {/* Multi-layer glow */}
-                    <div className="absolute -inset-10 md:-inset-16 bg-gradient-to-t from-zinc-900/50 via-zinc-800/10 to-transparent blur-[60px] -z-10 rounded-[3rem] opacity-80" />
-                    <div className="absolute -inset-6 md:-inset-10 bg-gradient-to-b from-cyan-500/10 to-transparent blur-[40px] -z-10 rounded-[2rem] opacity-50" />
+                    {/* Glow Underneath */}
+                    <div className="absolute -inset-4 bg-white/20 blur-[60px] opacity-20 rounded-[50px] -z-10" />
 
-                    {/* Dashboard Container */}
-                    <div className="relative rounded-2xl md:rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#0D0A1C]/95 to-[#0A0818]/95 backdrop-blur-2xl shadow-[0_8px_60px_-15px_rgba(168,85,247,0.3),0_0_0_1px_rgba(255,255,255,0.05)] p-1.5 sm:p-2 md:p-3 transform-gpu overflow-hidden">
-                        {/* Shimmer border effect */}
-                        <div className="absolute inset-0 rounded-2xl md:rounded-3xl overflow-hidden pointer-events-none">
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer" />
-                        </div>
+                    {/* Window Frame */}
+                    <div className="relative rounded-3xl border border-white/[0.1] bg-[#09090b] shadow-2xl overflow-hidden">
 
-                        {/* Browser Header */}
-                        <div className="flex items-center gap-2 px-4 py-3 md:px-5 md:py-3.5 border-b border-white/[0.04]">
+                        {/* Glass Reflection Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.03] via-transparent to-transparent pointer-events-none z-50" />
+
+                        {/* Browser Header (Stealth Mode) */}
+                        <div className="h-10 bg-black/50 border-b border-white/[0.05] flex items-center justify-between px-4">
+                            {/* Stealth Traffic Lights */}
                             <div className="flex gap-2">
-                                <div className="w-3 h-3 rounded-full bg-red-500/40 shadow-[0_0_6px_rgba(239,68,68,0.3)]" />
-                                <div className="w-3 h-3 rounded-full bg-yellow-500/40 shadow-[0_0_6px_rgba(234,179,8,0.3)]" />
-                                <div className="w-3 h-3 rounded-full bg-green-500/40 shadow-[0_0_6px_rgba(34,197,94,0.3)]" />
+                                <div className="w-2.5 h-2.5 rounded-full bg-zinc-700/50" />
+                                <div className="w-2.5 h-2.5 rounded-full bg-zinc-700/50" />
+                                <div className="w-2.5 h-2.5 rounded-full bg-zinc-700/50" />
                             </div>
-                            <div className="ml-4 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/[0.05] text-[10px] md:text-[11px] text-zinc-500 font-mono tracking-wide">
-                                devflow.app
+                            {/* URL Bar */}
+                            <div className="px-3 py-1 rounded-md bg-white/[0.02] border border-white/[0.04] text-[10px] text-zinc-600 font-mono">
+                                devflow.app/dashboard
                             </div>
+                            <div className="w-10" /> {/* Spacer */}
                         </div>
 
-                        <DashboardPreview />
-
-                        {/* Bottom Fade */}
-                        <div className="absolute bottom-0 inset-x-0 h-24 md:h-40 bg-gradient-to-t from-[#08061A] via-[#08061A]/80 to-transparent pointer-events-none rounded-b-2xl md:rounded-b-3xl" />
+                        {/* Content Area */}
+                        <div className="relative bg-[#000000]">
+                            <DashboardPreview />
+                            {/* Bottom Fade for Scroll Illusion */}
+                            <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-20" />
+                        </div>
                     </div>
                 </motion.div>
+
             </motion.div>
         </section>
     )

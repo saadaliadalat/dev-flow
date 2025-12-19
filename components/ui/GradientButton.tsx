@@ -24,23 +24,23 @@ export function GradientButton({
 }: GradientButtonProps) {
 
     const sizeClasses = {
-        sm: "py-2 px-4 text-sm min-h-[36px]",
-        md: "py-3 px-6 text-base min-h-[48px]",
-        lg: "py-4 px-8 text-lg min-h-[56px]"
+        sm: "h-9 px-4 text-sm",
+        md: "h-11 px-6 text-[15px]", // "Perfect" medium size
+        lg: "h-14 px-8 text-lg"
     }
 
     const variantClasses = {
-        primary: "bg-gradient-to-r from-white via-zinc-200 to-white bg-[length:200%_100%] bg-[0%] hover:bg-[100%] text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] font-bold",
-        secondary: "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/30 backdrop-blur-xl",
+        primary: "bg-white text-black shadow-[0_0_20px_-5px_rgba(255,255,255,0.4)] hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.6)] hover:bg-zinc-100 border border-transparent font-bold",
+        secondary: "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20 backdrop-blur-xl",
         ghost: "bg-transparent text-zinc-400 hover:text-white hover:bg-white/5"
     }
 
     return (
         <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             className={cn(
-                "relative inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none overflow-hidden",
+                "relative inline-flex items-center justify-center font-semibold rounded-full transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none overflow-hidden",
                 sizeClasses[size],
                 variantClasses[variant],
                 className

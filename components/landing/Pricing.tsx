@@ -20,66 +20,56 @@ export function Pricing() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-center">
+                <div className="max-w-4xl mx-auto">
+                    <GlassCard className="relative border-white/10 bg-zinc-900/50 backdrop-blur-2xl overflow-hidden">
+                        {/* Spotlight Effect */}
+                        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/5 blur-[80px] rounded-full pointer-events-none" />
 
-                    {/* Free */}
-                    <GlassCard className="border-glass-border/50">
-                        <div className="p-4">
-                            <h3 className="text-2xl font-bold mb-2">Hobby</h3>
-                            <div className="text-4xl font-display font-bold mb-6">$0<span className="text-lg text-text-tertiary font-normal">/mo</span></div>
-                            <ul className="space-y-4 mb-8">
-                                {['Limited History', 'Basic Analytics', 'Public Profile'].map((f) => (
-                                    <li key={f} className="flex items-center gap-2 text-text-secondary">
-                                        <CheckCircle2 size={18} className="text-text-tertiary" /> {f}
-                                    </li>
-                                ))}
-                            </ul>
-                            <GradientButton variant="secondary" className="w-full" onClick={() => router.push('/login')}>Start Free</GradientButton>
-                        </div>
-                    </GlassCard>
-
-                    {/* Pro */}
-                    <div className="relative transform md:-translate-y-4">
-                        <div className="absolute inset-0 bg-gradient-primary rounded-3xl blur-[20px] opacity-30" />
-                        <GlassCard className="relative border-cyan-500/50 bg-bg-elevated/50" glow="cyan">
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                                <span className="px-4 py-1 rounded-full bg-gradient-primary text-white text-xs font-bold uppercase tracking-wider">
-                                    Most Popular
-                                </span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 p-8 md:p-12 items-center">
+                            <div>
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-mono text-white mb-6">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                    </span>
+                                    COMPLETELY FREE
+                                </div>
+                                <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                                    Professional Grade. <br />
+                                    <span className="text-zinc-500">Zero Cost.</span>
+                                </h3>
+                                <p className="text-zinc-400 text-lg mb-8 leading-relaxed">
+                                    We believe developer tools should be accessible to everyone. No credit card required. No hidden fees. Just code.
+                                </p>
+                                <GradientButton variant="primary" size="lg" className="w-full md:w-auto min-w-[200px]" onClick={() => router.push('/login')}>
+                                    Start Building Now
+                                </GradientButton>
                             </div>
-                            <div className="p-6">
-                                <h3 className="text-2xl font-bold mb-2 text-white">Pro</h3>
-                                <div className="text-5xl font-display font-bold mb-6 text-gradient">$9<span className="text-lg text-text-tertiary font-normal">/mo</span></div>
-                                <ul className="space-y-4 mb-8">
-                                    {['Unlimited History', 'AI Insights & Coach', 'Burnout Protection', 'Private Leaderboards'].map((f) => (
-                                        <li key={f} className="flex items-center gap-2 text-white">
-                                            <CheckCircle2 size={18} className="text-cyan-400" /> {f}
+
+                            <div className="bg-black/40 rounded-2xl p-6 border border-white/5">
+                                <div className="text-white font-bold mb-6 flex items-center gap-2">
+                                    <CheckCircle2 className="text-white" /> What's Included
+                                </div>
+                                <ul className="space-y-4">
+                                    {[
+                                        'Unlimited Repositories',
+                                        'Advanced Analytics',
+                                        'Team Leaderboards',
+                                        'Export Data Options',
+                                        'Dark Mode UI',
+                                        'Priority Support'
+                                    ].map((feature, i) => (
+                                        <li key={i} className="flex items-center gap-3 text-zinc-300">
+                                            <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center">
+                                                <CheckCircle2 size={12} className="text-white" />
+                                            </div>
+                                            {feature}
                                         </li>
                                     ))}
                                 </ul>
-                                <GradientButton variant="primary" className="w-full h-14 text-lg" onClick={() => router.push('/login')}>
-                                    Get Started
-                                </GradientButton>
                             </div>
-                        </GlassCard>
-                    </div>
-
-                    {/* Team */}
-                    <GlassCard className="border-glass-border/50">
-                        <div className="p-4">
-                            <h3 className="text-2xl font-bold mb-2">Team</h3>
-                            <div className="text-4xl font-display font-bold mb-6">$19<span className="text-lg text-text-tertiary font-normal">/mo</span></div>
-                            <ul className="space-y-4 mb-8">
-                                {['Everything in Pro', 'Team Dashboard', 'Export Reports', 'Priority Support'].map((f) => (
-                                    <li key={f} className="flex items-center gap-2 text-text-secondary">
-                                        <CheckCircle2 size={18} className="text-text-tertiary" /> {f}
-                                    </li>
-                                ))}
-                            </ul>
-                            <GradientButton variant="secondary" className="w-full" onClick={() => router.push('/contact')}>Contact Sales</GradientButton>
                         </div>
                     </GlassCard>
-
                 </div>
             </div>
         </section>
