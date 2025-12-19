@@ -49,6 +49,22 @@ export async function GET(req: Request) {
             .order('date', { ascending: false }) // Get NEWEST first
             .limit(7)
 
+        // Calculate productivity score if it's 0 (fallback)
+        if (user.productivity_score === 0 && dailyStats && dailyStats.length > 0) {
+            const totalCommits = dailyStats.reduce((sum: number, d: any) => sum + (d.total_commits || 0), 0)
+            const avgCommitsPerDay = totalCommits / dailyStats.length
+
+            // Simple productivity calculation based on activity
+            const calculatedScore = Math.min(Math.round(
+                (avgCommitsPerDay * 10) + // Commits weight
+                (user.current_streak * 2) + // Streak bonus
+                (user.total_repos * 0.5)   // Repo diversity
+            ), 100)
+
+            user.productivity_score = calculatedScore
+            console.log(`Calculated fallback productivity score: ${calculatedScore}`)
+        }
+
         return NextResponse.json({
             user,
             dailyStats: dailyStats || []

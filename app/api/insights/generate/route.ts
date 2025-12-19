@@ -136,8 +136,52 @@ Focus on:
         if (error.message?.includes('API key')) {
             errorMessage = 'Invalid Gemini API key'
             statusCode = 401
-        } else if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
-            errorMessage = 'Gemini API rate limit exceeded'
+        } else if (error.status === 429 || error.message?.includes('quota') || error.message?.includes('rate limit') || error.message?.includes('429')) {
+            // Quota exceeded - generate fallback insights locally
+            console.log('Gemini quota exceeded, generating fallback insights...')
+
+            try {
+                const { userId } = await req.json().catch(() => ({ userId: null }))
+
+                if (userId) {
+                    const fallbackInsights = [
+                        {
+                            user_id: userId,
+                            insight_type: 'productivity_tip',
+                            title: 'Keep Up the Momentum!',
+                            message: 'Your coding activity shows consistent engagement. Consider setting specific daily goals to maintain this streak.',
+                            severity: 'info',
+                            action_items: ['Set a daily commit goal', 'Use time-blocking for focused coding sessions'],
+                            is_actionable: true,
+                            generated_by: 'fallback',
+                            confidence_score: 0.7
+                        },
+                        {
+                            user_id: userId,
+                            insight_type: 'recommendation',
+                            title: 'Review Your Progress',
+                            message: 'Take a moment to review your recent commits and identify patterns in your most productive hours.',
+                            severity: 'info',
+                            action_items: ['Check your activity chart', 'Optimize your schedule around peak hours'],
+                            is_actionable: true,
+                            generated_by: 'fallback',
+                            confidence_score: 0.6
+                        }
+                    ]
+
+                    await supabase.from('insights').insert(fallbackInsights)
+
+                    return NextResponse.json({
+                        success: true,
+                        message: 'Generated fallback insights (AI quota exceeded)',
+                        insights: fallbackInsights
+                    })
+                }
+            } catch (fallbackError) {
+                console.error('Fallback insight generation failed:', fallbackError)
+            }
+
+            errorMessage = 'AI quota exceeded. Try again later or upgrade your Gemini API plan.'
             statusCode = 429
         } else if (error.message?.includes('parse')) {
             errorMessage = 'Failed to parse AI response'

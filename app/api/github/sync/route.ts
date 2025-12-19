@@ -94,8 +94,8 @@ export async function POST(req: Request) {
 
         const commitsByDay = new Map<string, any>()
 
-        // Process repos in batches to avoid rate limits
-        const reposToSync = allRepos.filter(r => !r.fork && !r.archived).slice(0, 30)
+        // Process repos in batches to avoid rate limits - increased to 50 for better coverage
+        const reposToSync = allRepos.filter(r => !r.fork && !r.archived).slice(0, 50)
 
         for (const repo of reposToSync) {
             try {
@@ -218,18 +218,32 @@ export async function POST(req: Request) {
         const allReposForUserUpdate = reposToSync
         console.log(`SYNC DEBUG: Updating user ${profile.login} with ${totalCommits} commits, ${allReposForUserUpdate.length} repos`)
 
+        // Calculate average productivity score from daily stats
+        const avgProductivityScore = dailyStatsInserts.length > 0
+            ? Math.round(dailyStatsInserts.reduce((sum, d) => sum + d.productivity_score, 0) / dailyStatsInserts.length)
+            : calculateProductivityScore({
+                total_commits: totalCommits,
+                lines_added: 0,
+                lines_deleted: 0,
+                unique_repos: reposToSync.length,
+                active_hours: 8
+            })
+
+        console.log(`SYNC DEBUG: Calculated avg productivity score: ${avgProductivityScore}`)
+
         await supabase
             .from('users')
             .update({
                 last_synced: new Date().toISOString(),
                 total_commits: totalCommits,
+                total_repos: allRepos.length,
                 public_repos: allReposForUserUpdate.filter(r => !r.private).length,
                 followers: profile.followers,
                 following: profile.following,
                 name: profile.name,
                 avatar_url: profile.avatar_url,
-                bio: profile.bio
-                // We're NOT triggering AI insights here to avoid rate limits
+                bio: profile.bio,
+                productivity_score: avgProductivityScore
             })
             .eq('id', userData.id)
 
@@ -265,9 +279,9 @@ export async function POST(req: Request) {
         )
 
         // STEP 9: Generate AI insights (async, don't wait)
-        // generateInsights(userData.id).catch(err =>
-        //     console.error('Insight generation failed:', err)
-        // ) // Removed as per instruction
+        generateInsights(userData.id).catch(err =>
+            console.error('Insight generation failed:', err)
+        )
 
         return NextResponse.json({
             success: true,

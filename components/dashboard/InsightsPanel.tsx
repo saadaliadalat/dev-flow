@@ -51,11 +51,26 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
     async function generateInsights() {
         setIsGenerating(true)
         try {
-            const res = await fetch('/api/insights/generate', { method: 'POST' })
+            // First get user ID
+            const userRes = await fetch('/api/user/me')
+            const userData = await userRes.json()
+
+            if (!userRes.ok || !userData.user?.id) {
+                console.error('Failed to get user ID for insights')
+                return
+            }
+
+            const res = await fetch('/api/insights/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userData.user.id })
+            })
             const data = await res.json()
 
             if (res.ok) {
                 await fetchInsights()
+            } else {
+                console.error('Insights generation failed:', data.error)
             }
         } catch (error) {
             console.error('Error generating insights:', error)
