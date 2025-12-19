@@ -42,8 +42,8 @@ export default function DashboardPage() {
 
             if (data.success) {
                 setSyncMessage(`Synced! ${data.stats?.total_commits || 0} commits from ${data.stats?.repos_synced || 0} repos`)
-                // Refresh dashboard data
-                fetchDashboardData()
+                // Force reload to get fresh data
+                window.location.reload()
             } else {
                 setSyncMessage(`Sync failed: ${data.error || 'Unknown error'}`)
             }
@@ -57,76 +57,72 @@ export default function DashboardPage() {
     }
 
     async function fetchDashboardData() {
-        if (!session?.user?.id) return
+        if (!session) return
 
         try {
-            // Fetch User Stats (using github_id or trying to match)
-            // Note: In real app, we should use the user ID from our DB found via auth session
-            // For now, let's assume session.user.id maps correctly or we query by email/github
+            // Fetch User Data & Daily Stats from Server API
+            const res = await fetch('/api/user/me')
+            const data = await res.json()
 
-            let userId = session.user.id
+            if (res.ok) {
+                const { user, dailyStats } = data
+                if (user) {
+                    console.log('User data found:', user)
+                    setStats(user)
+                    const userId = user.id
 
-            // If the ID is not a UUID (e.g. from GitHub provider directly), we need to find our internal UUID
-            // This logic depends on how NextAuth session callback is set up. 
-            // Assuming session.user.id is the NextAuth ID (GitHub ID), we need to lookup.
+                    // Check if user needs onboarding
+                    const hasOnboarded = localStorage.getItem('devflow_onboarded')
+                    if (!hasOnboarded && !user.last_synced) {
+                        setShowOnboarding(true)
+                    }
 
-            const { data: user, error: userError } = await supabase
-                .from('users')
-                .select('*')
-                .eq('email', session.user.email)
-                .single()
+                    // Auto-sync if no data yet
+                    if (!user.last_synced || user.total_commits === 0) {
+                        syncGitHubData()
+                    }
 
-            if (user) {
-                setStats(user)
-                userId = user.id
+                    // Daily stats fetched from API
+                    const _unused = null;
 
-                // Check if user needs onboarding (first time user)
-                const hasOnboarded = localStorage.getItem('devflow_onboarded')
-                if (!hasOnboarded && !user.last_synced) {
-                    setShowOnboarding(true)
+                    if (dailyStats && dailyStats.length > 0) {
+                        // Reverse for Chart (Past -> Today)
+                        const chartStats = [...dailyStats].reverse()
+                        setActivityData(chartStats.map((d: any) => ({
+                            name: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
+                            commits: d.total_commits
+                        })))
+
+                        const today = new Date().toISOString().split('T')[0]
+                        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+                        const todayData = dailyStats.find((d: any) => d.date === today)
+                        setTodayCommits(todayData?.total_commits || 0)
+
+                        const weekTotal = dailyStats
+                            .filter((d: any) => d.date >= weekAgo)
+                            .reduce((sum: number, d: any) => sum + d.total_commits, 0)
+                        setWeekCommits(weekTotal)
+                    } else {
+                        setActivityData([
+                            { name: 'Mon', commits: 0 },
+                            { name: 'Tue', commits: 0 },
+                            { name: 'Wed', commits: 0 },
+                            { name: 'Thu', commits: 0 },
+                            { name: 'Fri', commits: 0 },
+                            { name: 'Sat', commits: 0 },
+                            { name: 'Sun', commits: 0 },
+                        ])
+                    }
                 }
+            }
 
-                // Auto-sync if no data yet (last_synced is null or user has 0 commits)
-                if (!user.last_synced || user.total_commits === 0) {
-                    syncGitHubData()
-                }
-
-                // Fetch Recent Activity (Mocking from daily_stats for chart if empty)
-                const { data: dailyStats } = await supabase
-                    .from('daily_stats')
-                    .select('date, total_commits')
-                    .eq('user_id', userId)
-                    .order('date', { ascending: true })
-                    .limit(7)
-
-                if (dailyStats && dailyStats.length > 0) {
-                    setActivityData(dailyStats.map(d => ({
-                        name: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
-                        commits: d.total_commits
-                    })))
-
-                    // Calculate today's and week's commits
-                    const today = new Date().toISOString().split('T')[0]
-                    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-
-                    const todayData = dailyStats.find(d => d.date === today)
-                    setTodayCommits(todayData?.total_commits || 0)
-
-                    const weekTotal = dailyStats
-                        .filter(d => d.date >= weekAgo)
-                        .reduce((sum, d) => sum + d.total_commits, 0)
-                    setWeekCommits(weekTotal)
-                } else {
-                    // Fallback/Placeholder if no data yet
-                    setActivityData([
-                        { name: 'Mon', commits: 0 },
-                        { name: 'Tue', commits: 0 },
-                        { name: 'Wed', commits: 0 },
-                        { name: 'Thu', commits: 0 },
-                        { name: 'Fri', commits: 0 },
-                        { name: 'Sat', commits: 0 },
-                        { name: 'Sun', commits: 0 },
-                    ])
+            // Fetch Real GitHub Activity
+            const activityRes = await fetch('/api/github/activity')
+            if (activityRes.ok) {
+                const activityJson = await activityRes.json()
+                if (activityJson.events) {
+                    setRecentCommits(activityJson.events)
                 }
             }
 
@@ -432,19 +428,29 @@ export default function DashboardPage() {
                         <h3 className="text-sm font-bold font-mono text-silver-dim uppercase tracking-wider mb-6 flex items-center gap-2">
                             <GitCommit size={14} className="text-purple-primary" /> Live Feed
                         </h3>
-                        {/* Placeholder for now as we don't have real commits synced yet without backend job */}
                         <div className="space-y-0">
-                            {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="flex gap-4 items-start group cursor-pointer hover:bg-white/5 p-3 rounded-xl transition-all border border-transparent hover:border-white/5">
-                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-primary shadow-[0_0_10px_var(--cyan-primary)] group-hover:scale-125 transition-transform" />
-                                    <div>
-                                        <p className="text-sm font-medium text-white group-hover:text-cyan-400 transition-colors leading-snug">
-                                            Update system initialization sequence
-                                        </p>
-                                        <p className="text-xs text-text-tertiary font-mono mt-1">12m ago • main</p>
+                            {recentCommits.length > 0 ? (
+                                recentCommits.map((event: any, i) => (
+                                    <div key={i} className="flex gap-4 items-start group cursor-pointer hover:bg-white/5 p-3 rounded-xl transition-all border border-transparent hover:border-white/5">
+                                        <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-primary shadow-[0_0_10px_var(--cyan-primary)] group-hover:scale-125 transition-transform" />
+                                        <div>
+                                            <p className="text-sm font-medium text-white group-hover:text-cyan-400 transition-colors leading-snug">
+                                                {event.title}
+                                            </p>
+                                            <p className="text-xs text-text-tertiary font-mono mt-1">
+                                                {new Date(event.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} •
+                                                <span className="opacity-70 ml-1">{event.repo}</span>
+                                            </p>
+                                        </div>
                                     </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-8 text-zinc-500 text-sm">
+                                    No recent activity found.
+                                    <br />
+                                    Push some code to see it here!
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </GlassCard>
                 </div>

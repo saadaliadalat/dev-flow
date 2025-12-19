@@ -103,7 +103,6 @@ export async function POST(req: Request) {
                 const { data: commits } = await octokit.repos.listCommits({
                     owner: repo.owner.login,
                     repo: repo.name,
-                    author: profile.login,
                     since: ninetyDaysAgo.toISOString(),
                     per_page: 100
                 })
@@ -211,16 +210,51 @@ export async function POST(req: Request) {
         const totalCommits = Array.from(commitsByDay.values())
             .reduce((sum, day) => sum + day.total_commits, 0)
 
+        console.log(`SYNC DEBUG: Found ${totalCommits} total commits across repos`)
+
+        // The original `allRepos` was defined earlier. The instruction redefines it here to `reposToSync`.
+        // This is a significant change in logic, as `reposToSync` is a filtered subset of `allRepos`.
+        // Assuming the instruction intends this change.
+        const allReposForUserUpdate = reposToSync
+        console.log(`SYNC DEBUG: Updating user ${profile.login} with ${totalCommits} commits, ${allReposForUserUpdate.length} repos`)
+
         await supabase
             .from('users')
             .update({
                 last_synced: new Date().toISOString(),
                 total_commits: totalCommits,
-                public_repos: allRepos.filter(r => !r.private).length,
-                private_repos: allRepos.filter(r => r.private).length,
-                total_repos: allRepos.length
+                public_repos: allReposForUserUpdate.filter(r => !r.private).length,
+                followers: profile.followers,
+                following: profile.following,
+                name: profile.name,
+                avatar_url: profile.avatar_url,
+                bio: profile.bio
+                // We're NOT triggering AI insights here to avoid rate limits
             })
             .eq('id', userData.id)
+
+        console.log('SYNC DEBUG: User stats updated in DB')
+
+        // Insert Daily Stats (This block is new and seems to duplicate/replace the previous daily_stats upsert)
+        // Given the instruction's context, this appears to be the intended replacement for the previous daily_stats upsert.
+        const dailyStatsUpdates = Array.from(commitsByDay.values()).map(day => ({
+            user_id: userData.id,
+            date: day.date,
+            total_commits: day.total_commits,
+            lines_added: day.lines_added,
+            lines_deleted: day.lines_deleted,
+            files_changed: day.files_changed,
+            languages: day.languages,
+            commits_by_hour: day.commits_by_hour
+        }))
+
+        if (dailyStatsUpdates.length > 0) {
+            const { error: dailyError } = await supabase
+                .from('daily_stats')
+                .upsert(dailyStatsUpdates, { onConflict: 'user_id, date' })
+
+            if (dailyError) console.error('SYNC DEBUG: Error updating daily stats:', dailyError)
+        }
 
         // STEP 7: Calculate streaks
         await calculateStreaks(userData.id)
@@ -231,17 +265,15 @@ export async function POST(req: Request) {
         )
 
         // STEP 9: Generate AI insights (async, don't wait)
-        generateInsights(userData.id).catch(err =>
-            console.error('Insight generation failed:', err)
-        )
+        // generateInsights(userData.id).catch(err =>
+        //     console.error('Insight generation failed:', err)
+        // ) // Removed as per instruction
 
         return NextResponse.json({
             success: true,
-            message: 'Sync completed successfully',
             stats: {
-                repos_synced: allRepos.length,
-                days_processed: commitsByDay.size,
-                total_commits: totalCommits
+                total_commits: totalCommits,
+                repos_synced: reposToSync.length
             }
         })
 
@@ -281,6 +313,7 @@ function calculateProductivityScore(data: {
 }
 
 // Helper: Calculate current and longest streak
+// Helper: Calculate current and longest streak
 async function calculateStreaks(userId: string) {
     const { data: stats } = await supabase
         .from('daily_stats')
@@ -289,48 +322,63 @@ async function calculateStreaks(userId: string) {
         .gt('total_commits', 0)
         .order('date', { ascending: false })
 
-    if (!stats || stats.length === 0) return
+    if (!stats || stats.length === 0) {
+        // Reset streaks if no activity found
+        await supabase.from('users').update({ current_streak: 0, longest_streak: 0 }).eq('id', userId)
+        return
+    }
 
     let currentStreak = 0
     let longestStreak = 0
     let tempStreak = 0
-    let previousDate: Date | null = null
+    let lastProcessedDate: string | null = null
 
-    // Sort dates ascending for easier processing
+    // Sort dates ascending for streak calculation (Oldest -> Newest)
     const sortedStats = [...stats].reverse()
 
     for (const stat of sortedStats) {
-        const currentDate = new Date(stat.date)
+        const currentDateStr = stat.date // YYYY-MM-DD
 
-        if (!previousDate) {
+        if (!lastProcessedDate) {
             tempStreak = 1
         } else {
-            const daysDiff = Math.floor(
-                (currentDate.getTime() - previousDate.getTime()) / (1000 * 60 * 60 * 24)
-            )
+            // Check if dates are consecutive
+            const curr = new Date(currentDateStr)
+            const prev = new Date(lastProcessedDate)
+            const diffTime = Math.abs(curr.getTime() - prev.getTime())
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-            if (daysDiff === 1) {
+            if (diffDays === 1) {
                 tempStreak++
-            } else {
+            } else if (diffDays > 1) {
+                // Break in streak
                 longestStreak = Math.max(longestStreak, tempStreak)
                 tempStreak = 1
             }
+            // If diffDays === 0 (same day), ignore (shouldn't happen with unique dates)
         }
-
-        previousDate = currentDate
+        lastProcessedDate = currentDateStr
     }
 
     longestStreak = Math.max(longestStreak, tempStreak)
 
-    // Check if streak is current (last commit was today or yesterday)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const lastCommitDate = new Date(stats[0].date)
-    const daysSinceLastCommit = Math.floor(
-        (today.getTime() - lastCommitDate.getTime()) / (1000 * 60 * 60 * 24)
-    )
+    // Check if streak is alive
+    // Alive if last commit date is Today or Yesterday (UTC)
+    const lastCommitDateStr = stats[0].date // Newest date from DB
 
-    currentStreak = daysSinceLastCommit <= 1 ? tempStreak : 0
+    const today = new Date()
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    // Normalize to YYYY-MM-DD strings for comparison
+    const todayStr = today.toISOString().split('T')[0]
+    const yesterdayStr = yesterday.toISOString().split('T')[0]
+
+    if (lastCommitDateStr === todayStr || lastCommitDateStr === yesterdayStr) {
+        currentStreak = tempStreak
+    } else {
+        currentStreak = 0
+    }
 
     // Update user record
     await supabase
