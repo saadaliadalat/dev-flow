@@ -1,188 +1,215 @@
 'use client'
 
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { GradientButton } from '@/components/ui/GradientButton'
-import { Github, Play, ArrowRight, Sparkles } from 'lucide-react'
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
+import { Play, ArrowRight, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { DashboardPreview } from '@/components/landing/DashboardPreview'
-import Image from 'next/image'
+import { useRef } from 'react'
 
-// Particle Field Component
-const ParticleField = () => {
-    // Generate static positions for particles to avoid hydration mismatch
-    const particles = Array.from({ length: 30 }).map((_, i) => ({
-        id: i,
-        top: `${(i * 3.3 * 7) % 100}%`,
-        left: `${(i * 7.1 * 3) % 100}%`,
-        size: (i % 3) + 1,
-        duration: (i % 5) + 10,
-        delay: -(i % 10)
-    }));
-
-    return (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-            {particles.map((particle) => (
-                <motion.div
-                    key={particle.id}
-                    className="absolute rounded-full bg-purple-400/30"
-                    style={{
-                        left: particle.left,
-                        top: particle.top,
-                        width: particle.size,
-                        height: particle.size,
-                    }}
-                    animate={{
-                        y: [0, -30, 0],
-                        opacity: [0.2, 0.5, 0.2],
-                    }}
-                    transition={{
-                        duration: particle.duration,
-                        repeat: Infinity,
-                        delay: particle.delay,
-                        ease: "easeInOut"
-                    }}
-                />
-            ))}
-        </div>
-    )
-}
-
-// Floating 3D Object Component
-const FloatingObject = ({ delay = 0, className, style }: { delay?: number, className?: string, style?: React.CSSProperties }) => (
+// Floating particle component
+const FloatingParticle = ({ delay, size, left, top }: { delay: number; size: number; left: string; top: string }) => (
     <motion.div
-        className={`absolute hidden md:block z-0 pointer-events-none ${className}`}
-        style={style}
+        className="absolute rounded-full bg-purple-400/40"
+        style={{ width: size, height: size, left, top }}
         animate={{
-            y: [0, -20, 0],
-            rotate: [0, 5, 0],
+            y: [0, -30, 0],
+            opacity: [0.2, 0.6, 0.2],
+            scale: [1, 1.2, 1],
         }}
         transition={{
-            duration: 6,
+            duration: 4 + Math.random() * 2,
             repeat: Infinity,
             delay,
-            ease: "easeInOut"
+            ease: 'easeInOut',
         }}
-    >
-        <div className="relative w-24 h-24 md:w-32 md:h-32 opacity-60 mix-blend-screen">
-            <div className="absolute inset-0 bg-purple-500/30 blur-2xl rounded-full" />
-            {/* Simple Geometric Shape Representation since we don't have the crystal png */}
-            <div className="w-full h-full border border-purple-500/30 bg-purple-500/5 backdrop-blur-sm transform rotate-45 rounded-xl shadow-[0_0_30px_rgba(168,85,247,0.4)]" />
-        </div>
-    </motion.div>
+    />
 )
 
 export function Hero() {
     const router = useRouter()
+    const containerRef = useRef<HTMLDivElement>(null)
     const { scrollY } = useScroll()
-    const opacity = useTransform(scrollY, [0, 300], [1, 0])
-    const y = useTransform(scrollY, [0, 300], [0, 50])
+
+    // Smooth spring physics for parallax
+    const smoothY = useSpring(useTransform(scrollY, [0, 800], [0, 180]), { stiffness: 50, damping: 18 })
+    const smoothRotateX = useSpring(useTransform(scrollY, [0, 600], [14, 0]), { stiffness: 45, damping: 18 })
+    const smoothScale = useSpring(useTransform(scrollY, [0, 600], [0.92, 1.01]), { stiffness: 45, damping: 18 })
+    const bgY = useSpring(useTransform(scrollY, [0, 800], [0, 100]), { stiffness: 35, damping: 18 })
+    const contentOpacity = useTransform(scrollY, [0, 400], [1, 0.3])
+
+    // Generate static lines
+    const lines = Array.from({ length: 56 }).map((_, i) => ({
+        angle: (i * 360) / 56,
+    }))
+
+    // Generate particles
+    const particles = Array.from({ length: 20 }).map((_, i) => ({
+        delay: i * 0.3,
+        size: 2 + (i % 3),
+        left: `${(i * 5.1) % 100}%`,
+        top: `${(i * 4.7) % 100}%`,
+    }))
 
     return (
-        <section className="relative min-h-[140vh] flex flex-col items-center pt-32 overflow-hidden bg-bg-deepest">
-
+        <section
+            ref={containerRef}
+            className="relative min-h-screen flex flex-col items-center pt-28 md:pt-36 lg:pt-40 overflow-hidden bg-[#08061A]"
+        >
             {/* Background Layers */}
-            <div className="absolute inset-0 pointer-events-none">
-                {/* Purple Planet / Sphere */}
-                <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] md:w-[800px] md:h-[800px] opacity-60 blur-sm pointer-events-none z-0">
-                    <div className="w-full h-full rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(168,85,247,0.8)_0%,rgba(124,58,237,0.6)_30%,rgba(107,33,168,0.4)_60%,rgba(88,28,135,0.2)_100%)] animate-pulse-slow shadow-[0_0_100px_rgba(168,85,247,0.5),inset_0_0_100px_rgba(168,85,247,0.3)]" />
-                    <div className="absolute inset-0 rounded-full border-2 border-purple-400/20 shadow-[0_0_50px_rgba(168,85,247,0.4)]" />
+            <div className="absolute inset-0 pointer-events-none z-0">
+                {/* Primary Glow */}
+                <motion.div
+                    style={{ y: bgY }}
+                    className="absolute top-[-25%] left-[5%] w-[600px] h-[600px] md:w-[800px] md:h-[800px] bg-purple-600/20 blur-[180px] rounded-full"
+                />
+                {/* Secondary Glow */}
+                <motion.div
+                    style={{ y: bgY }}
+                    className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] md:w-[700px] md:h-[700px] bg-fuchsia-500/15 blur-[150px] rounded-full"
+                />
+                {/* Accent Glow */}
+                <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[300px] h-[300px] bg-cyan-500/10 blur-[100px] rounded-full" />
+
+                {/* Radiating Lines */}
+                <div className="absolute inset-0 opacity-15 md:opacity-20">
+                    <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+                        <defs>
+                            <radialGradient id="linesFade" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stopColor="transparent" />
+                                <stop offset="35%" stopColor="transparent" />
+                                <stop offset="100%" stopColor="white" />
+                            </radialGradient>
+                        </defs>
+                        {lines.map((line, i) => (
+                            <line
+                                key={i}
+                                x1="50"
+                                y1="50"
+                                x2={50 + 85 * Math.cos((line.angle * Math.PI) / 180)}
+                                y2={50 + 85 * Math.sin((line.angle * Math.PI) / 180)}
+                                stroke="rgba(168, 85, 247, 0.35)"
+                                strokeWidth="0.025"
+                            />
+                        ))}
+                    </svg>
                 </div>
 
-                {/* Secondary Gradients */}
-                <div className="absolute bottom-0 inset-x-0 h-[400px] bg-gradient-to-t from-bg-deepest to-transparent z-10" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(124,58,237,0.15)_0%,transparent_50%)]" />
+                {/* Floating Particles */}
+                {particles.map((p, i) => (
+                    <FloatingParticle key={i} {...p} />
+                ))}
 
-                {/* Particle Field */}
-                <ParticleField />
-
-                {/* Floating Objects */}
-                <FloatingObject delay={0} style={{ top: '15%', left: '10%' }} />
-                <FloatingObject delay={2} style={{ top: '55%', right: '15%' }} />
-                <FloatingObject delay={4} style={{ bottom: '25%', left: '20%' }} />
+                {/* Noise texture overlay */}
+                <div className="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNhKSIvPjwvc3ZnPg==')]" />
             </div>
 
-            <div className="container mx-auto px-6 relative z-10 flex flex-col items-center text-center">
-
+            {/* Content */}
+            <motion.div
+                style={{ opacity: contentOpacity }}
+                className="container mx-auto px-4 sm:px-6 relative z-10 flex flex-col items-center text-center"
+            >
                 {/* Badge */}
                 <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="mb-8"
+                    initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                    className="mb-6 md:mb-8"
                 >
-                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-sm tracking-wide font-medium text-silver backdrop-blur-md hover:border-purple-500/50 transition-colors cursor-pointer group shadow-[0_0_20px_rgba(168,85,247,0.2)]">
-                        <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-silver to-white font-display">
-                            Precision. Speed. Intelligence.
-                        </span>
+                    <span className="group inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-gradient-to-r from-white/5 to-white/[0.02] border border-white/10 text-[11px] md:text-xs font-semibold tracking-widest text-purple-200/90 uppercase backdrop-blur-md shadow-[0_0_20px_rgba(168,85,247,0.1)] hover:border-purple-500/30 transition-all duration-300 cursor-default">
+                        <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+                        Developer Analytics Platform
                     </span>
                 </motion.div>
 
-                {/* Main Headline */}
+                {/* Headline */}
                 <motion.h1
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8, delay: 0.1 }}
-                    className="text-7xl md:text-9xl font-display font-black tracking-[0.1em] mb-6 text-white uppercase drop-shadow-[0_0_40px_rgba(168,85,247,0.5)]"
-                >
-                    DEVFLOW
-                </motion.h1>
-
-                {/* Tagline */}
-                <motion.h2
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                    className="text-2xl md:text-4xl font-light tracking-[0.15em] text-silver-light uppercase opacity-90 mb-8"
+                    transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                    className="text-[2.5rem] sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] font-display font-bold tracking-[-0.02em] text-white leading-[1.08] mb-5 md:mb-7"
                 >
-                    Stop Guessing. <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-200">Start Scaling.</span>
-                </motion.h2>
+                    Build Faster With
+                    <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-[length:200%_auto] animate-text-shimmer">
+                        DevFlow Insights
+                    </span>
+                </motion.h1>
 
                 {/* Subheadline */}
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.3 }}
-                    className="text-lg md:text-xl text-zinc max-w-2xl mx-auto mb-12 leading-relaxed"
+                    transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
+                    className="text-[15px] sm:text-lg md:text-xl text-zinc-400 max-w-lg md:max-w-2xl mx-auto mb-9 md:mb-12 leading-relaxed tracking-[-0.01em]"
                 >
-                    Transform your GitHub activity into actionable insights, achievements, and stunning year-in-review cards. The developer productivity platform built for the future.
+                    Transform your GitHub activity into actionable insights. Track velocity, prevent burnout, and celebrate achievements — making every commit count.
                 </motion.p>
 
                 {/* CTAs */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
-                    className="flex flex-col sm:flex-row gap-5 w-full sm:w-auto mb-20"
+                    transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
+                    className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-16 md:mb-24 w-full sm:w-auto"
                 >
-                    <GradientButton
-                        size="lg"
-                        icon={<Github className="w-5 h-5" />}
+                    <button
                         onClick={() => router.push('/login')}
-                        className="min-w-[220px] shadow-[0_0_30px_rgba(168,85,247,0.4)]"
+                        className="group w-full sm:w-auto px-8 py-3.5 sm:py-4 rounded-full bg-white text-[#08061A] font-semibold text-sm sm:text-[15px] hover:bg-zinc-50 active:scale-[0.97] transition-all duration-200 shadow-[0_0_30px_rgba(255,255,255,0.2),0_4px_20px_rgba(0,0,0,0.3)] flex items-center justify-center gap-2.5"
                     >
-                        Build My Analytics
-                    </GradientButton>
-                    <GradientButton
-                        variant="secondary"
-                        size="lg"
-                        icon={<Play className="w-5 h-5 fill-current" />}
+                        Get Started
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                    <button
                         onClick={() => router.push('/#demo')}
-                        className="min-w-[200px]"
+                        className="group w-full sm:w-auto px-8 py-3.5 sm:py-4 rounded-full bg-white/[0.03] text-white font-medium text-sm sm:text-[15px] border border-white/10 hover:bg-white/[0.07] hover:border-white/20 active:scale-[0.97] transition-all duration-200 flex items-center justify-center gap-2.5 backdrop-blur-sm"
                     >
+                        <Play className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
                         Watch Demo
-                    </GradientButton>
+                    </button>
                 </motion.div>
 
                 {/* 3D Dashboard Preview */}
                 <motion.div
-                    style={{ opacity, y, scale: 0.95 }}
-                    className="w-full relative z-20 max-w-6xl"
+                    style={{
+                        y: smoothY,
+                        rotateX: smoothRotateX,
+                        scale: smoothScale,
+                        transformPerspective: 1400,
+                    }}
+                    className="w-full relative z-20 max-w-5xl xl:max-w-6xl origin-top"
                 >
-                    <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 blur-3xl -z-10 rounded-full opacity-50" />
-                    <DashboardPreview />
+                    {/* Multi-layer glow */}
+                    <div className="absolute -inset-10 md:-inset-16 bg-gradient-to-t from-purple-600/30 via-purple-900/20 to-transparent blur-[60px] -z-10 rounded-[3rem] opacity-80" />
+                    <div className="absolute -inset-6 md:-inset-10 bg-gradient-to-b from-cyan-500/10 to-transparent blur-[40px] -z-10 rounded-[2rem] opacity-50" />
+
+                    {/* Dashboard Container */}
+                    <div className="relative rounded-2xl md:rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#0D0A1C]/95 to-[#0A0818]/95 backdrop-blur-2xl shadow-[0_8px_60px_-15px_rgba(168,85,247,0.3),0_0_0_1px_rgba(255,255,255,0.05)] p-1.5 sm:p-2 md:p-3 transform-gpu overflow-hidden">
+                        {/* Shimmer border effect */}
+                        <div className="absolute inset-0 rounded-2xl md:rounded-3xl overflow-hidden pointer-events-none">
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer" />
+                        </div>
+
+                        {/* Browser Header */}
+                        <div className="flex items-center gap-2 px-4 py-3 md:px-5 md:py-3.5 border-b border-white/[0.04]">
+                            <div className="flex gap-2">
+                                <div className="w-3 h-3 rounded-full bg-red-500/40 shadow-[0_0_6px_rgba(239,68,68,0.3)]" />
+                                <div className="w-3 h-3 rounded-full bg-yellow-500/40 shadow-[0_0_6px_rgba(234,179,8,0.3)]" />
+                                <div className="w-3 h-3 rounded-full bg-green-500/40 shadow-[0_0_6px_rgba(34,197,94,0.3)]" />
+                            </div>
+                            <div className="ml-4 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/[0.05] text-[10px] md:text-[11px] text-zinc-500 font-mono tracking-wide">
+                                devflow.app
+                            </div>
+                        </div>
+
+                        <DashboardPreview />
+
+                        {/* Bottom Fade */}
+                        <div className="absolute bottom-0 inset-x-0 h-24 md:h-40 bg-gradient-to-t from-[#08061A] via-[#08061A]/80 to-transparent pointer-events-none rounded-b-2xl md:rounded-b-3xl" />
+                    </div>
                 </motion.div>
-            </div>
+            </motion.div>
         </section>
     )
 }
+
+
