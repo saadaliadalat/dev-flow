@@ -30,9 +30,9 @@ export function GradientButton({
     }
 
     const variantClasses = {
-        primary: "bg-gradient-to-r from-purple-600 via-purple-500 to-purple-600 bg-[length:200%_100%] bg-[0%] hover:bg-[100%] text-white shadow-[0_4px_14px_0_rgba(168,85,247,0.39)] hover:shadow-[0_6px_20px_rgba(168,85,247,0.23)]",
-        secondary: "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-purple-500/30 backdrop-blur-xl",
-        ghost: "bg-transparent text-purple-400 hover:text-purple-300 hover:bg-white/5"
+        primary: "bg-gradient-to-r from-white via-zinc-200 to-white bg-[length:200%_100%] bg-[0%] hover:bg-[100%] text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] font-bold",
+        secondary: "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/30 backdrop-blur-xl",
+        ghost: "bg-transparent text-zinc-400 hover:text-white hover:bg-white/5"
     }
 
     return (
