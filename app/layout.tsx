@@ -25,6 +25,8 @@ export const metadata: Metadata = {
     description: "Track your coding productivity, unlock achievements, and share your developer journey",
 };
 
+import { AuthProvider } from "@/components/providers/AuthProvider";
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -33,7 +35,9 @@ export default function RootLayout({
     return (
         <html lang="en" className={`${inter.variable} ${outfit.variable} ${firaCode.variable}`}>
             <body className="antialiased bg-background text-foreground overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-100">
-                {children}
+                <AuthProvider>
+                    {children}
+                </AuthProvider>
             </body>
         </html>
     );
