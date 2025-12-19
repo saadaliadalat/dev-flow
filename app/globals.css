@@ -3,135 +3,104 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* Obsidian & Chrome Theme (Monochrome) */
-    /* Background Layers - Deep Space */
-    --bg-deepest: #000000;
-    /* Pure Black */
-    --bg-deep: #09090b;
-    /* Zinc 950 */
-    --bg-mid: #18181b;
-    /* Zinc 900 */
-    --bg-elevated: #27272a;
-    /* Zinc 800 */
+    :root {
+        /* --- OBSIDIAN THEME CORE (Formerly Quantum) --- */
 
-    /* Primary Brand - Silver & White (formerly Purple) */
-    --purple-primary: #e4e4e7;
-    /* Silver (Zinc 200) */
-    --purple-light: #ffffff;
-    /* Pure White */
-    --purple-dark: #a1a1aa;
-    /* Zinc 400 */
-    --purple-glow: rgba(255, 255, 255, 0.25);
-    /* White glow */
+        /* Backgrounds - Pure Black & Zinc */
+        --bg-deepest: #000000;
+        --bg-deep: #09090b;
+        /* Zinc 950 */
+        --bg-mid: #18181b;
+        /* Zinc 900 */
+        --bg-elevated: #27272a;
+        /* Zinc 800 */
 
-    /* Gradients - Metallic */
-    --gradient-primary: linear-gradient(135deg, #ffffff 0%, #e4e4e7 50%, #a1a1aa 100%);
-    --gradient-purple-deep: linear-gradient(135deg, #18181b 0%, #52525b 100%);
-    /* Dark Metal */
+        /* Text - High Contrast White & Zinc */
+        --text-primary: #ffffff;
+        --text-secondary: #a1a1aa;
+        /* Zinc 400 */
+        --text-tertiary: #71717a;
+        /* Zinc 500 */
+        --text-muted: #52525b;
+        /* Zinc 600 */
 
-    /* Silver/Zinc - Secondary Accents */
-    --silver-primary: #e4e4e7;
-    /* Silver */
-    --silver-light: #f4f4f5;
-    /* Bright silver */
-    --silver-dark: #a1a1aa;
-    /* Dark silver */
-    --zinc: #71717a;
-    /* Zinc gray */
+        /* Glass System - Smoked & Crystal */
+        --glass-bg: rgba(9, 9, 11, 0.7);
+        /* Zinc 950 alpha */
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --glass-hover-bg: rgba(255, 255, 255, 0.05);
+        --glass-hover-border: rgba(255, 255, 255, 0.15);
 
-    /* Glass Effects - Smoked */
-    --glass-bg: rgba(255, 255, 255, 0.03);
-    /* Subtle white tint */
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-hover-bg: rgba(255, 255, 255, 0.05);
-    --glass-hover-border: rgba(255, 255, 255, 0.15);
+        /* "Purple" Variables Remapped to Obsidian/Silver */
+        --purple-primary: #ffffff;
+        --purple-light: #e4e4e7;
+        /* Zinc 200 */
+        --purple-dark: #18181b;
+        /* Zinc 900 */
+        --purple-glow: rgba(255, 255, 255, 0.25);
 
-    /* Cosmic Accents - Remapped to Monochrome variants */
-    --cosmic-pink: #d4d4d8;
-    /* Zinc 300 */
-    --cosmic-blue: #a1a1aa;
-    /* Zinc 400 */
-    --cosmic-cyan: #ffffff;
-    /* White */
+        /* "Cosmic" Accents Remapped to Monochrome */
+        --cosmic-pink: #d4d4d8;
+        /* Zinc 300 */
+        --cosmic-blue: #a1a1aa;
+        /* Zinc 400 */
+        --cosmic-cyan: #ffffff;
+        /* White */
 
-    /* Text Hierarchy */
-    --text-primary: #ffffff;
-    /* White */
-    --text-secondary: #d4d4d8;
-    /* Zinc 300 */
-    --text-tertiary: #a1a1aa;
-    /* Zinc 400 */
-    --text-muted: #71717a;
-    /* Zinc 500 */
+        /* Silver Accents */
+        --silver-primary: #e4e4e7;
+        --silver-light: #ffffff;
+        --silver-dark: #a1a1aa;
+        --zinc: #52525b;
 
-    /* Functional Colors */
-    --success: #10b981;
-    /* Emerald */
-    --warning: #f59e0b;
-    /* Amber */
-    --error: #ef4444;
-    /* Red */
+        /* Gradients */
+        --gradient-primary: linear-gradient(to right, #ffffff, #d4d4d8);
+        /* White Silver */
+        --gradient-secondary: linear-gradient(to right, #a1a1aa, #52525b);
+        /* Zinc Fade */
+        --gradient-purple-deep: linear-gradient(to bottom, #000000, #09090b);
+        /* Deepest Dark */
+        --gradient-mesh: radial-gradient(at top left, rgba(255, 255, 255, 0.05), transparent 50%);
 
-    /* Special Effects */
-    --box-shadow-glow: 0 0 30px rgba(255, 255, 255, 0.1), 0 0 60px rgba(255, 255, 255, 0.05);
+        /* Legacy Backgrounds (Neutralized) */
+        --bg-cosmic: radial-gradient(circle at center, #18181b 0%, #000000 100%);
+        --planet-gradient: linear-gradient(45deg, #ffffff, #52525b);
 
-    /* Background Gradients - Fog & Shadow */
-    --bg-cosmic: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
-      radial-gradient(ellipse at bottom right, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
-      radial-gradient(ellipse at bottom left, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+        /* Font Families (Inter / JetBrains Mono mapping) */
+        --font-display: "Inter", system-ui, sans-serif;
+        --font-body: "Inter", system-ui, sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+    }
 
-    --planet-gradient: radial-gradient(circle at 30% 30%,
-        rgba(255, 255, 255, 0.15) 0%,
-        rgba(228, 228, 231, 0.1) 30%,
-        rgba(161, 161, 170, 0.05) 60%,
-        rgba(24, 24, 27, 0.0) 100%);
-  }
+    body {
+        @apply bg-bg-deepest text-text-primary antialiased selection:bg-white/20;
+        font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    }
 
-  body {
-    @apply bg-[var(--bg-deepest)] text-[var(--text-primary)] font-body antialiased selection:bg-purple-500/30 selection:text-purple-100;
-  }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-display tracking-tight text-[var(--text-primary)];
-  }
+    ::-webkit-scrollbar-track {
+        @apply bg-black;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply bg-zinc-800 rounded-full hover:bg-zinc-700 transition-colors;
+    }
 }
 
 @layer utilities {
-  .glass-card {
-    @apply bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-xl shadow-lg;
-  }
-
-  .glass-card-hover {
-    @apply hover:bg-[var(--glass-hover-bg)] hover:border-[var(--glass-hover-border)] transition-all duration-300;
-  }
-
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-purple-500 to-indigo-500;
-  }
-
-  .glow-purple {
-    box-shadow: 0 0 30px var(--purple-glow);
-  }
-
-  .animate-pulse-slow {
-    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes float {
-
-    0%,
-    100% {
-      transform: translateY(0);
+    .text-gradient {
+        @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-300 to-zinc-500;
     }
 
-    50% {
-      transform: translateY(-20px);
+    .glass-card {
+        @apply bg-zinc-800 bg-opacity-10 backdrop-blur-xl border border-white/5;
     }
-  }
+
+    .animate-shimmer {
+        animation: shimmer 2s linear infinite;
+    }
 }
