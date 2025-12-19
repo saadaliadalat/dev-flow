@@ -20,69 +20,100 @@ export default function DashboardPage() {
     const [activityData, setActivityData] = useState<any[]>([])
     const [recentCommits, setRecentCommits] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [isSyncing, setIsSyncing] = useState(false)
+    const [syncMessage, setSyncMessage] = useState('')
 
-    useEffect(() => {
-        async function fetchDashboardData() {
-            if (!session?.user?.id) return
+    // Function to sync GitHub data
+    const syncGitHubData = async () => {
+        setIsSyncing(true)
+        setSyncMessage('Syncing your GitHub data...')
+        try {
+            const res = await fetch('/api/github/sync', { method: 'POST' })
+            const data = await res.json()
 
-            try {
-                // Fetch User Stats (using github_id or trying to match)
-                // Note: In real app, we should use the user ID from our DB found via auth session
-                // For now, let's assume session.user.id maps correctly or we query by email/github
+            if (data.success) {
+                setSyncMessage(`Synced! ${data.stats?.total_commits || 0} commits from ${data.stats?.repos_synced || 0} repos`)
+                // Refresh dashboard data
+                fetchDashboardData()
+            } else {
+                setSyncMessage(`Sync failed: ${data.error || 'Unknown error'}`)
+            }
+        } catch (error: any) {
+            setSyncMessage(`Sync error: ${error.message}`)
+        } finally {
+            setIsSyncing(false)
+            // Clear message after 5 seconds
+            setTimeout(() => setSyncMessage(''), 5000)
+        }
+    }
 
-                let userId = session.user.id
+    async function fetchDashboardData() {
+        if (!session?.user?.id) return
 
-                // If the ID is not a UUID (e.g. from GitHub provider directly), we need to find our internal UUID
-                // This logic depends on how NextAuth session callback is set up. 
-                // Assuming session.user.id is the NextAuth ID (GitHub ID), we need to lookup.
+        try {
+            // Fetch User Stats (using github_id or trying to match)
+            // Note: In real app, we should use the user ID from our DB found via auth session
+            // For now, let's assume session.user.id maps correctly or we query by email/github
 
-                const { data: user, error: userError } = await supabase
-                    .from('users')
-                    .select('*')
-                    .eq('email', session.user.email)
-                    .single()
+            let userId = session.user.id
 
-                if (user) {
-                    setStats(user)
-                    userId = user.id
+            // If the ID is not a UUID (e.g. from GitHub provider directly), we need to find our internal UUID
+            // This logic depends on how NextAuth session callback is set up. 
+            // Assuming session.user.id is the NextAuth ID (GitHub ID), we need to lookup.
 
-                    // Fetch Recent Activity (Mocking from daily_stats for chart if empty)
-                    const { data: dailyStats } = await supabase
-                        .from('daily_stats')
-                        .select('date, total_commits')
-                        .eq('user_id', userId)
-                        .order('date', { ascending: true })
-                        .limit(7)
+            const { data: user, error: userError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('email', session.user.email)
+                .single()
 
-                    if (dailyStats && dailyStats.length > 0) {
-                        setActivityData(dailyStats.map(d => ({
-                            name: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
-                            commits: d.total_commits
-                        })))
-                    } else {
-                        // Fallback/Placeholder if no data yet
-                        setActivityData([
-                            { name: 'Mon', commits: 0 },
-                            { name: 'Tue', commits: 0 },
-                            { name: 'Wed', commits: 0 },
-                            { name: 'Thu', commits: 0 },
-                            { name: 'Fri', commits: 0 },
-                            { name: 'Sat', commits: 0 },
-                            { name: 'Sun', commits: 0 },
-                        ])
-                    }
+            if (user) {
+                setStats(user)
+                userId = user.id
 
-                    // Fetch Achievements
-                    // ... (Implementation optional for this step, keeping placeholder)
+                // Auto-sync if no data yet (last_synced is null or user has 0 commits)
+                if (!user.last_synced || user.total_commits === 0) {
+                    syncGitHubData()
                 }
 
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error)
-            } finally {
-                setIsLoading(false)
-            }
-        }
+                // Fetch Recent Activity (Mocking from daily_stats for chart if empty)
+                const { data: dailyStats } = await supabase
+                    .from('daily_stats')
+                    .select('date, total_commits')
+                    .eq('user_id', userId)
+                    .order('date', { ascending: true })
+                    .limit(7)
 
+                if (dailyStats && dailyStats.length > 0) {
+                    setActivityData(dailyStats.map(d => ({
+                        name: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
+                        commits: d.total_commits
+                    })))
+                } else {
+                    // Fallback/Placeholder if no data yet
+                    setActivityData([
+                        { name: 'Mon', commits: 0 },
+                        { name: 'Tue', commits: 0 },
+                        { name: 'Wed', commits: 0 },
+                        { name: 'Thu', commits: 0 },
+                        { name: 'Fri', commits: 0 },
+                        { name: 'Sat', commits: 0 },
+                        { name: 'Sun', commits: 0 },
+                    ])
+                }
+
+                // Fetch Achievements
+                // ... (Implementation optional for this step, keeping placeholder)
+            }
+
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    useEffect(() => {
         fetchDashboardData()
     }, [session])
 
@@ -111,7 +142,39 @@ export default function DashboardPage() {
                     </motion.p>
                 </div>
 
-                <motion.div variants={itemVariants} className="flex gap-3">
+                <motion.div variants={itemVariants} className="flex gap-3 items-center">
+                    {/* Sync Message */}
+                    {syncMessage && (
+                        <span className="text-xs text-zinc-400 font-mono max-w-[200px] truncate">
+                            {syncMessage}
+                        </span>
+                    )}
+
+                    {/* Sync Button */}
+                    <button
+                        onClick={syncGitHubData}
+                        disabled={isSyncing}
+                        className="px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold flex items-center gap-2 shadow-lg hover:bg-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isSyncing ? (
+                            <>
+                                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                Syncing...
+                            </>
+                        ) : (
+                            <>
+                                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z" />
+                                </svg>
+                                Sync GitHub
+                            </>
+                        )}
+                    </button>
+
+                    {/* Online Status */}
                     <span className="px-4 py-2 rounded-xl bg-bg-elevated border border-white/5 text-silver-dim text-sm font-medium flex items-center gap-2 shadow-lg">
                         <span className="relative flex h-2 w-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
