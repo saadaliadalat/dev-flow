@@ -14,6 +14,12 @@ import {
 import { useSession } from 'next-auth/react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 
+// New personalized components
+import { Onboarding } from '@/components/dashboard/Onboarding'
+import { PersonalGoals } from '@/components/dashboard/PersonalGoals'
+import { QuickActions } from '@/components/dashboard/QuickActions'
+import { PersonalInsights } from '@/components/dashboard/PersonalInsights'
+
 export default function DashboardPage() {
     const { data: session } = useSession()
     const [stats, setStats] = useState<any>(null)
@@ -22,6 +28,9 @@ export default function DashboardPage() {
     const [isLoading, setIsLoading] = useState(true)
     const [isSyncing, setIsSyncing] = useState(false)
     const [syncMessage, setSyncMessage] = useState('')
+    const [showOnboarding, setShowOnboarding] = useState(false)
+    const [todayCommits, setTodayCommits] = useState(0)
+    const [weekCommits, setWeekCommits] = useState(0)
 
     // Function to sync GitHub data
     const syncGitHubData = async () => {
@@ -71,6 +80,12 @@ export default function DashboardPage() {
                 setStats(user)
                 userId = user.id
 
+                // Check if user needs onboarding (first time user)
+                const hasOnboarded = localStorage.getItem('devflow_onboarded')
+                if (!hasOnboarded && !user.last_synced) {
+                    setShowOnboarding(true)
+                }
+
                 // Auto-sync if no data yet (last_synced is null or user has 0 commits)
                 if (!user.last_synced || user.total_commits === 0) {
                     syncGitHubData()
@@ -89,6 +104,18 @@ export default function DashboardPage() {
                         name: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
                         commits: d.total_commits
                     })))
+
+                    // Calculate today's and week's commits
+                    const today = new Date().toISOString().split('T')[0]
+                    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+                    const todayData = dailyStats.find(d => d.date === today)
+                    setTodayCommits(todayData?.total_commits || 0)
+
+                    const weekTotal = dailyStats
+                        .filter(d => d.date >= weekAgo)
+                        .reduce((sum, d) => sum + d.total_commits, 0)
+                    setWeekCommits(weekTotal)
                 } else {
                     // Fallback/Placeholder if no data yet
                     setActivityData([
@@ -101,9 +128,6 @@ export default function DashboardPage() {
                         { name: 'Sun', commits: 0 },
                     ])
                 }
-
-                // Fetch Achievements
-                // ... (Implementation optional for this step, keeping placeholder)
             }
 
         } catch (error) {
@@ -183,6 +207,27 @@ export default function DashboardPage() {
                         <span className="font-mono tracking-wider">ONLINE</span>
                     </span>
                 </motion.div>
+            </motion.div>
+
+            {/* Onboarding Modal for New Users */}
+            {showOnboarding && (
+                <Onboarding
+                    userName={session?.user?.name?.split(' ')[0] || 'Developer'}
+                    onComplete={() => {
+                        setShowOnboarding(false)
+                        localStorage.setItem('devflow_onboarded', 'true')
+                    }}
+                />
+            )}
+
+            {/* Quick Actions */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mb-8"
+            >
+                <QuickActions onSync={syncGitHubData} isSyncing={isSyncing} />
             </motion.div>
 
             {/* Stats Grid */}
@@ -328,38 +373,57 @@ export default function DashboardPage() {
 
                 {/* Recent Activity / Side Panel */}
                 <div className="space-y-6">
+                    {/* Personal Goals */}
+                    <PersonalGoals
+                        todayCommits={todayCommits}
+                        weekCommits={weekCommits}
+                        currentStreak={stats?.current_streak || 0}
+                    />
+
+                    {/* Personal Insights */}
+                    <GlassCard className="p-6">
+                        <PersonalInsights
+                            userName={session?.user?.name?.split(' ')[0] || 'Developer'}
+                            productivityScore={stats?.productivity_score || 0}
+                            currentStreak={stats?.current_streak || 0}
+                            totalCommits={stats?.total_commits || 0}
+                        />
+                    </GlassCard>
+
                     {/* Profile Card */}
                     <GlassCard className="p-6 relative overflow-hidden">
-                        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-primary opacity-20" />
+                        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-white/10 to-transparent" />
 
                         <div className="relative z-10 flex flex-col items-center text-center mt-4">
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-primary to-cyan-primary p-[2px] mb-4 shadow-[0_0_30px_rgba(124,58,237,0.3)]">
+                            <div className="w-20 h-20 rounded-full bg-white/10 p-[2px] mb-4 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
                                 <div className="w-full h-full rounded-full bg-bg-deep flex items-center justify-center overflow-hidden">
                                     {session?.user?.image ? (
                                         <img src={session.user.image} alt={session.user.name || 'User'} className="w-full h-full object-cover" />
                                     ) : (
-                                        <span className="text-3xl font-bold text-white">{session?.user?.name?.charAt(0) || 'U'}</span>
+                                        <span className="text-2xl font-bold text-white">{session?.user?.name?.charAt(0) || 'U'}</span>
                                     )}
                                 </div>
                             </div>
 
-                            <h3 className="text-xl font-bold font-display text-white">{session?.user?.name || 'User'}</h3>
-                            <div className="flex items-center gap-2 mt-2 mb-6">
-                                <span className="px-3 py-1 bg-white/5 rounded-full border border-white/10 text-xs font-mono text-silver-dim">
-                                    PRO MEMBER
-                                </span>
-                            </div>
-                        </div>
+                            <h3 className="text-lg font-bold text-white">{session?.user?.name || 'User'}</h3>
+                            <p className="text-sm text-zinc-500">@{stats?.username || 'developer'}</p>
 
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-end text-sm">
-                                <span className="text-silver-dim font-mono text-xs uppercase tracking-wider">Level Progress</span>
-                                <span className="font-bold text-white font-mono">LVL 42</span>
+                            <div className="flex gap-4 mt-4 text-center">
+                                <div>
+                                    <p className="text-lg font-bold text-white">{stats?.total_repos || 0}</p>
+                                    <p className="text-xs text-zinc-500">Repos</p>
+                                </div>
+                                <div className="w-px bg-white/10" />
+                                <div>
+                                    <p className="text-lg font-bold text-white">{stats?.followers || 0}</p>
+                                    <p className="text-xs text-zinc-500">Followers</p>
+                                </div>
+                                <div className="w-px bg-white/10" />
+                                <div>
+                                    <p className="text-lg font-bold text-white">{stats?.following || 0}</p>
+                                    <p className="text-xs text-zinc-500">Following</p>
+                                </div>
                             </div>
-                            <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
-                                <div className="h-full w-[70%] bg-gradient-primary rounded-full shadow-[0_0_10px_rgba(124,58,237,0.5)]" />
-                            </div>
-                            <div className="text-xs text-text-tertiary text-right font-mono">2,400 / 3,000 XP</div>
                         </div>
                     </GlassCard>
 
