@@ -20,7 +20,7 @@ export function BentoCard({
     description,
     icon,
     size = 'small',
-    gradient = "from-cyan-500/20 to-blue-500/20",
+    gradient = "from-purple-600 to-purple-800",
     className,
     children
 }: BentoCardProps) {
@@ -38,7 +38,7 @@ export function BentoCard({
                 sizeClasses[size],
                 className
             )}
-            glow="cyan"
+            glow="purple"
         >
             {/* Header */}
             <div className="flex items-start justify-between mb-4">

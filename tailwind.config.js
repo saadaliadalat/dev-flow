@@ -11,6 +11,14 @@ module.exports = {
                 background: 'var(--bg-deepest)',
                 foreground: 'var(--text-primary)',
 
+                // Deep Space Backgrounds
+                bg: {
+                    deepest: 'var(--bg-deepest)',
+                    deep: 'var(--bg-deep)',
+                    mid: 'var(--bg-mid)',
+                    elevated: 'var(--bg-elevated)',
+                },
+
                 // Glass system
                 glass: {
                     bg: 'var(--glass-bg)',
@@ -19,22 +27,26 @@ module.exports = {
                     stroke: 'var(--glass-hover-border)',
                 },
 
-                // Brand colors
-                cyan: {
-                    DEFAULT: 'var(--cyan-primary)',
-                    light: 'var(--cyan-light)',
-                    glow: 'var(--cyan-glow)',
-                },
+                // Quantum Brand Colors
                 purple: {
-                    DEFAULT: 'var(--purple-secondary)',
+                    DEFAULT: 'var(--purple-primary)',
                     light: 'var(--purple-light)',
+                    dark: 'var(--purple-dark)',
                     glow: 'var(--purple-glow)',
                 },
-
-                // Status colors
-                success: 'var(--green-success)',
-                warning: 'var(--orange-warning)',
-                danger: 'var(--red-danger)',
+                silver: {
+                    DEFAULT: 'var(--silver-primary)',
+                    light: 'var(--silver-light)',
+                    dark: 'var(--silver-dark)',
+                },
+                zinc: {
+                    DEFAULT: 'var(--zinc)',
+                },
+                cosmic: {
+                    pink: 'var(--cosmic-pink)',
+                    blue: 'var(--cosmic-blue)',
+                    cyan: 'var(--cosmic-cyan)',
+                },
 
                 // Text hierarchy
                 text: {
@@ -43,6 +55,12 @@ module.exports = {
                     tertiary: 'var(--text-tertiary)',
                     muted: 'var(--text-muted)',
                 }
+            },
+            backgroundImage: {
+                'gradient-primary': 'var(--gradient-primary)',
+                'gradient-purple': 'var(--gradient-purple-deep)',
+                'cosmic': 'var(--bg-cosmic)',
+                'planet': 'var(--planet-gradient)',
             },
             fontFamily: {
                 display: ['var(--font-display)', 'system-ui', 'sans-serif'],

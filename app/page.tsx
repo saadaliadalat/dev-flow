@@ -1,7 +1,8 @@
 import { Navbar } from '@/components/landing/Navbar'
 import { Hero } from '@/components/landing/Hero'
-import { Features } from '@/components/landing/Features'
+import { StorytellingFeatures } from '@/components/landing/StorytellingFeatures'
 import { HowItWorks } from '@/components/landing/HowItWorks'
+
 import { Testimonials } from '@/components/landing/Testimonials'
 import { Pricing } from '@/components/landing/Pricing'
 import { FinalCTA } from '@/components/landing/FinalCTA'
@@ -12,7 +13,7 @@ export default function Home() {
         <main className="min-h-screen bg-bg-deepest text-text-primary selection:bg-cyan-500/30">
             <Navbar />
             <Hero />
-            <Features />
+            <StorytellingFeatures />
             <HowItWorks />
             <Pricing />
             <Testimonials />

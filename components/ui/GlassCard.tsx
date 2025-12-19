@@ -28,10 +28,10 @@ export function GlassCard({
             whileTap={hover ? "tap" : "rest"}
             onClick={onClick}
             className={cn(
-                "glass-card relative overflow-hidden rounded-2xl p-6 md:p-8",
-                hover && "glass-card-hover cursor-pointer",
-                glow === 'cyan' && "hover:shadow-[0_0_30px_-5px_var(--cyan-glow)]",
-                glow === 'purple' && "hover:shadow-[0_0_30px_-5px_var(--purple-glow)]",
+                "glass-card relative overflow-hidden rounded-2xl p-6 md:p-8 bg-gradient-to-br from-purple-500/5 to-transparent border border-purple-500/20 backdrop-blur-xl",
+                hover && "hover:border-purple-400/40 transition-all duration-300 cursor-pointer",
+                glow === 'cyan' && "hover:shadow-[0_0_30px_-5px_var(--cosmic-cyan)]",
+                glow === 'purple' && "hover:shadow-[0_0_40px_-5px_rgba(168,85,247,0.4)]",
                 className
             )}
         >

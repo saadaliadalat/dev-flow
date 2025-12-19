@@ -38,8 +38,8 @@ export function Navbar() {
         <motion.nav
             style={{ backgroundColor: navBackground, backdropFilter: navBackdrop }}
             className={cn(
-                "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b",
-                isScrolled ? "border-glass-border py-4" : "border-transparent py-6"
+                "fixed top-6 left-6 right-6 z-50 transition-all duration-300 rounded-2xl border",
+                isScrolled ? "border-glass-border py-3 bg-bg-deep/80 shadow-2xl shadow-purple-primary/10" : "border-transparent py-5 bg-transparent"
             )}
         >
             <div className="container mx-auto px-6 flex items-center justify-between">
