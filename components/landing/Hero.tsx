@@ -9,7 +9,7 @@ import { useRef } from 'react'
 // Floating particle component
 const FloatingParticle = ({ delay, size, left, top }: { delay: number; size: number; left: string; top: string }) => (
     <motion.div
-        className="absolute rounded-full bg-purple-400/40"
+        className="absolute rounded-full bg-white/20"
         style={{ width: size, height: size, left, top }}
         animate={{
             y: [0, -30, 0],
@@ -60,7 +60,7 @@ export function Hero() {
                 {/* Primary Glow */}
                 <motion.div
                     style={{ y: bgY }}
-                    className="absolute top-[-25%] left-[5%] w-[600px] h-[600px] md:w-[800px] md:h-[800px] bg-purple-600/20 blur-[180px] rounded-full"
+                    className="absolute top-[-25%] left-[5%] w-[600px] h-[600px] md:w-[800px] md:h-[800px] bg-white/5 blur-[180px] rounded-full"
                 />
                 {/* Secondary Glow */}
                 <motion.div
@@ -115,8 +115,8 @@ export function Hero() {
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                     className="mb-6 md:mb-8"
                 >
-                    <span className="group inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-gradient-to-r from-white/5 to-white/[0.02] border border-white/10 text-[11px] md:text-xs font-semibold tracking-widest text-purple-200/90 uppercase backdrop-blur-md shadow-[0_0_20px_rgba(168,85,247,0.1)] hover:border-purple-500/30 transition-all duration-300 cursor-default">
-                        <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+                    <span className="group inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-gradient-to-r from-white/10 to-white/5 border border-white/10 text-[11px] md:text-xs font-semibold tracking-widest text-zinc-300 uppercase backdrop-blur-md shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:border-white/30 transition-all duration-300 cursor-default">
+                        <Sparkles className="w-3.5 h-3.5 text-white animate-pulse" />
                         Developer Analytics Platform
                     </span>
                 </motion.div>
@@ -130,7 +130,7 @@ export function Hero() {
                 >
                     Build Faster With
                     <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-[length:200%_auto] animate-text-shimmer">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-400 to-white bg-[length:200%_auto] animate-text-shimmer">
                         DevFlow Insights
                     </span>
                 </motion.h1>
@@ -179,7 +179,7 @@ export function Hero() {
                     className="w-full relative z-20 max-w-5xl xl:max-w-6xl origin-top"
                 >
                     {/* Multi-layer glow */}
-                    <div className="absolute -inset-10 md:-inset-16 bg-gradient-to-t from-purple-600/30 via-purple-900/20 to-transparent blur-[60px] -z-10 rounded-[3rem] opacity-80" />
+                    <div className="absolute -inset-10 md:-inset-16 bg-gradient-to-t from-zinc-900/50 via-zinc-800/10 to-transparent blur-[60px] -z-10 rounded-[3rem] opacity-80" />
                     <div className="absolute -inset-6 md:-inset-10 bg-gradient-to-b from-cyan-500/10 to-transparent blur-[40px] -z-10 rounded-[2rem] opacity-50" />
 
                     {/* Dashboard Container */}
