@@ -19,6 +19,8 @@ import { Onboarding } from '@/components/dashboard/Onboarding'
 import { PersonalGoals } from '@/components/dashboard/PersonalGoals'
 import { QuickActions } from '@/components/dashboard/QuickActions'
 import { PersonalInsights } from '@/components/dashboard/PersonalInsights'
+import { BurnoutAlert } from '@/components/dashboard/BurnoutAlert'
+import { InsightsPanel } from '@/components/dashboard/InsightsPanel'
 
 export default function DashboardPage() {
     const { data: session } = useSession()
@@ -31,6 +33,8 @@ export default function DashboardPage() {
     const [showOnboarding, setShowOnboarding] = useState(false)
     const [todayCommits, setTodayCommits] = useState(0)
     const [weekCommits, setWeekCommits] = useState(0)
+    const [achievementStats, setAchievementStats] = useState({ unlocked: 0, pending: 0, total: 0 })
+    const [weekTrend, setWeekTrend] = useState(0)
 
     // Function to sync GitHub data
     const syncGitHubData = async () => {
@@ -103,6 +107,17 @@ export default function DashboardPage() {
                             .filter((d: any) => d.date >= weekAgo)
                             .reduce((sum: number, d: any) => sum + d.total_commits, 0)
                         setWeekCommits(weekTotal)
+
+                        // Calculate week-over-week trend
+                        const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                        const lastWeekTotal = dailyStats
+                            .filter((d: any) => d.date >= twoWeeksAgo && d.date < weekAgo)
+                            .reduce((sum: number, d: any) => sum + d.total_commits, 0)
+
+                        if (lastWeekTotal > 0) {
+                            const trend = ((weekTotal - lastWeekTotal) / lastWeekTotal) * 100
+                            setWeekTrend(Math.round(trend))
+                        }
                     } else {
                         setActivityData([
                             { name: 'Mon', commits: 0 },
@@ -123,6 +138,15 @@ export default function DashboardPage() {
                 const activityJson = await activityRes.json()
                 if (activityJson.events) {
                     setRecentCommits(activityJson.events)
+                }
+            }
+
+            // Fetch Achievement Stats
+            const achievementRes = await fetch('/api/achievements')
+            if (achievementRes.ok) {
+                const achievementData = await achievementRes.json()
+                if (achievementData.stats) {
+                    setAchievementStats(achievementData.stats)
                 }
             }
 
@@ -241,9 +265,15 @@ export default function DashboardPage() {
                         <div className="p-3 rounded-xl bg-cyan-primary/10 text-cyan-primary border border-cyan-primary/20">
                             <GitCommit size={20} />
                         </div>
-                        <span className="text-xs font-medium text-cyan-400 flex items-center gap-1 bg-cyan-500/10 px-2 py-1 rounded-lg border border-cyan-500/20">
-                            <ArrowUpRight size={12} /> +12%
-                        </span>
+                        {weekTrend !== 0 && (
+                            <span className={`text-xs font-medium flex items-center gap-1 px-2 py-1 rounded-lg border ${weekTrend > 0
+                                    ? 'text-green-400 bg-green-500/10 border-green-500/20'
+                                    : 'text-red-400 bg-red-500/10 border-red-500/20'
+                                }`}>
+                                {weekTrend > 0 ? <ArrowUpRight size={12} /> : '↓'}
+                                {weekTrend > 0 ? '+' : ''}{weekTrend}%
+                            </span>
+                        )}
                     </div>
                     <div className="text-4xl font-bold font-display mb-1 text-white tracking-tight">
                         <AnimatedCounter value={stats?.total_commits || 0} />
@@ -296,11 +326,11 @@ export default function DashboardPage() {
                             <Trophy size={20} />
                         </div>
                         <span className="text-xs font-medium text-text-tertiary">
-                            3 Pending
+                            {achievementStats.pending} Pending
                         </span>
                     </div>
                     <div className="text-4xl font-bold font-display mb-1 text-white tracking-tight">
-                        <AnimatedCounter value={12} />
+                        <AnimatedCounter value={achievementStats.unlocked} />
                     </div>
                     <div className="text-sm text-text-tertiary font-mono">ACHIEVEMENTS</div>
                 </GlassCard>
@@ -376,6 +406,9 @@ export default function DashboardPage() {
                         currentStreak={stats?.current_streak || 0}
                     />
 
+                    {/* Burnout Alert */}
+                    <BurnoutAlert />
+
                     {/* Personal Insights */}
                     <GlassCard className="p-6">
                         <PersonalInsights
@@ -384,6 +417,11 @@ export default function DashboardPage() {
                             currentStreak={stats?.current_streak || 0}
                             totalCommits={stats?.total_commits || 0}
                         />
+                    </GlassCard>
+
+                    {/* AI Insights Panel */}
+                    <GlassCard>
+                        <InsightsPanel />
                     </GlassCard>
 
                     {/* Profile Card */}

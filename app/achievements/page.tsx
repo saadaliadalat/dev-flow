@@ -16,46 +16,54 @@ export default function AchievementsPage() {
 
     useEffect(() => {
         async function fetchAchievements() {
-            if (!session?.user?.id) return
+            if (!session?.user) return
 
-            // 1. Get all standardized achievements
-            // Note: In a real DB we'd have an 'achievements_def' table. 
-            // For now, I'll hardcode the definitions and check which ones the user has unlocked in 'user_achievements'
+            try {
+                // Fetch achievements from API (fixes RLS issue)
+                const res = await fetch('/api/achievements')
+                const data = await res.json()
 
-            // Mock definitions for the UI
-            const definitions = [
-                { id: 'first_commit', title: 'Hello World', description: 'Make your first commit', icon: GitCommit, tier: 'bronze' },
-                { id: 'streak_7', title: 'Week Warrior', description: 'Maintain a 7-day streak', icon: Flame, tier: 'silver' },
-                { id: 'streak_30', title: 'Unstoppable', description: 'Maintain a 30-day streak', icon: Zap, tier: 'gold' },
-                { id: 'commits_100', title: 'Centurion', description: 'Reach 100 total commits', icon: Trophy, tier: 'silver' },
-                { id: 'commits_1000', title: 'Kilo-committer', description: 'Reach 1,000 total commits', icon: Trophy, tier: 'platinum' },
-                { id: 'night_owl', title: 'Night Owl', description: 'Commit between 12 AM and 4 AM', icon: Moon, tier: 'bronze' },
-                { id: 'early_bird', title: 'Early Bird', description: 'Commit between 5 AM and 8 AM', icon: Sun, tier: 'bronze' },
-                { id: 'weekend_warrior', title: 'Weekend Warrior', description: 'Code on 4 consecutive weekends', icon: Calendar, tier: 'silver' },
-            ]
+                if (res.ok && data.achievements) {
+                    // Map achievements with icon components
+                    const iconMap: Record<string, any> = {
+                        '🔥': Flame,
+                        '⚡': Zap,
+                        '💯': Trophy,
+                        '📝': GitCommit,
+                        '🚀': GitCommit,
+                        '🏆': Trophy,
+                        '🦉': Moon,
+                        '🌅': Sun,
+                        '🌍': Code,
+                        '🎮': Calendar,
+                        '🔀': GitCommit,
+                        '🎯': Star,
+                        '👑': Trophy,
+                        '🎉': Zap,
+                        '📅': Calendar,
+                    }
 
-            // 2. Get user's unlocked achievements
-            // NOTE: We need to resolve the user's DB ID first if session.user.id is GitHub ID.
-            // Simplified for now:
-            const { data: user } = await supabase.from('users').select('id').eq('email', session.user.email).single()
+                    const formatted = data.achievements.map((ach: any) => ({
+                        id: ach.achievement_key,
+                        title: ach.title,
+                        description: ach.description,
+                        icon: iconMap[ach.icon] || Trophy,
+                        tier: ach.tier,
+                        unlocked: ach.is_unlocked,
+                        unlockedAt: ach.unlocked_at,
+                        progress: ach.current_progress,
+                        target: ach.target_progress
+                    }))
 
-            if (user) {
-                const { data: unlocked } = await supabase
-                    .from('achievements') // Assuming this table links users to achievements
-                    .select('achievement_type, unlocked_at')
-                    .eq('user_id', user.id)
-
-                const unlockedSet = new Set(unlocked?.map(u => u.achievement_type))
-
-                const merged = definitions.map(def => ({
-                    ...def,
-                    unlocked: unlockedSet.has(def.id),
-                    unlockedAt: unlocked?.find(u => u.achievement_type === def.id)?.unlocked_at
-                }))
-
-                setAchievements(merged)
+                    setAchievements(formatted)
+                } else {
+                    console.error('Failed to fetch achievements:', data.error)
+                }
+            } catch (error) {
+                console.error('Error fetching achievements:', error)
+            } finally {
+                setIsLoading(false)
             }
-            setIsLoading(false)
         }
 
         if (session) fetchAchievements()
@@ -92,8 +100,8 @@ export default function AchievementsPage() {
                                 key={achievement.id}
                                 variants={itemVariants}
                                 className={`relative group p-6 rounded-2xl border transition-all duration-300 ${achievement.unlocked
-                                        ? 'bg-gradient-to-br from-white/5 to-white/0 border-white/10 hover:border-purple-primary/50'
-                                        : 'bg-black/40 border-white/5 opacity-60 grayscale'
+                                    ? 'bg-gradient-to-br from-white/5 to-white/0 border-white/10 hover:border-purple-primary/50'
+                                    : 'bg-black/40 border-white/5 opacity-60 grayscale'
                                     }`}
                             >
                                 <div className="absolute top-4 right-4">
@@ -120,6 +128,21 @@ export default function AchievementsPage() {
                                     <p className="mt-4 text-[10px] font-mono text-purple-400/80 uppercase tracking-widest">
                                         Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}
                                     </p>
+                                )}
+
+                                {!achievement.unlocked && achievement.progress > 0 && achievement.target && (
+                                    <div className="mt-4">
+                                        <div className="flex justify-between text-[10px] font-mono text-zinc-600 mb-1">
+                                            <span>Progress</span>
+                                            <span>{achievement.progress}/{achievement.target}</span>
+                                        </div>
+                                        <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-purple-primary to-cyan-primary transition-all duration-500"
+                                                style={{ width: `${Math.min((achievement.progress / achievement.target) * 100, 100)}%` }}
+                                            />
+                                        </div>
+                                    </div>
                                 )}
                             </motion.div>
                         ))}

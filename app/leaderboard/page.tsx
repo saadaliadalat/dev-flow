@@ -14,15 +14,21 @@ export default function LeaderboardPage() {
 
     useEffect(() => {
         async function fetchLeaderboard() {
-            // Fetch users ordered by productivity_score descending
-            const { data } = await supabase
-                .from('users')
-                .select('id, name, username, avatar_url, productivity_score, total_commits, current_streak')
-                .order('productivity_score', { ascending: false })
-                .limit(50)
+            try {
+                // Fetch leaderboard from API (fixes RLS issue)
+                const res = await fetch('/api/social/leaderboard')
+                const data = await res.json()
 
-            if (data) setUsers(data)
-            setIsLoading(false)
+                if (res.ok && data.users) {
+                    setUsers(data.users)
+                } else {
+                    console.error('Failed to fetch leaderboard:', data.error)
+                }
+            } catch (error) {
+                console.error('Error fetching leaderboard:', error)
+            } finally {
+                setIsLoading(false)
+            }
         }
         fetchLeaderboard()
     }, [])
