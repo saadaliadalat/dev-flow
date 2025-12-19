@@ -27,13 +27,25 @@ module.exports = {
                     stroke: 'var(--glass-hover-border)',
                 },
 
-                // Quantum Brand Colors
+                // Quantum Brand Colors - Remapped to Obsidian/Zinc System
                 purple: {
+                    ...require('tailwindcss/colors').zinc,
                     DEFAULT: 'var(--purple-primary)',
                     light: 'var(--purple-light)',
                     dark: 'var(--purple-dark)',
                     glow: 'var(--purple-glow)',
                 },
+                // Force other cosmic colors to Monochrome/Zinc
+                fuchsia: require('tailwindcss/colors').zinc,
+                pink: require('tailwindcss/colors').zinc,
+                violet: require('tailwindcss/colors').zinc,
+                indigo: require('tailwindcss/colors').zinc,
+                blue: require('tailwindcss/colors').zinc,
+                cyan: require('tailwindcss/colors').zinc,
+                sky: require('tailwindcss/colors').zinc,
+                teal: require('tailwindcss/colors').zinc,
+                emerald: require('tailwindcss/colors').emerald, // Keep emerald for success
+
                 silver: {
                     DEFAULT: 'var(--silver-primary)',
                     light: 'var(--silver-light)',
@@ -41,6 +53,7 @@ module.exports = {
                 },
                 zinc: {
                     DEFAULT: 'var(--zinc)',
+                    ...require('tailwindcss/colors').zinc,
                 },
                 cosmic: {
                     pink: 'var(--cosmic-pink)',
@@ -90,8 +103,8 @@ module.exports = {
                     '100%': { opacity: '1', transform: 'scale(1)' },
                 },
                 pulseGlow: {
-                    '0%, 100%': { opacity: '1', boxShadow: '0 0 20px var(--cyan-glow)' },
-                    '50%': { opacity: '0.8', boxShadow: '0 0 30px var(--cyan-glow)' },
+                    '0%, 100%': { opacity: '1', boxShadow: '0 0 20px var(--purple-glow)' },
+                    '50%': { opacity: '0.8', boxShadow: '0 0 30px var(--purple-glow)' },
                 },
                 float: {
                     '0%, 100%': { transform: 'translateY(0)' },

@@ -14,7 +14,7 @@ export function DashboardPreview() {
                 whileInView={{ rotateX: 20, rotateY: 0, opacity: 1, y: 0 }}
                 transition={{ duration: 1, ease: "easeOut" }}
                 style={{ transformStyle: 'preserve-3d' }}
-                className="w-full aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-[#0a0612] to-[#1a0f2e] border border-purple-500/20 shadow-2xl relative"
+                className="w-full aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-[#09090b] to-[#18181b] border border-zinc-500/20 shadow-2xl relative"
             >
                 {/* Top Bar */}
                 <div className="h-12 border-b border-purple-500/10 bg-purple-500/5 backdrop-blur-xl flex items-center justify-between px-6">

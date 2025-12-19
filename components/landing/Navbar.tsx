@@ -14,14 +14,14 @@ const DevFlowLogo = ({ className = '' }: { className?: string }) => (
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={className}
-        whileHover={{ scale: 1.1, rotate: 5 }}
-        transition={{ type: "spring", stiffness: 300 }}
+        whileHover={{ scale: 1.05 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
         <defs>
             <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#a855f7" />
-                <stop offset="50%" stopColor="#ec4899" />
-                <stop offset="100%" stopColor="#06b6d4" />
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="50%" stopColor="#e4e4e7" />
+                <stop offset="100%" stopColor="#71717a" />
             </linearGradient>
             <filter id="logoGlow" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur stdDeviation="2" result="blur" />
@@ -32,34 +32,35 @@ const DevFlowLogo = ({ className = '' }: { className?: string }) => (
             </filter>
         </defs>
 
-        {/* Outer Ring */}
+        {/* Outer Ring - Dashed */}
         <motion.circle
             cx="20" cy="20" r="18"
             stroke="url(#logoGradient)"
-            strokeWidth="1.5"
+            strokeWidth="1"
             fill="none"
             strokeDasharray="4 4"
             animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
             style={{ transformOrigin: "center" }}
-            opacity="0.6"
+            opacity="0.3"
         />
 
         {/* Solid Background */}
-        <circle cx="20" cy="20" r="14" fill="#0a0612" />
+        <circle cx="20" cy="20" r="14" fill="#000000" stroke="#27272a" strokeWidth="1" />
 
         {/* The "D" Shape */}
         <path
             d="M14 12 L14 28 L20 28 C25 28 28 24 28 20 C28 16 25 12 20 12 L14 12 Z"
             fill="url(#logoGradient)"
+            opacity="0.9"
         />
 
         {/* Pulse Dot */}
         <motion.circle
             cx="28" cy="12" r="2"
-            fill="#06b6d4"
-            animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0.3, 0.8] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            fill="#ffffff"
+            animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0.2, 0.8] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         />
     </motion.svg>
 )
@@ -131,7 +132,7 @@ export function Navbar() {
                 >
                     <div className={cn(
                         "relative flex items-center gap-2 p-2 rounded-full transition-all duration-500",
-                        "bg-[#0a0612]/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-purple-500/10"
+                        "bg-[#09090b]/90 backdrop-blur-2xl border border-white/[0.08] shadow-2xl shadow-black/50"
                     )}>
 
                         {/* Logo Area - Icon Only */}
@@ -173,7 +174,7 @@ export function Navbar() {
                                     <button onClick={() => signOut()} className="p-2 rounded-full hover:bg-white/10 transition-colors text-white/70 hover:text-white" title="Sign Out">
                                         <LogOut size={18} />
                                     </button>
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 p-[1px] mx-1">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white/20 to-white/5 p-[1px] mx-1">
                                         <img
                                             src={session.user?.image || ''}
                                             alt="User"
@@ -192,7 +193,7 @@ export function Navbar() {
                                             whileTap={{ scale: 0.95 }}
                                             className="px-4 py-2 rounded-full bg-white text-black text-xs font-bold flex items-center gap-1.5 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-shadow"
                                         >
-                                            <Zap className="w-3 h-3 text-purple-600 fill-purple-600" />
+                                            <Zap className="w-3 h-3 text-black fill-black" />
                                             <span>Start</span>
                                         </motion.button>
                                     </Link>
@@ -266,7 +267,7 @@ export function Navbar() {
                                 </>
                             ) : (
                                 <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                                    <button className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold">
+                                    <button className="w-full py-4 rounded-xl bg-white text-black font-bold">
                                         Go to Dashboard
                                     </button>
                                 </Link>

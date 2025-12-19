@@ -4,28 +4,31 @@
 
 @layer base {
   :root {
-    /* Quantum Cosmic Theme */
+    /* Obsidian & Chrome Theme (Monochrome) */
     /* Background Layers - Deep Space */
-    --bg-deepest: #0a0612;
-    /* Deep purple-black */
-    --bg-deep: #120820;
-    /* Dark purple */
-    --bg-mid: #1a0f2e;
-    /* Medium purple-black */
-    --bg-elevated: #2d1b4e;
-    /* Elevated purple */
+    --bg-deepest: #000000;
+    /* Pure Black */
+    --bg-deep: #09090b;
+    /* Zinc 950 */
+    --bg-mid: #18181b;
+    /* Zinc 900 */
+    --bg-elevated: #27272a;
+    /* Zinc 800 */
 
-    /* Purple Gradients - Primary Brand */
-    --purple-primary: #a855f7;
-    /* Vibrant purple */
-    --purple-light: #c084fc;
-    /* Light purple */
-    --purple-dark: #7e22ce;
-    /* Dark purple */
-    --purple-glow: rgba(168, 85, 247, 0.5);
+    /* Primary Brand - Silver & White (formerly Purple) */
+    --purple-primary: #e4e4e7;
+    /* Silver (Zinc 200) */
+    --purple-light: #ffffff;
+    /* Pure White */
+    --purple-dark: #a1a1aa;
+    /* Zinc 400 */
+    --purple-glow: rgba(255, 255, 255, 0.25);
+    /* White glow */
 
-    --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%);
-    --gradient-purple-deep: linear-gradient(135deg, #6b21a8 0%, #a855f7 100%);
+    /* Gradients - Metallic */
+    --gradient-primary: linear-gradient(135deg, #ffffff 0%, #e4e4e7 50%, #a1a1aa 100%);
+    --gradient-purple-deep: linear-gradient(135deg, #18181b 0%, #52525b 100%);
+    /* Dark Metal */
 
     /* Silver/Zinc - Secondary Accents */
     --silver-primary: #e4e4e7;
@@ -37,46 +40,52 @@
     --zinc: #71717a;
     /* Zinc gray */
 
-    /* Glass Effects */
-    --glass-bg: rgba(168, 85, 247, 0.05);
-    /* Purple tint glass */
-    --glass-border: rgba(168, 85, 247, 0.15);
-    --glass-hover-bg: rgba(168, 85, 247, 0.1);
-    --glass-hover-border: rgba(168, 85, 247, 0.3);
+    /* Glass Effects - Smoked */
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    /* Subtle white tint */
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-hover-bg: rgba(255, 255, 255, 0.05);
+    --glass-hover-border: rgba(255, 255, 255, 0.15);
 
-    /* Cosmic Accents */
-    --cosmic-pink: #ec4899;
-    --cosmic-blue: #8b5cf6;
-    --cosmic-cyan: #06b6d4;
+    /* Cosmic Accents - Remapped to Monochrome variants */
+    --cosmic-pink: #d4d4d8;
+    /* Zinc 300 */
+    --cosmic-blue: #a1a1aa;
+    /* Zinc 400 */
+    --cosmic-cyan: #ffffff;
+    /* White */
 
     /* Text Hierarchy */
-    --text-primary: #fafafa;
-    /* Almost white */
-    --text-secondary: #e4e4e7;
-    /* Silver */
+    --text-primary: #ffffff;
+    /* White */
+    --text-secondary: #d4d4d8;
+    /* Zinc 300 */
     --text-tertiary: #a1a1aa;
-    /* Zinc */
+    /* Zinc 400 */
     --text-muted: #71717a;
-    /* Dark zinc */
+    /* Zinc 500 */
 
     /* Functional Colors */
     --success: #10b981;
+    /* Emerald */
     --warning: #f59e0b;
+    /* Amber */
     --error: #ef4444;
+    /* Red */
 
     /* Special Effects */
-    --box-shadow-glow: 0 0 30px rgba(168, 85, 247, 0.6), 0 0 60px rgba(168, 85, 247, 0.3);
+    --box-shadow-glow: 0 0 30px rgba(255, 255, 255, 0.1), 0 0 60px rgba(255, 255, 255, 0.05);
 
-    /* Cosmic Background Gradients */
-    --bg-cosmic: radial-gradient(ellipse at top, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at bottom right, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
-      radial-gradient(ellipse at bottom left, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+    /* Background Gradients - Fog & Shadow */
+    --bg-cosmic: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom left, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
 
     --planet-gradient: radial-gradient(circle at 30% 30%,
-        rgba(168, 85, 247, 0.8) 0%,
-        rgba(124, 58, 237, 0.6) 30%,
-        rgba(107, 33, 168, 0.4) 60%,
-        rgba(88, 28, 135, 0.2) 100%);
+        rgba(255, 255, 255, 0.15) 0%,
+        rgba(228, 228, 231, 0.1) 30%,
+        rgba(161, 161, 170, 0.05) 60%,
+        rgba(24, 24, 27, 0.0) 100%);
   }
 
   body {

@@ -210,7 +210,7 @@ const AIStory = () => (
             ))}
 
             <motion.div
-                className="relative w-16 h-16 bg-[#120820] border-2 border-purple-500/60 rounded-2xl flex items-center justify-center z-10 shadow-[0_0_50px_rgba(168,85,247,0.3)]"
+                className="relative w-16 h-16 bg-[#09090b] border-2 border-zinc-500/60 rounded-2xl flex items-center justify-center z-10 shadow-[0_0_50px_rgba(255,255,255,0.2)]"
                 animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.06, 1] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             >
