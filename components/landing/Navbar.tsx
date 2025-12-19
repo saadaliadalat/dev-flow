@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
-import { Github, Menu, X, LogOut, LayoutDashboard, Sparkles, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, LogOut, Zap, Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useSession, signOut } from 'next-auth/react'
@@ -23,10 +23,6 @@ const DevFlowLogo = ({ className = '' }: { className?: string }) => (
                 <stop offset="50%" stopColor="#ec4899" />
                 <stop offset="100%" stopColor="#06b6d4" />
             </linearGradient>
-            <linearGradient id="logoInner" x1="0%" y1="100%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#7c3aed" />
-                <stop offset="100%" stopColor="#c084fc" />
-            </linearGradient>
             <filter id="logoGlow" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur stdDeviation="2" result="blur" />
                 <feMerge>
@@ -36,56 +32,31 @@ const DevFlowLogo = ({ className = '' }: { className?: string }) => (
             </filter>
         </defs>
 
-        {/* Outer Ring - Orbiting effect */}
+        {/* Outer Ring */}
         <motion.circle
             cx="20" cy="20" r="18"
             stroke="url(#logoGradient)"
             strokeWidth="1.5"
             fill="none"
-            strokeDasharray="8 4"
+            strokeDasharray="4 4"
             animate={{ rotate: 360 }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
             style={{ transformOrigin: "center" }}
+            opacity="0.6"
         />
 
-        {/* Background Circle */}
+        {/* Solid Background */}
         <circle cx="20" cy="20" r="14" fill="#0a0612" />
 
-        {/* Inner Gradient Circle */}
-        <circle cx="20" cy="20" r="12" fill="url(#logoInner)" opacity="0.2" />
-
-        {/* The "D" Letter - Stylized */}
-        <motion.path
-            d="M13 12 L13 28 L20 28 C25 28 28 24 28 20 C28 16 25 12 20 12 L13 12 Z M16 15 L19 15 C23 15 25 17 25 20 C25 23 23 25 19 25 L16 25 L16 15 Z"
-            fill="white"
-            filter="url(#logoGlow)"
-        />
-
-        {/* Flow Lines - Animated */}
-        <motion.path
-            d="M30 14 Q34 20 30 26"
-            stroke="url(#logoGradient)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            fill="none"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-        />
-        <motion.path
-            d="M33 16 Q36 20 33 24"
-            stroke="url(#logoGradient)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            fill="none"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 2, delay: 0.3, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+        {/* The "D" Shape */}
+        <path
+            d="M14 12 L14 28 L20 28 C25 28 28 24 28 20 C28 16 25 12 20 12 L14 12 Z"
+            fill="url(#logoGradient)"
         />
 
         {/* Pulse Dot */}
         <motion.circle
-            cx="28" cy="20" r="2"
+            cx="28" cy="12" r="2"
             fill="#06b6d4"
             animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0.3, 0.8] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -93,218 +64,214 @@ const DevFlowLogo = ({ className = '' }: { className?: string }) => (
     </motion.svg>
 )
 
-// --- Magnetic Nav Link ---
-const MagneticLink = ({ href, children, onMouseEnter, onMouseLeave, isActive }: any) => {
-    return (
-        <Link
-            href={href}
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-            className="relative px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors duration-200 z-10"
-        >
-            {children}
-            {isActive && (
-                <motion.div
-                    layoutId="activeNavBackground"
-                    className="absolute inset-0 bg-white/10 rounded-full -z-10"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                />
-            )}
-        </Link>
-    )
-}
+const NavLink = ({ href, children, isActive, onClick }: any) => (
+    <Link
+        href={href}
+        onClick={onClick}
+        className={cn(
+            "relative px-4 py-1.5 text-sm font-medium transition-colors rounded-full z-10",
+            isActive ? "text-white" : "text-white/60 hover:text-white"
+        )}
+    >
+        {children}
+        {isActive && (
+            <motion.div
+                layoutId="activeTab"
+                className="absolute inset-0 bg-white/10 rounded-full -z-10 backdrop-blur-sm border border-white/5"
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+            />
+        )}
+    </Link>
+)
+
+const MobileNavLink = ({ href, children, onClick }: any) => (
+    <Link
+        href={href}
+        onClick={onClick}
+        className="text-2xl font-medium text-white/70 hover:text-white transition-colors"
+    >
+        {children}
+    </Link>
+)
 
 export function Navbar() {
     const { data: session, status } = useSession()
     const [isScrolled, setIsScrolled] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-    const [hoveredNav, setHoveredNav] = useState<string | null>(null)
+    const [activeTab, setActiveTab] = useState<string>('')
     const { scrollY } = useScroll()
 
-    const navWidth = useTransform(scrollY, [0, 100], ['100%', '80%'])
-    const navTop = useTransform(scrollY, [0, 100], ['24px', '16px'])
-    const navBorderRadius = useTransform(scrollY, [0, 100], ['16px', '50px'])
+    const navY = useTransform(scrollY, [0, 100], [24, 16])
 
     useEffect(() => {
-        const handleScroll = () => setIsScrolled(window.scrollY > 20)
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 20)
+            const sections = ['features', 'how-it-works', 'pricing']
+            const current = sections.find(section => {
+                const el = document.getElementById(section)
+                if (el) {
+                    const rect = el.getBoundingClientRect()
+                    return rect.top >= 0 && rect.top <= 400
+                }
+                return false
+            })
+            if (current) setActiveTab(current)
+        }
         window.addEventListener('scroll', handleScroll)
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 
     return (
         <>
-            <motion.div
-                className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
-                style={{ top: navTop }}
-            >
+            {/* --- DESKTOP FLOATING DOCK --- */}
+            <div className="hidden md:flex fixed top-0 left-0 right-0 z-50 justify-center pointer-events-none">
                 <motion.nav
-                    style={{
-                        width: isScrolled ? 'auto' : '100%',
-                        maxWidth: isScrolled ? 'fit-content' : '1280px',
-                        borderRadius: navBorderRadius
-                    }}
-                    className={cn(
-                        "pointer-events-auto transition-all duration-500 border backdrop-blur-xl mx-4",
-                        isScrolled
-                            ? "border-white/10 bg-[#0a0612]/70 shadow-[0_8px_32px_rgb(0,0,0,0.4)] px-6 py-2" // Compact Island
-                            : "border-transparent bg-transparent px-6 py-4" // Full Width
-                    )}
+                    style={{ y: navY }}
+                    className="pointer-events-auto"
                 >
-                    <div className="flex items-center justify-between gap-8">
+                    <div className={cn(
+                        "relative flex items-center gap-2 p-2 rounded-full transition-all duration-500",
+                        "bg-[#0a0612]/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-purple-500/10"
+                    )}>
 
-                        {/* Logo Area */}
-                        <Link href="/" className="flex items-center gap-3 group shrink-0">
+                        {/* Logo Area - Icon Only */}
+                        <Link href="/" className="pl-2 pr-2 flex items-center justify-center">
                             <DevFlowLogo className="w-9 h-9" />
-                            <AnimatePresence>
-                                {!isScrolled && (
-                                    <motion.div
-                                        initial={{ opacity: 0, width: 0 }}
-                                        animate={{ opacity: 1, width: 'auto' }}
-                                        exit={{ opacity: 0, width: 0 }}
-                                        className="flex flex-col overflow-hidden whitespace-nowrap"
-                                    >
-                                        <span className="font-display font-bold text-lg text-white tracking-tight leading-none">
-                                            DevFlow
-                                        </span>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
                         </Link>
 
-                        {/* Center Island Navigation */}
-                        <div className="hidden md:flex items-center gap-1">
+                        {/* Navigation Links */}
+                        <div className="flex items-center">
                             {['Features', 'How it Works', 'Pricing', 'Blog'].map((item) => {
                                 const slug = item.toLowerCase().replace(/\s+/g, '-')
-                                const href = slug === 'blog' ? '/blog' : `/#${slug}`
                                 return (
-                                    <MagneticLink
+                                    <NavLink
                                         key={item}
-                                        href={href}
-                                        onMouseEnter={() => setHoveredNav(item)}
-                                        onMouseLeave={() => setHoveredNav(null)}
-                                        isActive={hoveredNav === item}
+                                        href={slug === 'blog' ? '/blog' : `/#${slug}`}
+                                        isActive={activeTab === slug}
+                                        onClick={() => setActiveTab(slug)}
                                     >
                                         {item}
-                                    </MagneticLink>
+                                    </NavLink>
                                 )
                             })}
                         </div>
 
-                        {/* Right Actions */}
-                        <div className="flex items-center gap-3 shrink-0">
+                        {/* Divider */}
+                        <div className="w-[1px] h-6 bg-white/10 mx-2" />
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 pr-1">
                             {status === 'loading' ? (
-                                <div className="w-24 h-9 bg-white/5 animate-pulse rounded-full" />
+                                <div className="w-20 h-8 bg-white/5 animate-pulse rounded-full" />
                             ) : session ? (
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
                                     <Link href="/dashboard">
-                                        <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-white text-sm font-medium border border-white/5 transition-all"
-                                        >
-                                            <LayoutDashboard className="w-3.5 h-3.5" />
-                                            Dashboard
-                                        </motion.button>
-                                    </Link>
-                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 p-[1px] cursor-pointer" onClick={() => signOut()}>
-                                        <div className="w-full h-full rounded-full overflow-hidden bg-[#0a0612]">
-                                            {session.user?.image ? (
-                                                <img src={session.user.image} alt={session.user.name || 'User'} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center bg-white/10 text-xs font-bold text-white">
-                                                    {session.user?.name?.charAt(0) || 'U'}
-                                                </div>
-                                            )}
+                                        <div className="p-2 rounded-full hover:bg-white/10 transition-colors text-white/70 hover:text-white" title="Dashboard">
+                                            <LayoutDashboard size={18} />
                                         </div>
+                                    </Link>
+                                    <button onClick={() => signOut()} className="p-2 rounded-full hover:bg-white/10 transition-colors text-white/70 hover:text-white" title="Sign Out">
+                                        <LogOut size={18} />
+                                    </button>
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 p-[1px] mx-1">
+                                        <img
+                                            src={session.user?.image || ''}
+                                            alt="User"
+                                            className="w-full h-full rounded-full bg-black object-cover"
+                                        />
                                     </div>
                                 </div>
                             ) : (
                                 <>
-                                    <Link href="/login" className="text-sm font-medium text-white/70 hover:text-white transition-colors hidden sm:block">
+                                    <Link href="/login" className="px-3 text-sm font-medium text-white/70 hover:text-white transition-colors">
                                         Sign In
                                     </Link>
                                     <Link href="/login">
                                         <motion.button
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
-                                            className="group relative flex items-center gap-2 px-5 py-2 rounded-full bg-white text-black text-sm font-bold shadow-lg shadow-white/20 hover:shadow-white/40 transition-shadow overflow-hidden"
+                                            className="px-4 py-2 rounded-full bg-white text-black text-xs font-bold flex items-center gap-1.5 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-shadow"
                                         >
-                                            <span className="relative z-10 flex items-center gap-2">
-                                                Get Started <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                                            </span>
-                                            <div className="absolute inset-0 bg-gradient-to-r from-purple-200 via-cyan-200 to-purple-200 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <Zap className="w-3 h-3 text-purple-600 fill-purple-600" />
+                                            <span>Start</span>
                                         </motion.button>
                                     </Link>
                                 </>
                             )}
-
-                            {/* Mobile Toggle */}
-                            <motion.button
-                                whileTap={{ scale: 0.9 }}
-                                className="md:hidden w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-white/80"
-                                onClick={() => setMobileMenuOpen(true)}
-                            >
-                                <Menu size={18} />
-                            </motion.button>
                         </div>
+
                     </div>
                 </motion.nav>
-            </motion.div>
+            </div>
 
-            {/* Mobile Menu Overlay */}
+            {/* --- MOBILE NAVBAR --- */}
+            <div className="md:hidden fixed top-0 left-0 right-0 z-50 p-4 pointer-events-none">
+                <div className="pointer-events-auto flex items-center justify-between p-4 rounded-2xl bg-[#0a0612]/80 backdrop-blur-xl border border-white/10 shadow-2xl">
+                    <Link href="/" className="flex items-center gap-2">
+                        <DevFlowLogo className="w-8 h-8" />
+                    </Link>
+                    <button
+                        onClick={() => setMobileMenuOpen(true)}
+                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/5 text-white"
+                    >
+                        <Menu size={20} />
+                    </button>
+                </div>
+            </div>
+
+            {/* --- MOBILE MENU OVERLAY --- */}
             <AnimatePresence>
                 {mobileMenuOpen && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-md md:hidden"
-                        onClick={() => setMobileMenuOpen(false)}
+                        className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-2xl md:hidden flex flex-col p-6"
                     >
-                        <motion.div
-                            initial={{ x: '100%' }}
-                            animate={{ x: 0 }}
-                            exit={{ x: '100%' }}
-                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                            className="absolute top-0 right-0 bottom-0 w-[300px] bg-[#0a0612] border-l border-white/10 p-6 flex flex-col shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="flex items-center justify-between mb-8">
-                                <div className="flex items-center gap-2">
-                                    <DevFlowLogo className="w-8 h-8" />
-                                    <span className="font-display font-bold text-lg text-white">DevFlow</span>
-                                </div>
-                                <button onClick={() => setMobileMenuOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-white/60 hover:text-white">
-                                    <X size={18} />
-                                </button>
-                            </div>
+                        <div className="flex items-center justify-between mb-12">
+                            <span className="font-display font-bold text-2xl text-white">Menu</span>
+                            <button
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
 
-                            <div className="flex flex-col gap-2">
-                                {['Features', 'How it Works', 'Pricing', 'Blog'].map((item) => (
-                                    <Link
-                                        key={item}
-                                        href={item === 'Blog' ? '/blog' : `/#${item.toLowerCase().replace(/\s+/g, '-')}`}
-                                        className="py-3 px-4 rounded-xl text-white/70 hover:text-white hover:bg-white/5 transition-colors font-medium text-lg"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                    >
-                                        {item}
+                        <div className="flex flex-col gap-6 items-start">
+                            {['Features', 'How it Works', 'Pricing', 'Blog'].map((item) => (
+                                <MobileNavLink
+                                    key={item}
+                                    href={item === 'Blog' ? '/blog' : `/#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    {item}
+                                </MobileNavLink>
+                            ))}
+                        </div>
+
+                        <div className="mt-auto flex flex-col gap-4">
+                            {!session ? (
+                                <>
+                                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                                        <button className="w-full py-4 rounded-xl border border-white/10 text-white font-medium hover:bg-white/5">
+                                            Sign In
+                                        </button>
                                     </Link>
-                                ))}
-                            </div>
-
-                            <div className="mt-auto flex flex-col gap-3">
-                                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                    <button className="w-full py-3 rounded-xl bg-white text-black font-bold">
-                                        Sign In
+                                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                                        <button className="w-full py-4 rounded-xl bg-white text-black font-bold">
+                                            Get Started
+                                        </button>
+                                    </Link>
+                                </>
+                            ) : (
+                                <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                                    <button className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold">
+                                        Go to Dashboard
                                     </button>
                                 </Link>
-                                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                    <button className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold shadow-lg shadow-purple-500/20">
-                                        Get Started
-                                    </button>
-                                </Link>
-                            </div>
-                        </motion.div>
+                            )}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
