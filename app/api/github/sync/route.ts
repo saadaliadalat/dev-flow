@@ -31,10 +31,13 @@ export async function POST(req: Request) {
             auth: userData.github_access_token
         })
 
+        console.log('=== STARTING COMPREHENSIVE GITHUB SYNC ===')
+
         // STEP 1: Fetch user profile
         const { data: profile } = await octokit.users.getAuthenticated()
+        console.log(`Syncing for user: ${profile.login}`)
 
-        // STEP 2: Fetch all repositories
+        // STEP 2: Fetch ALL repositories (no limit)
         let allRepos: any[] = []
         let page = 1
         let hasMore = true
@@ -44,16 +47,18 @@ export async function POST(req: Request) {
                 sort: 'updated',
                 per_page: 100,
                 page,
-                affiliation: 'owner,collaborator'
+                affiliation: 'owner,collaborator,organization_member'
             })
 
             allRepos = [...allRepos, ...repos]
             hasMore = repos.length === 100
             page++
 
-            // Limit to prevent rate limiting
-            if (page > 5) break
+            // Remove limit - sync ALL repos
+            if (page > 10) break // Safety limit: 1000 repos max
         }
+
+        console.log(`Found ${allRepos.length} total repositories`)
 
         // STEP 3: Store repositories
         const repoInserts = allRepos.map(repo => ({
@@ -76,7 +81,6 @@ export async function POST(req: Request) {
             github_pushed_at: repo.pushed_at
         }))
 
-        // Upsert repositories
         const { error: repoError } = await supabase
             .from('repositories')
             .upsert(repoInserts, {
@@ -88,28 +92,56 @@ export async function POST(req: Request) {
             console.error('Repo upsert error:', repoError)
         }
 
-        // STEP 4: Fetch commits for each repo (last 90 days)
-        const ninetyDaysAgo = new Date()
-        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+        // STEP 4: Fetch ALL GitHub Events (includes commits, PRs, issues, etc.)
+        // This better matches GitHub's contribution graph
+        let allEvents: any[] = []
+        page = 1
+        hasMore = true
 
+        while (hasMore && page <= 10) {
+            try {
+                const { data: events } = await octokit.activity.listEventsForAuthenticatedUser({
+                    username: profile.login,
+                    per_page: 100,
+                    page
+                })
+
+                allEvents = [...allEvents, ...events]
+                hasMore = events.length === 100
+                page++
+            } catch (e) {
+                console.error('Events fetch error:', e)
+                break
+            }
+        }
+
+        console.log(`Found ${allEvents.length} GitHub events`)
+
+        // STEP 5: Fetch commits for EACH repo (year-to-date for accurate count)
+        const yearStart = new Date(new Date().getFullYear(), 0, 1) // Jan 1st of current year
         const commitsByDay = new Map<string, any>()
+        let totalCommitsThisYear = 0
 
-        // Process repos in batches to avoid rate limits - increased to 50 for better coverage
-        const reposToSync = allRepos.filter(r => !r.fork && !r.archived).slice(0, 50)
+        // Process ALL repos that aren't forks (to match GitHub's contribution count)
+        const reposToSync = allRepos.filter(r => !r.fork && !r.archived)
+        console.log(`Processing ${reposToSync.length} non-fork, non-archived repos...`)
 
         for (const repo of reposToSync) {
             try {
-                // Fetch commits from this repo
+                // Fetch commits authored by this user for this year
                 const { data: commits } = await octokit.repos.listCommits({
                     owner: repo.owner.login,
                     repo: repo.name,
-                    since: ninetyDaysAgo.toISOString(),
+                    author: profile.login, // Only this user's commits
+                    since: yearStart.toISOString(),
                     per_page: 100
                 })
 
                 if (!commits || commits.length === 0) continue
 
-                // Process each commit
+                totalCommitsThisYear += commits.length
+
+                // Process each commit for daily stats
                 for (const commit of commits) {
                     const commitDate = new Date(commit.commit.author!.date!)
                     const dateKey = commitDate.toISOString().split('T')[0]
@@ -136,10 +168,6 @@ export async function POST(req: Request) {
                     if (repo.language) {
                         dayData.languages[repo.language] = (dayData.languages[repo.language] || 0) + 1
                     }
-
-                    // Fetch commit details for lines changed
-                    // SKIP detailed stats for now to speed up sync and avoid rate limits
-                    // We can add this back as a background job later
                 }
 
                 // Update repo commit count
@@ -152,22 +180,35 @@ export async function POST(req: Request) {
                     .eq('github_repo_id', repo.id)
 
             } catch (error: any) {
-                // Handle empty repos (409 Conflict) or other repo-specific errors
-                if (error.status === 409) {
-                    // Repo is empty, just skip it
-                    continue
+                if (error.status === 409) continue // Empty repo
+                if (error.status === 403) {
+                    console.log('Rate limit approaching, pausing...')
+                    await new Promise(resolve => setTimeout(resolve, 1000))
                 }
-                console.error(`Error processing repo ${repo.name}:`, error)
                 continue
             }
         }
 
-        // STEP 5: Store daily stats
+        console.log(`Total commits this year: ${totalCommitsThisYear}`)
+
+        // STEP 6: Count other contributions from events (PRs, Issues, Reviews)
+        let totalPRs = 0
+        let totalIssues = 0
+        let totalReviews = 0
+
+        for (const event of allEvents) {
+            if (event.type === 'PullRequestEvent') totalPRs++
+            if (event.type === 'IssuesEvent') totalIssues++
+            if (event.type === 'PullRequestReviewEvent') totalReviews++
+        }
+
+        console.log(`PRs: ${totalPRs}, Issues: ${totalIssues}, Reviews: ${totalReviews}`)
+
+        // STEP 7: Store daily stats
         const dailyStatsInserts = Array.from(commitsByDay.values()).map(day => {
             const languages = Object.entries(day.languages).sort((a: any, b: any) => b[1] - a[1])
             const primaryLanguage = languages[0]?.[0] || null
 
-            // Calculate productivity score
             const productivityScore = calculateProductivityScore({
                 total_commits: day.total_commits,
                 lines_added: day.lines_added,
@@ -195,49 +236,48 @@ export async function POST(req: Request) {
             }
         })
 
-        const { error: statsError } = await supabase
-            .from('daily_stats')
-            .upsert(dailyStatsInserts, {
-                onConflict: 'user_id,date',
-                ignoreDuplicates: false
-            })
+        if (dailyStatsInserts.length > 0) {
+            const { error: statsError } = await supabase
+                .from('daily_stats')
+                .upsert(dailyStatsInserts, {
+                    onConflict: 'user_id,date',
+                    ignoreDuplicates: false
+                })
 
-        if (statsError) {
-            console.error('Stats upsert error:', statsError)
+            if (statsError) {
+                console.error('Stats upsert error:', statsError)
+            }
         }
 
-        // STEP 6: Update user's aggregate stats
-        const totalCommits = Array.from(commitsByDay.values())
-            .reduce((sum, day) => sum + day.total_commits, 0)
+        // STEP 8: Calculate streak
+        await calculateStreaks(userData.id)
 
-        console.log(`SYNC DEBUG: Found ${totalCommits} total commits across repos`)
+        // STEP 9: Calculate total contributions (commits + PRs + issues + reviews)
+        const totalContributions = totalCommitsThisYear + totalPRs + totalIssues + totalReviews
 
-        // The original `allRepos` was defined earlier. The instruction redefines it here to `reposToSync`.
-        // This is a significant change in logic, as `reposToSync` is a filtered subset of `allRepos`.
-        // Assuming the instruction intends this change.
-        const allReposForUserUpdate = reposToSync
-        console.log(`SYNC DEBUG: Updating user ${profile.login} with ${totalCommits} commits, ${allReposForUserUpdate.length} repos`)
-
-        // Calculate average productivity score from daily stats
+        // STEP 10: Calculate productivity score
         const avgProductivityScore = dailyStatsInserts.length > 0
             ? Math.round(dailyStatsInserts.reduce((sum, d) => sum + d.productivity_score, 0) / dailyStatsInserts.length)
             : calculateProductivityScore({
-                total_commits: totalCommits,
+                total_commits: totalCommitsThisYear,
                 lines_added: 0,
                 lines_deleted: 0,
                 unique_repos: reposToSync.length,
                 active_hours: 8
             })
 
-        console.log(`SYNC DEBUG: Calculated avg productivity score: ${avgProductivityScore}`)
-
+        // STEP 11: Update user record with ALL stats
         await supabase
             .from('users')
             .update({
                 last_synced: new Date().toISOString(),
-                total_commits: totalCommits,
+                total_commits: totalCommitsThisYear,
+                total_contributions: totalContributions,
+                total_prs: totalPRs,
+                total_issues: totalIssues,
+                total_reviews: totalReviews,
                 total_repos: allRepos.length,
-                public_repos: allReposForUserUpdate.filter(r => !r.private).length,
+                public_repos: allRepos.filter(r => !r.private).length,
                 followers: profile.followers,
                 following: profile.following,
                 name: profile.name,
@@ -247,47 +287,24 @@ export async function POST(req: Request) {
             })
             .eq('id', userData.id)
 
-        console.log('SYNC DEBUG: User stats updated in DB')
+        console.log(`=== SYNC COMPLETE: ${totalCommitsThisYear} commits, ${totalContributions} total contributions ===`)
 
-        // Insert Daily Stats (This block is new and seems to duplicate/replace the previous daily_stats upsert)
-        // Given the instruction's context, this appears to be the intended replacement for the previous daily_stats upsert.
-        const dailyStatsUpdates = Array.from(commitsByDay.values()).map(day => ({
-            user_id: userData.id,
-            date: day.date,
-            total_commits: day.total_commits,
-            lines_added: day.lines_added,
-            lines_deleted: day.lines_deleted,
-            files_changed: day.files_changed,
-            languages: day.languages,
-            commits_by_hour: day.commits_by_hour
-        }))
+        // STEP 12: Check achievements
+        checkAndUnlockAchievements(userData.id).catch(console.error)
 
-        if (dailyStatsUpdates.length > 0) {
-            const { error: dailyError } = await supabase
-                .from('daily_stats')
-                .upsert(dailyStatsUpdates, { onConflict: 'user_id, date' })
-
-            if (dailyError) console.error('SYNC DEBUG: Error updating daily stats:', dailyError)
-        }
-
-        // STEP 7: Calculate streaks
-        await calculateStreaks(userData.id)
-
-        // STEP 8: Check for new achievements (async, don't wait)
-        checkAndUnlockAchievements(userData.id).catch(err =>
-            console.error('Achievement check failed:', err)
-        )
-
-        // STEP 9: Generate AI insights (async, don't wait)
-        generateInsights(userData.id).catch(err =>
-            console.error('Insight generation failed:', err)
-        )
+        // STEP 13: Generate insights (if quota available)
+        generateInsights(userData.id).catch(console.error)
 
         return NextResponse.json({
             success: true,
             stats: {
-                total_commits: totalCommits,
-                repos_synced: reposToSync.length
+                total_commits: totalCommitsThisYear,
+                total_contributions: totalContributions,
+                total_prs: totalPRs,
+                total_issues: totalIssues,
+                repos_synced: reposToSync.length,
+                days_with_activity: commitsByDay.size,
+                productivity_score: avgProductivityScore
             }
         })
 
@@ -327,7 +344,6 @@ function calculateProductivityScore(data: {
 }
 
 // Helper: Calculate current and longest streak
-// Helper: Calculate current and longest streak
 async function calculateStreaks(userId: string) {
     const { data: stats } = await supabase
         .from('daily_stats')
@@ -337,64 +353,64 @@ async function calculateStreaks(userId: string) {
         .order('date', { ascending: false })
 
     if (!stats || stats.length === 0) {
-        // Reset streaks if no activity found
         await supabase.from('users').update({ current_streak: 0, longest_streak: 0 }).eq('id', userId)
         return
     }
 
+    // Get today and yesterday in local timezone
+    const today = new Date()
+    const todayStr = today.toISOString().split('T')[0]
+
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = yesterday.toISOString().split('T')[0]
+
+    // Sort dates from newest to oldest
+    const sortedDates = stats.map(s => s.date).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+
     let currentStreak = 0
     let longestStreak = 0
     let tempStreak = 0
-    let lastProcessedDate: string | null = null
+    let expectedDate = new Date(todayStr)
 
-    // Sort dates ascending for streak calculation (Oldest -> Newest)
-    const sortedStats = [...stats].reverse()
+    // Check if there's activity today or yesterday to start a streak
+    if (sortedDates[0] === todayStr || sortedDates[0] === yesterdayStr) {
+        // Start from the most recent activity date
+        expectedDate = new Date(sortedDates[0])
 
-    for (const stat of sortedStats) {
-        const currentDateStr = stat.date // YYYY-MM-DD
+        for (const dateStr of sortedDates) {
+            const date = new Date(dateStr)
+            const expectedStr = expectedDate.toISOString().split('T')[0]
 
-        if (!lastProcessedDate) {
-            tempStreak = 1
-        } else {
-            // Check if dates are consecutive
-            const curr = new Date(currentDateStr)
-            const prev = new Date(lastProcessedDate)
-            const diffTime = Math.abs(curr.getTime() - prev.getTime())
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-            if (diffDays === 1) {
+            if (dateStr === expectedStr) {
                 tempStreak++
-            } else if (diffDays > 1) {
-                // Break in streak
-                longestStreak = Math.max(longestStreak, tempStreak)
-                tempStreak = 1
+                expectedDate.setDate(expectedDate.getDate() - 1)
+            } else {
+                // Gap in streak
+                break
             }
-            // If diffDays === 0 (same day), ignore (shouldn't happen with unique dates)
         }
-        lastProcessedDate = currentDateStr
-    }
-
-    longestStreak = Math.max(longestStreak, tempStreak)
-
-    // Check if streak is alive
-    // Alive if last commit date is Today or Yesterday (UTC)
-    const lastCommitDateStr = stats[0].date // Newest date from DB
-
-    const today = new Date()
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-
-    // Normalize to YYYY-MM-DD strings for comparison
-    const todayStr = today.toISOString().split('T')[0]
-    const yesterdayStr = yesterday.toISOString().split('T')[0]
-
-    if (lastCommitDateStr === todayStr || lastCommitDateStr === yesterdayStr) {
         currentStreak = tempStreak
-    } else {
-        currentStreak = 0
     }
 
-    // Update user record
+    // Calculate longest streak ever
+    tempStreak = 1
+    for (let i = 1; i < sortedDates.length; i++) {
+        const curr = new Date(sortedDates[i])
+        const prev = new Date(sortedDates[i - 1])
+        const diffDays = Math.round((prev.getTime() - curr.getTime()) / (1000 * 60 * 60 * 24))
+
+        if (diffDays === 1) {
+            tempStreak++
+        } else {
+            longestStreak = Math.max(longestStreak, tempStreak)
+            tempStreak = 1
+        }
+    }
+    longestStreak = Math.max(longestStreak, tempStreak, currentStreak)
+
+    console.log(`Streak calculation: current=${currentStreak}, longest=${longestStreak}`)
+
     await supabase
         .from('users')
         .update({

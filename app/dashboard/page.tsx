@@ -45,9 +45,9 @@ export default function DashboardPage() {
             const data = await res.json()
 
             if (data.success) {
-                setSyncMessage(`Synced! ${data.stats?.total_commits || 0} commits from ${data.stats?.repos_synced || 0} repos`)
-                // Force reload to get fresh data
-                window.location.reload()
+                setSyncMessage(`✅ Synced! ${data.stats?.total_commits || 0} commits, ${data.stats?.total_prs || 0} PRs, Score: ${data.stats?.productivity_score || 0}`)
+                // Reload after 2 seconds to show updated data
+                setTimeout(() => window.location.reload(), 2000)
             } else {
                 setSyncMessage(`Sync failed: ${data.error || 'Unknown error'}`)
             }
@@ -187,6 +187,13 @@ export default function DashboardPage() {
                 </div>
 
                 <motion.div variants={itemVariants} className="flex gap-3 items-center">
+                    {/* Last Synced Info */}
+                    {stats?.last_synced && (
+                        <span className="text-xs text-zinc-500 font-mono hidden md:block">
+                            Last synced: {new Date(stats.last_synced).toLocaleString()}
+                        </span>
+                    )}
+
                     {/* Sync Message */}
                     {syncMessage && (
                         <span className="text-xs text-zinc-400 font-mono max-w-[200px] truncate">
@@ -267,8 +274,8 @@ export default function DashboardPage() {
                         </div>
                         {weekTrend !== 0 && (
                             <span className={`text-xs font-medium flex items-center gap-1 px-2 py-1 rounded-lg border ${weekTrend > 0
-                                    ? 'text-green-400 bg-green-500/10 border-green-500/20'
-                                    : 'text-red-400 bg-red-500/10 border-red-500/20'
+                                ? 'text-green-400 bg-green-500/10 border-green-500/20'
+                                : 'text-red-400 bg-red-500/10 border-red-500/20'
                                 }`}>
                                 {weekTrend > 0 ? <ArrowUpRight size={12} /> : '↓'}
                                 {weekTrend > 0 ? '+' : ''}{weekTrend}%
@@ -278,7 +285,7 @@ export default function DashboardPage() {
                     <div className="text-4xl font-bold font-display mb-1 text-white tracking-tight">
                         <AnimatedCounter value={stats?.total_commits || 0} />
                     </div>
-                    <div className="text-sm text-text-tertiary font-mono">TOTAL COMMITS</div>
+                    <div className="text-sm text-text-tertiary font-mono">COMMITS {new Date().getFullYear()}</div>
                 </GlassCard>
 
                 <GlassCard className="p-6 relative overflow-hidden group" glow="purple">
