@@ -3,9 +3,11 @@
 import { motion } from 'framer-motion'
 import { GradientButton } from '@/components/ui/GradientButton'
 import { Github, ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { GlassCard } from '@/components/ui/GlassCard'
 
 export function FinalCTA() {
+    const router = useRouter()
     return (
         <section className="py-24 relative overflow-hidden">
             {/* Background Mesh */}
@@ -44,7 +46,7 @@ export function FinalCTA() {
                         transition={{ delay: 0.2 }}
                         className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10"
                     >
-                        <GradientButton size="lg" icon={<Github className="w-5 h-5" />} className="w-full sm:w-auto text-lg px-10 py-5">
+                        <GradientButton size="lg" icon={<Github className="w-5 h-5" />} className="w-full sm:w-auto text-lg px-10 py-5" onClick={() => router.push('/login')}>
                             Start Free with GitHub
                         </GradientButton>
                     </motion.div>

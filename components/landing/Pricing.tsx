@@ -4,8 +4,10 @@ import { motion } from 'framer-motion'
 import { GradientButton } from '@/components/ui/GradientButton'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Github, CheckCircle2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export function Pricing() {
+    const router = useRouter()
     return (
         <section id="pricing" className="py-24 relative overflow-hidden">
             <div className="container mx-auto px-6">
@@ -32,7 +34,7 @@ export function Pricing() {
                                     </li>
                                 ))}
                             </ul>
-                            <GradientButton variant="secondary" className="w-full">Start Free</GradientButton>
+                            <GradientButton variant="secondary" className="w-full" onClick={() => router.push('/login')}>Start Free</GradientButton>
                         </div>
                     </GlassCard>
 
@@ -55,7 +57,7 @@ export function Pricing() {
                                         </li>
                                     ))}
                                 </ul>
-                                <GradientButton variant="primary" className="w-full h-14 text-lg">
+                                <GradientButton variant="primary" className="w-full h-14 text-lg" onClick={() => router.push('/login')}>
                                     Get Started
                                 </GradientButton>
                             </div>
@@ -74,7 +76,7 @@ export function Pricing() {
                                     </li>
                                 ))}
                             </ul>
-                            <GradientButton variant="secondary" className="w-full">Contact Sales</GradientButton>
+                            <GradientButton variant="secondary" className="w-full" onClick={() => router.push('/contact')}>Contact Sales</GradientButton>
                         </div>
                     </GlassCard>
 

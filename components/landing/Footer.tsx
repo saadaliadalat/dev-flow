@@ -33,31 +33,40 @@ export function Footer() {
                     </div>
 
                     {/* Links */}
-                    {[
-                        { title: "Product", links: ["Features", "Pricing", "Changelog", "Roadmap"] },
-                        { title: "Company", links: ["About", "Blog", "Careers", "Contact"] },
-                        { title: "Resources", links: ["Documentation", "API Reference", "Support", "Status"] }
-                    ].map((col) => (
-                        <div key={col.title}>
-                            <h4 className="font-bold text-white mb-6">{col.title}</h4>
-                            <ul className="space-y-4">
-                                {col.links.map((link) => (
-                                    <li key={link}>
-                                        <Link href="#" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">
-                                            {link}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
+                    <div key="Product">
+                        <h4 className="font-bold text-white mb-6">Product</h4>
+                        <ul className="space-y-4">
+                            <li><Link href="/#features" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">Features</Link></li>
+                            <li><Link href="/#pricing" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">Pricing</Link></li>
+                            <li><Link href="/changelog" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">Changelog</Link></li>
+                            <li><Link href="/roadmap" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">Roadmap</Link></li>
+                        </ul>
+                    </div>
+                    <div key="Company">
+                        <h4 className="font-bold text-white mb-6">Company</h4>
+                        <ul className="space-y-4">
+                            <li><Link href="/about" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">About</Link></li>
+                            <li><Link href="/blog" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">Blog</Link></li>
+                            <li><Link href="/careers" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">Careers</Link></li>
+                            <li><Link href="/contact" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">Contact</Link></li>
+                        </ul>
+                    </div>
+                    <div key="Resources">
+                        <h4 className="font-bold text-white mb-6">Resources</h4>
+                        <ul className="space-y-4">
+                            <li><Link href="/docs" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">Documentation</Link></li>
+                            <li><Link href="/docs" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">API Reference</Link></li>
+                            <li><Link href="/support" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">Support</Link></li>
+                            <li><Link href="/status" className="text-text-tertiary text-sm hover:text-cyan-400 transition-colors">Status</Link></li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div className="border-t border-glass-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-text-muted">
                     <p>© {new Date().getFullYear()} DevFlow. All rights reserved.</p>
                     <div className="flex gap-8">
-                        <Link href="#" className="hover:text-text-secondary">Privacy Policy</Link>
-                        <Link href="#" className="hover:text-text-secondary">Terms of Service</Link>
+                        <Link href="/privacy" className="hover:text-text-secondary">Privacy Policy</Link>
+                        <Link href="/terms" className="hover:text-text-secondary">Terms of Service</Link>
                     </div>
                 </div>
             </div>

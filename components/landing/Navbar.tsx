@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { GradientButton } from '@/components/ui/GradientButton'
-import { Github, Menu, X } from 'lucide-react'
+import { Github, Menu, X, User as UserIcon, LogOut, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { useSession, signOut } from 'next-auth/react'
 
 export function Navbar() {
+    const { data: session, status } = useSession()
     const [isScrolled, setIsScrolled] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const { scrollY } = useScroll()
@@ -51,26 +53,66 @@ export function Navbar() {
 
                 {/* Desktop Links */}
                 <div className="hidden md:flex items-center gap-8">
-                    {['Features', 'How it Works', 'Pricing', 'Blog'].map((item) => (
-                        <Link
-                            key={item}
-                            href={`#${item.toLowerCase().replace(' ', '-')}`}
-                            className="text-sm font-medium text-text-secondary hover:text-white transition-colors relative group"
-                        >
-                            {item}
-                            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-full" />
-                        </Link>
-                    ))}
+                    <Link href="/#features" className="text-sm font-medium text-text-secondary hover:text-white transition-colors relative group">
+                        Features
+                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-full" />
+                    </Link>
+                    <Link href="/#how-it-works" className="text-sm font-medium text-text-secondary hover:text-white transition-colors relative group">
+                        How it Works
+                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-full" />
+                    </Link>
+                    <Link href="/#pricing" className="text-sm font-medium text-text-secondary hover:text-white transition-colors relative group">
+                        Pricing
+                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-full" />
+                    </Link>
+                    <Link href="/blog" className="text-sm font-medium text-text-secondary hover:text-white transition-colors relative group">
+                        Blog
+                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-full" />
+                    </Link>
                 </div>
 
                 {/* Desktop CTA */}
                 <div className="hidden md:flex items-center gap-4">
-                    <Link href="/login" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">
-                        Sign In
-                    </Link>
-                    <GradientButton size="sm" icon={<Github className="w-4 h-4" />}>
-                        Get Started
-                    </GradientButton>
+                    {status === 'loading' ? (
+                        <div className="w-24 h-9 bg-white/5 animate-pulse rounded-lg" />
+                    ) : session ? (
+                        <div className="flex items-center gap-4">
+                            <Link href="/dashboard">
+                                <GradientButton size="sm" icon={<LayoutDashboard className="w-4 h-4" />}>
+                                    Dashboard
+                                </GradientButton>
+                            </Link>
+                            <button
+                                onClick={() => signOut()}
+                                className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors text-text-secondary hover:text-white"
+                                title="Sign Out"
+                            >
+                                <LogOut size={18} />
+                            </button>
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 p-[1px]">
+                                <div className="w-full h-full rounded-full overflow-hidden bg-bg-deep">
+                                    {session.user?.image ? (
+                                        <img src={session.user.image} alt={session.user.name || 'User'} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-white/10 text-xs font-bold">
+                                            {session.user?.name?.charAt(0) || 'U'}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <Link href="/login" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">
+                                Sign In
+                            </Link>
+                            <Link href="/login">
+                                <GradientButton size="sm" icon={<Github className="w-4 h-4" />}>
+                                    Get Started
+                                </GradientButton>
+                            </Link>
+                        </>
+                    )}
                 </div>
 
                 {/* Mobile Toggle */}
@@ -89,16 +131,18 @@ export function Navbar() {
                     animate={{ opacity: 1, y: 0 }}
                     className="absolute top-full left-0 right-0 bg-bg-deep border-b border-glass-border p-6 md:hidden flex flex-col gap-4 shadow-2xl"
                 >
-                    {['Features', 'How it Works', 'Pricing', 'Blog'].map((item) => (
-                        <Link
-                            key={item}
-                            href={`#${item.toLowerCase().replace(' ', '-')}`}
-                            className="py-2 text-text-secondary hover:text-white border-b border-glass-border/50"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            {item}
-                        </Link>
-                    ))}
+                    <Link href="/#features" className="py-2 text-text-secondary hover:text-white border-b border-glass-border/50" onClick={() => setMobileMenuOpen(false)}>
+                        Features
+                    </Link>
+                    <Link href="/#how-it-works" className="py-2 text-text-secondary hover:text-white border-b border-glass-border/50" onClick={() => setMobileMenuOpen(false)}>
+                        How it Works
+                    </Link>
+                    <Link href="/#pricing" className="py-2 text-text-secondary hover:text-white border-b border-glass-border/50" onClick={() => setMobileMenuOpen(false)}>
+                        Pricing
+                    </Link>
+                    <Link href="/blog" className="py-2 text-text-secondary hover:text-white border-b border-glass-border/50" onClick={() => setMobileMenuOpen(false)}>
+                        Blog
+                    </Link>
                     <div className="flex flex-col gap-3 mt-4">
                         <GradientButton variant="secondary" onClick={() => setMobileMenuOpen(false)}>
                             Sign In

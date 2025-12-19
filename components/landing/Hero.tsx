@@ -3,9 +3,11 @@
 import { motion } from 'framer-motion'
 import { GradientButton } from '@/components/ui/GradientButton'
 import { Github, Play } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { containerVariants, itemVariants } from '@/lib/animations'
 
 export function Hero() {
+    const router = useRouter()
     return (
         <section className="relative min-h-[110vh] flex items-center justify-center overflow-hidden pt-20">
 
@@ -56,10 +58,10 @@ export function Hero() {
 
                     {/* CTAs */}
                     <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                        <GradientButton size="lg" icon={<Github className="w-5 h-5" />}>
+                        <GradientButton size="lg" icon={<Github className="w-5 h-5" />} onClick={() => router.push('/login')}>
                             Sign Up with GitHub
                         </GradientButton>
-                        <GradientButton variant="ghost" size="lg" icon={<Play className="w-5 h-5" />}>
+                        <GradientButton variant="ghost" size="lg" icon={<Play className="w-5 h-5" />} onClick={() => router.push('/#how-it-works')}>
                             Watch Demo
                         </GradientButton>
                     </motion.div>

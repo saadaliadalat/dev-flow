@@ -582,6 +582,44 @@ CREATE TRIGGER update_teams_updated_at BEFORE UPDATE ON teams
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
+-- TABLE 11: contact_submissions
+-- ============================================
+CREATE TABLE IF NOT EXISTS contact_submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  
+  -- Sender Info
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  company TEXT,
+  
+  -- Message
+  subject TEXT,
+  message TEXT NOT NULL,
+  
+  -- Status
+  status TEXT DEFAULT 'new', -- new, read, replied, archived
+  
+  -- Metadata
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  replied_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_contact_email ON contact_submissions(email);
+CREATE INDEX IF NOT EXISTS idx_contact_status ON contact_submissions(status);
+
+-- Enable RLS
+ALTER TABLE contact_submissions ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+-- Only service role can read/write for now, or add specific admin users policy
+DROP POLICY IF EXISTS "Admins can view messages" ON contact_submissions;
+-- Assuming we might want to allow public inserts but restricted reads
+DROP POLICY IF EXISTS "Public can insert messages" ON contact_submissions;
+CREATE POLICY "Public can insert messages" ON contact_submissions
+  FOR INSERT WITH CHECK (true);
+
+-- ============================================
 -- COMPLETE!
 -- ============================================
 -- All tables, indexes, RLS policies, and triggers have been created.
