@@ -108,6 +108,8 @@ export async function POST(req: Request) {
                     per_page: 100
                 })
 
+                if (!commits || commits.length === 0) continue
+
                 // Process each commit
                 for (const commit of commits) {
                     const commitDate = new Date(commit.commit.author!.date!)
@@ -137,19 +139,8 @@ export async function POST(req: Request) {
                     }
 
                     // Fetch commit details for lines changed
-                    try {
-                        const { data: commitDetails } = await octokit.repos.getCommit({
-                            owner: repo.owner.login,
-                            repo: repo.name,
-                            ref: commit.sha
-                        })
-
-                        dayData.lines_added += commitDetails.stats?.additions || 0
-                        dayData.lines_deleted += commitDetails.stats?.deletions || 0
-                        dayData.files_changed += commitDetails.files?.length || 0
-                    } catch (err) {
-                        // Silently continue if commit details fail
-                    }
+                    // SKIP detailed stats for now to speed up sync and avoid rate limits
+                    // We can add this back as a background job later
                 }
 
                 // Update repo commit count
@@ -161,7 +152,12 @@ export async function POST(req: Request) {
                     })
                     .eq('github_repo_id', repo.id)
 
-            } catch (error) {
+            } catch (error: any) {
+                // Handle empty repos (409 Conflict) or other repo-specific errors
+                if (error.status === 409) {
+                    // Repo is empty, just skip it
+                    continue
+                }
                 console.error(`Error processing repo ${repo.name}:`, error)
                 continue
             }
