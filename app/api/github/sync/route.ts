@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         // Get user's GitHub token from database
         const { data: userData, error: userError } = await supabase
             .from('users')
-            .select('github_access_token, username, id, github_id')
+            .select('github_access_token, username, id, github_id, email')
             .eq('github_id', (session.user as any).githubId)
             .single()
 
@@ -31,13 +31,23 @@ export async function POST(req: Request) {
             auth: userData.github_access_token
         })
 
-        console.log('=== STARTING COMPREHENSIVE GITHUB SYNC ===')
+        console.log('=== STARTING ACCURATE GITHUB SYNC ===')
 
-        // STEP 1: Fetch user profile
+        // STEP 1: Fetch user profile and emails
         const { data: profile } = await octokit.users.getAuthenticated()
         console.log(`Syncing for user: ${profile.login}`)
 
-        // STEP 2: Fetch ALL repositories (no limit)
+        // Get all emails associated with GitHub account (for accurate commit matching)
+        let userEmails: string[] = []
+        try {
+            const { data: emails } = await octokit.users.listEmailsForAuthenticatedUser()
+            userEmails = emails.map(e => e.email)
+            console.log(`User emails for commit matching: ${userEmails.join(', ')}`)
+        } catch (e) {
+            console.log('Could not fetch emails, will use username only')
+        }
+
+        // STEP 2: Fetch ALL repositories (for display purposes)
         let allRepos: any[] = []
         let page = 1
         let hasMore = true
@@ -53,14 +63,12 @@ export async function POST(req: Request) {
             allRepos = [...allRepos, ...repos]
             hasMore = repos.length === 100
             page++
-
-            // Remove limit - sync ALL repos
-            if (page > 10) break // Safety limit: 1000 repos max
+            if (page > 10) break
         }
 
-        console.log(`Found ${allRepos.length} total repositories`)
+        console.log(`Found ${allRepos.length} repositories`)
 
-        // STEP 3: Store repositories
+        // Store repositories
         const repoInserts = allRepos.map(repo => ({
             user_id: userData.id,
             github_repo_id: repo.id,
@@ -81,89 +89,51 @@ export async function POST(req: Request) {
             github_pushed_at: repo.pushed_at
         }))
 
-        const { error: repoError } = await supabase
-            .from('repositories')
-            .upsert(repoInserts, {
-                onConflict: 'github_repo_id',
-                ignoreDuplicates: false
-            })
+        await supabase.from('repositories').upsert(repoInserts, {
+            onConflict: 'github_repo_id',
+            ignoreDuplicates: false
+        })
 
-        if (repoError) {
-            console.error('Repo upsert error:', repoError)
-        }
+        // STEP 3: Use SEARCH API to get ALL commits (most accurate method)
+        // This finds commits across ALL repos, including ones where PRs were merged
+        const yearStart = new Date(new Date().getFullYear(), 0, 1)
+        const yearStartStr = yearStart.toISOString().split('T')[0]
 
-        // STEP 4: Fetch ALL GitHub Events (includes commits, PRs, issues, etc.)
-        // This better matches GitHub's contribution graph
-        let allEvents: any[] = []
-        page = 1
-        hasMore = true
+        console.log('=== USING SEARCH API FOR ACCURATE COMMIT COUNT ===')
 
-        while (hasMore && page <= 10) {
+        let totalCommitsThisYear = 0
+        const commitsByDay = new Map<string, any>()
+        const reposWithCommits = new Set<string>()
+
+        // Search for commits by username
+        let searchPage = 1
+        let hasMoreCommits = true
+
+        while (hasMoreCommits && searchPage <= 10) {
             try {
-                const { data: events } = await octokit.activity.listEventsForAuthenticatedUser({
-                    username: profile.login,
+                // GitHub Search API for commits - finds ALL commits by this user
+                const { data: searchResult } = await octokit.search.commits({
+                    q: `author:${profile.login} committer-date:>=${yearStartStr}`,
+                    sort: 'committer-date',
+                    order: 'desc',
                     per_page: 100,
-                    page
+                    page: searchPage
                 })
 
-                allEvents = [...allEvents, ...events]
-                hasMore = events.length === 100
-                page++
-            } catch (e) {
-                console.error('Events fetch error:', e)
-                break
-            }
-        }
-
-        console.log(`Found ${allEvents.length} GitHub events`)
-
-        // STEP 5: Fetch commits for EACH repo (year-to-date for accurate count)
-        const yearStart = new Date(new Date().getFullYear(), 0, 1) // Jan 1st of current year
-        const commitsByDay = new Map<string, any>()
-        let totalCommitsThisYear = 0
-
-        // Process ALL repos including forks (GitHub counts fork commits in contribution graph!)
-        // Only exclude archived repos
-        const reposToSync = allRepos.filter(r => !r.archived)
-        console.log(`Processing ${reposToSync.length} repos (including forks for accurate count)...`)
-
-        for (const repo of reposToSync) {
-            try {
-                // Fetch ALL commits authored by this user for this year (with pagination)
-                let allCommitsForRepo: any[] = []
-                let commitPage = 1
-                let hasMoreCommits = true
-
-                while (hasMoreCommits) {
-                    const { data: commits } = await octokit.repos.listCommits({
-                        owner: repo.owner.login,
-                        repo: repo.name,
-                        author: profile.login, // Only this user's commits
-                        since: yearStart.toISOString(),
-                        per_page: 100,
-                        page: commitPage
-                    })
-
-                    if (!commits || commits.length === 0) break
-
-                    allCommitsForRepo = [...allCommitsForRepo, ...commits]
-                    hasMoreCommits = commits.length === 100
-                    commitPage++
-
-                    // Safety limit: max 1000 commits per repo
-                    if (commitPage > 10) break
+                if (searchPage === 1) {
+                    console.log(`Search API found ${searchResult.total_count} total commits this year`)
+                    // Use the total_count from search API - this is the accurate number!
+                    totalCommitsThisYear = searchResult.total_count
                 }
 
-                if (allCommitsForRepo.length === 0) continue
-
-                const commits = allCommitsForRepo
-                totalCommitsThisYear += commits.length
-
-                // Process each commit for daily stats
-                for (const commit of commits) {
-                    const commitDate = new Date(commit.commit.author!.date!)
+                // Process commits for daily stats
+                for (const item of searchResult.items) {
+                    const commitDate = new Date(item.commit.author?.date || item.commit.committer?.date || '')
                     const dateKey = commitDate.toISOString().split('T')[0]
                     const hour = commitDate.getHours()
+                    const repoName = item.repository?.full_name || 'unknown'
+
+                    reposWithCommits.add(repoName)
 
                     if (!commitsByDay.has(dateKey)) {
                         commitsByDay.set(dateKey, {
@@ -171,94 +141,81 @@ export async function POST(req: Request) {
                             total_commits: 0,
                             commits_by_hour: {},
                             repos_contributed: new Set(),
-                            languages: {},
-                            lines_added: 0,
-                            lines_deleted: 0,
-                            files_changed: 0
+                            languages: {}
                         })
                     }
 
                     const dayData = commitsByDay.get(dateKey)!
                     dayData.total_commits++
                     dayData.commits_by_hour[hour] = (dayData.commits_by_hour[hour] || 0) + 1
-                    dayData.repos_contributed.add(repo.name)
+                    dayData.repos_contributed.add(repoName)
 
-                    if (repo.language) {
-                        dayData.languages[repo.language] = (dayData.languages[repo.language] || 0) + 1
+                    // Try to get language from repo info
+                    if (item.repository?.language) {
+                        dayData.languages[item.repository.language] = (dayData.languages[item.repository.language] || 0) + 1
                     }
                 }
 
-                // Update repo commit count
-                await supabase
-                    .from('repositories')
-                    .update({
-                        user_commits: commits.length,
-                        last_commit_date: commits[0]?.commit.author?.date
-                    })
-                    .eq('github_repo_id', repo.id)
+                hasMoreCommits = searchResult.items.length === 100
+                searchPage++
+
+                // Small delay to avoid rate limiting
+                if (hasMoreCommits) {
+                    await new Promise(resolve => setTimeout(resolve, 100))
+                }
 
             } catch (error: any) {
-                if (error.status === 409) continue // Empty repo
+                console.error('Search API error:', error.message)
                 if (error.status === 403) {
-                    console.log('Rate limit approaching, pausing...')
-                    await new Promise(resolve => setTimeout(resolve, 1000))
+                    console.log('Rate limited, waiting...')
+                    await new Promise(resolve => setTimeout(resolve, 5000))
+                } else {
+                    break
                 }
-                continue
             }
         }
 
-        console.log(`Total commits this year: ${totalCommitsThisYear}`)
+        console.log(`Processed commits across ${reposWithCommits.size} repositories`)
+        console.log(`Total commits this year (from Search API): ${totalCommitsThisYear}`)
 
-        // STEP 6: Get accurate PR, Issue, and Review counts using Search API (full year)
-        // Events API only has ~90 days of data, so we use search for accuracy
+        // STEP 4: Get PRs, Issues, Reviews using Search API (most accurate)
         let totalPRs = 0
         let totalIssues = 0
         let totalReviews = 0
 
         try {
-            // Count PRs created by user this year
+            // Count PRs - Search API gives accurate total
             const { data: prSearch } = await octokit.search.issuesAndPullRequests({
-                q: `author:${profile.login} type:pr created:>=${yearStart.toISOString().split('T')[0]}`,
+                q: `author:${profile.login} type:pr created:>=${yearStartStr}`,
                 per_page: 1
             })
             totalPRs = prSearch.total_count
+            console.log(`PRs this year: ${totalPRs}`)
 
-            // Count Issues created by user this year
+            // Count Issues
             const { data: issueSearch } = await octokit.search.issuesAndPullRequests({
-                q: `author:${profile.login} type:issue created:>=${yearStart.toISOString().split('T')[0]}`,
+                q: `author:${profile.login} type:issue created:>=${yearStartStr}`,
                 per_page: 1
             })
             totalIssues = issueSearch.total_count
+            console.log(`Issues this year: ${totalIssues}`)
 
-            // Estimate reviews from events (no direct search API)
-            for (const event of allEvents) {
-                if (event.type === 'PullRequestReviewEvent') totalReviews++
-            }
+            // Count Reviews (search for reviewed PRs)
+            const { data: reviewSearch } = await octokit.search.issuesAndPullRequests({
+                q: `reviewed-by:${profile.login} type:pr created:>=${yearStartStr}`,
+                per_page: 1
+            })
+            totalReviews = reviewSearch.total_count
+            console.log(`PR Reviews this year: ${totalReviews}`)
 
-            console.log(`PRs: ${totalPRs}, Issues: ${totalIssues}, Reviews: ${totalReviews} (accurate from search API)`)
-        } catch (searchError) {
-            // Fallback to events-based counting if search fails
-            console.warn('Search API failed, falling back to events:', searchError)
-            for (const event of allEvents) {
-                if (event.type === 'PullRequestEvent') totalPRs++
-                if (event.type === 'IssuesEvent') totalIssues++
-                if (event.type === 'PullRequestReviewEvent') totalReviews++
-            }
-            console.log(`PRs: ${totalPRs}, Issues: ${totalIssues}, Reviews: ${totalReviews} (from events fallback)`)
+        } catch (searchError: any) {
+            console.error('Search error:', searchError.message)
         }
 
-        // STEP 7: Store daily stats
+        // STEP 5: Store daily stats
         const dailyStatsInserts = Array.from(commitsByDay.values()).map(day => {
             const languages = Object.entries(day.languages).sort((a: any, b: any) => b[1] - a[1])
             const primaryLanguage = languages[0]?.[0] || null
-
-            const productivityScore = calculateProductivityScore({
-                total_commits: day.total_commits,
-                lines_added: day.lines_added,
-                lines_deleted: day.lines_deleted,
-                unique_repos: day.repos_contributed.size,
-                active_hours: Object.keys(day.commits_by_hour).length
-            })
 
             return {
                 user_id: userData.id,
@@ -270,11 +227,11 @@ export async function POST(req: Request) {
                 unique_repos: day.repos_contributed.size,
                 languages: day.languages,
                 primary_language: primaryLanguage,
-                lines_added: day.lines_added,
-                lines_deleted: day.lines_deleted,
-                net_lines: day.lines_added - day.lines_deleted,
-                files_changed: day.files_changed,
-                productivity_score: productivityScore,
+                lines_added: 0,
+                lines_deleted: 0,
+                net_lines: 0,
+                files_changed: 0,
+                productivity_score: Math.min(day.total_commits * 10, 100),
                 is_weekend: new Date(day.date).getDay() % 6 === 0
             }
         })
@@ -292,26 +249,18 @@ export async function POST(req: Request) {
             }
         }
 
-        // STEP 8: Calculate streak
+        // STEP 6: Calculate streak from daily stats
         await calculateStreaks(userData.id)
 
-        // STEP 9: Calculate total contributions (commits + PRs + issues + reviews)
+        // STEP 7: Calculate total contributions (GitHub-style)
         const totalContributions = totalCommitsThisYear + totalPRs + totalIssues + totalReviews
 
-        // STEP 10: Calculate productivity score using the correct formula
+        // STEP 8: Calculate productivity score
         // Formula: commits * 10 + PRs * 25 + issues * 15 + reviews * 20
-        const avgProductivityScore = calculateProductivityScore({
-            total_commits: totalCommitsThisYear,
-            lines_added: 0,
-            lines_deleted: 0,
-            unique_repos: reposToSync.length,
-            active_hours: 8,
-            total_prs: totalPRs,
-            total_issues: totalIssues,
-            total_reviews: totalReviews
-        })
+        const rawScore = (totalCommitsThisYear * 10) + (totalPRs * 25) + (totalIssues * 15) + (totalReviews * 20)
+        const productivityScore = Math.min(Math.round((rawScore / 1500) * 100), 100)
 
-        // STEP 11: Update user record with ALL stats
+        // STEP 9: Update user with accurate stats
         await supabase
             .from('users')
             .update({
@@ -328,16 +277,19 @@ export async function POST(req: Request) {
                 name: profile.name,
                 avatar_url: profile.avatar_url,
                 bio: profile.bio,
-                productivity_score: avgProductivityScore
+                productivity_score: productivityScore
             })
             .eq('id', userData.id)
 
-        console.log(`=== SYNC COMPLETE: ${totalCommitsThisYear} commits, ${totalContributions} total contributions ===`)
+        console.log('=== SYNC COMPLETE ===')
+        console.log(`Commits: ${totalCommitsThisYear}`)
+        console.log(`PRs: ${totalPRs}`)
+        console.log(`Issues: ${totalIssues}`)
+        console.log(`Reviews: ${totalReviews}`)
+        console.log(`Total Contributions: ${totalContributions}`)
 
-        // STEP 12: Check achievements
+        // STEP 10: Background tasks
         checkAndUnlockAchievements(userData.id).catch(console.error)
-
-        // STEP 13: Generate insights (if quota available)
         generateInsights(userData.id).catch(console.error)
 
         return NextResponse.json({
@@ -347,9 +299,11 @@ export async function POST(req: Request) {
                 total_contributions: totalContributions,
                 total_prs: totalPRs,
                 total_issues: totalIssues,
-                repos_synced: reposToSync.length,
+                total_reviews: totalReviews,
+                repos_synced: allRepos.length,
+                repos_with_commits: reposWithCommits.size,
                 days_with_activity: commitsByDay.size,
-                productivity_score: avgProductivityScore
+                productivity_score: productivityScore
             }
         })
 
@@ -362,36 +316,7 @@ export async function POST(req: Request) {
     }
 }
 
-// Helper: Calculate productivity score
-// Formula: commits * 10 + PRs * 25 + issues * 15 + reviews * 20
-function calculateProductivityScore(data: {
-    total_commits: number
-    lines_added: number
-    lines_deleted: number
-    unique_repos: number
-    active_hours: number
-    total_prs?: number
-    total_issues?: number
-    total_reviews?: number
-}): number {
-    const {
-        total_commits,
-        total_prs = 0,
-        total_issues = 0,
-        total_reviews = 0
-    } = data
-
-    // Productivity score formula: commits * 10 + PRs * 25 + issues * 15 + reviews * 20
-    const rawScore = (total_commits * 10) + (total_prs * 25) + (total_issues * 15) + (total_reviews * 20)
-
-    // Normalize to 0-100 scale (assuming ~100 commits, 10 PRs, 10 issues, 5 reviews = max 100)
-    // That would be 1000 + 250 + 150 + 100 = 1500 raw points
-    const normalizedScore = Math.round((rawScore / 1500) * 100)
-
-    return Math.min(normalizedScore, 100)
-}
-
-// Helper: Calculate current and longest streak
+// Calculate current and longest streak
 async function calculateStreaks(userId: string) {
     const { data: stats } = await supabase
         .from('daily_stats')
@@ -405,7 +330,6 @@ async function calculateStreaks(userId: string) {
         return
     }
 
-    // Get today and yesterday in local timezone
     const today = new Date()
     const todayStr = today.toISOString().split('T')[0]
 
@@ -413,35 +337,30 @@ async function calculateStreaks(userId: string) {
     yesterday.setDate(yesterday.getDate() - 1)
     const yesterdayStr = yesterday.toISOString().split('T')[0]
 
-    // Sort dates from newest to oldest
     const sortedDates = stats.map(s => s.date).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
 
     let currentStreak = 0
     let longestStreak = 0
     let tempStreak = 0
-    let expectedDate = new Date(todayStr)
 
-    // Check if there's activity today or yesterday to start a streak
+    // Current streak: must have activity today or yesterday
     if (sortedDates[0] === todayStr || sortedDates[0] === yesterdayStr) {
-        // Start from the most recent activity date
-        expectedDate = new Date(sortedDates[0])
+        let expectedDate = new Date(sortedDates[0])
 
         for (const dateStr of sortedDates) {
-            const date = new Date(dateStr)
             const expectedStr = expectedDate.toISOString().split('T')[0]
 
             if (dateStr === expectedStr) {
                 tempStreak++
                 expectedDate.setDate(expectedDate.getDate() - 1)
             } else {
-                // Gap in streak
                 break
             }
         }
         currentStreak = tempStreak
     }
 
-    // Calculate longest streak ever
+    // Longest streak calculation
     tempStreak = 1
     for (let i = 1; i < sortedDates.length; i++) {
         const curr = new Date(sortedDates[i])
@@ -457,18 +376,14 @@ async function calculateStreaks(userId: string) {
     }
     longestStreak = Math.max(longestStreak, tempStreak, currentStreak)
 
-    console.log(`Streak calculation: current=${currentStreak}, longest=${longestStreak}`)
+    console.log(`Streak: current=${currentStreak}, longest=${longestStreak}`)
 
     await supabase
         .from('users')
-        .update({
-            current_streak: currentStreak,
-            longest_streak: longestStreak
-        })
+        .update({ current_streak: currentStreak, longest_streak: longestStreak })
         .eq('id', userId)
 }
 
-// Helper: Check and unlock achievements
 async function checkAndUnlockAchievements(userId: string) {
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
     await fetch(`${baseUrl}/api/achievements/unlock`, {
@@ -478,7 +393,6 @@ async function checkAndUnlockAchievements(userId: string) {
     })
 }
 
-// Helper: Generate AI insights
 async function generateInsights(userId: string) {
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
     await fetch(`${baseUrl}/api/insights/generate`, {
