@@ -8,6 +8,9 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// Rate limit: 1 sync per 5 minutes
+const SYNC_COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
+
 export async function POST(req: Request) {
     try {
         const session = await auth()
@@ -19,12 +22,26 @@ export async function POST(req: Request) {
         // Get user's GitHub token from database
         const { data: userData, error: userError } = await supabase
             .from('users')
-            .select('github_access_token, username, id, github_id, email')
+            .select('github_access_token, username, id, github_id, email, last_synced')
             .eq('github_id', (session.user as any).githubId)
             .single()
 
         if (userError || !userData?.github_access_token) {
             return NextResponse.json({ error: 'GitHub token not found' }, { status: 400 })
+        }
+
+        // Rate limiting check
+        if (userData.last_synced) {
+            const lastSyncTime = new Date(userData.last_synced).getTime()
+            const timeSinceSync = Date.now() - lastSyncTime
+            if (timeSinceSync < SYNC_COOLDOWN_MS) {
+                const waitMinutes = Math.ceil((SYNC_COOLDOWN_MS - timeSinceSync) / 60000)
+                return NextResponse.json({
+                    error: 'Rate limited',
+                    message: `Please wait ${waitMinutes} minute(s) before syncing again.`,
+                    retryAfter: waitMinutes
+                }, { status: 429 })
+            }
         }
 
         const octokit = new Octokit({
@@ -109,7 +126,7 @@ export async function POST(req: Request) {
         let searchPage = 1
         let hasMoreCommits = true
 
-        while (hasMoreCommits && searchPage <= 10) {
+        while (hasMoreCommits && searchPage <= 20) { // Increased to 2000 commits max
             try {
                 // GitHub Search API for commits - finds ALL commits by this user
                 const { data: searchResult } = await octokit.search.commits({

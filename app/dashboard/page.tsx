@@ -38,29 +38,50 @@ export default function DashboardPage() {
     const [dateRange, setDateRange] = useState<'7' | '30' | '90'>('30')
     const [allDailyStats, setAllDailyStats] = useState<any[]>([])
 
-    // Function to sync GitHub data
+    // Function to sync GitHub data with progress stages
     const syncGitHubData = async () => {
         setIsSyncing(true)
-        setSyncMessage('Syncing your GitHub data...')
+        setSyncMessage('🔄 Starting sync...')
         try {
             const res = await fetch('/api/github/sync', { method: 'POST' })
             const data = await res.json()
 
+            if (res.status === 429) {
+                // Rate limited
+                setSyncMessage(`⏳ ${data.message}`)
+                setIsSyncing(false)
+                setTimeout(() => setSyncMessage(''), 5000)
+                return
+            }
+
             if (data.success) {
-                setSyncMessage(`Synced! ${data.stats?.total_commits || 0} commits, ${data.stats?.total_prs || 0} PRs`)
+                setSyncMessage(`✅ Synced! ${data.stats?.total_commits || 0} commits, ${data.stats?.total_prs || 0} PRs`)
                 // Reload after 2 seconds to show updated data
                 setTimeout(() => window.location.reload(), 2000)
             } else {
-                setSyncMessage(`Sync failed: ${data.error || 'Unknown error'}`)
+                setSyncMessage(`❌ ${data.error || 'Unknown error'}`)
             }
         } catch (error: any) {
-            setSyncMessage(`Sync error: ${error.message}`)
+            setSyncMessage(`❌ ${error.message}`)
         } finally {
             setIsSyncing(false)
             // Clear message after 5 seconds
             setTimeout(() => setSyncMessage(''), 5000)
         }
     }
+
+    // Calculate data freshness
+    const getDataFreshness = () => {
+        if (!stats?.last_synced) return { text: 'Never synced', color: 'text-red-400', bgColor: 'bg-red-500/10' }
+        const hoursSinceSync = Math.floor((Date.now() - new Date(stats.last_synced).getTime()) / 3600000)
+        if (hoursSinceSync < 1) return { text: 'Just now', color: 'text-green-400', bgColor: 'bg-green-500/10' }
+        if (hoursSinceSync < 6) return { text: `${hoursSinceSync}h ago`, color: 'text-green-400', bgColor: 'bg-green-500/10' }
+        if (hoursSinceSync < 24) return { text: `${hoursSinceSync}h ago`, color: 'text-yellow-400', bgColor: 'bg-yellow-500/10' }
+        const days = Math.floor(hoursSinceSync / 24)
+        return { text: `${days}d ago`, color: 'text-orange-400', bgColor: 'bg-orange-500/10' }
+    }
+
+    const dataFreshness = getDataFreshness()
 
     // Update chart when date range changes
     useEffect(() => {
@@ -218,13 +239,11 @@ export default function DashboardPage() {
                 </div>
 
                 <motion.div variants={itemVariants} className="flex gap-3 items-center flex-wrap">
-                    {/* Last Synced Info */}
-                    {stats?.last_synced && (
-                        <span className="text-xs text-zinc-500 font-mono hidden md:flex items-center gap-1">
-                            <CheckCircle2 size={12} className="text-green-500" />
-                            Synced: {new Date(stats.last_synced).toLocaleString()}
-                        </span>
-                    )}
+                    {/* Data Freshness Indicator */}
+                    <span className={`px-3 py-1.5 rounded-lg ${dataFreshness.bgColor} ${dataFreshness.color} text-xs font-mono flex items-center gap-1.5 border border-white/5`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                        {dataFreshness.text}
+                    </span>
 
                     {/* Sync Message */}
                     {syncMessage && (

@@ -24,6 +24,22 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
     const [isLoading, setIsLoading] = useState(true)
     const [isGenerating, setIsGenerating] = useState(false)
 
+    // Cooldown: 1 hour between generations
+    const GENERATION_COOLDOWN_MS = 60 * 60 * 1000 // 1 hour
+
+    const canGenerateInsights = () => {
+        const lastGenerated = localStorage.getItem('devflow_last_insight_gen')
+        if (!lastGenerated) return true
+        return Date.now() - parseInt(lastGenerated) >= GENERATION_COOLDOWN_MS
+    }
+
+    const getCooldownRemaining = () => {
+        const lastGenerated = localStorage.getItem('devflow_last_insight_gen')
+        if (!lastGenerated) return 0
+        const remaining = GENERATION_COOLDOWN_MS - (Date.now() - parseInt(lastGenerated))
+        return Math.max(0, Math.ceil(remaining / 60000)) // minutes
+    }
+
     useEffect(() => {
         fetchInsights()
     }, [])
@@ -36,8 +52,8 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
             if (res.ok) {
                 setInsights(data.insights || [])
 
-                // Auto-generate if no insights exist
-                if (data.insights.length === 0) {
+                // Auto-generate if no insights exist AND cooldown has passed
+                if (data.insights.length === 0 && canGenerateInsights()) {
                     await generateInsights()
                 }
             }
@@ -49,6 +65,12 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
     }
 
     async function generateInsights() {
+        // Check cooldown before generating
+        if (!canGenerateInsights()) {
+            console.log(`Insight generation on cooldown. ${getCooldownRemaining()} minutes remaining.`)
+            return
+        }
+
         setIsGenerating(true)
         try {
             // First get user ID
@@ -68,6 +90,8 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
             const data = await res.json()
 
             if (res.ok) {
+                // Store generation time for cooldown
+                localStorage.setItem('devflow_last_insight_gen', Date.now().toString())
                 await fetchInsights()
             } else {
                 console.error('Insights generation failed:', data.error)
@@ -156,10 +180,17 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
                 {!isGenerating && (
                     <button
                         onClick={generateInsights}
-                        className="text-xs text-purple-primary hover:text-purple-light transition-colors font-medium flex items-center gap-1"
+                        disabled={!canGenerateInsights()}
+                        className={`text-xs font-medium flex items-center gap-1 transition-colors ${canGenerateInsights()
+                                ? 'text-purple-primary hover:text-purple-light'
+                                : 'text-zinc-600 cursor-not-allowed'
+                            }`}
+                        title={canGenerateInsights() ? 'Generate new insights' : `Cooldown: ${getCooldownRemaining()} min remaining`}
                     >
                         <Sparkles size={12} />
-                        {insights.length === 0 ? 'Generate' : 'Generate New'}
+                        {!canGenerateInsights()
+                            ? `Wait ${getCooldownRemaining()}m`
+                            : insights.length === 0 ? 'Generate' : 'Refresh'}
                     </button>
                 )}
             </div>

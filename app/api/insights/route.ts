@@ -75,6 +75,18 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
 
+        // Get current user's ID for ownership validation
+        const githubId = (session.user as any).githubId
+        const { data: user } = await supabase
+            .from('users')
+            .select('id')
+            .eq('github_id', githubId)
+            .single()
+
+        if (!user) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
         const updates: any = {}
 
         switch (action) {
@@ -96,12 +108,18 @@ export async function PATCH(req: Request) {
                 return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
         }
 
-        const { error } = await supabase
+        // Security: Only update insights owned by the current user
+        const { error, count } = await supabase
             .from('insights')
             .update(updates)
             .eq('id', insightId)
+            .eq('user_id', user.id)
 
         if (error) throw error
+
+        if (count === 0) {
+            return NextResponse.json({ error: 'Insight not found or access denied' }, { status: 404 })
+        }
 
         return NextResponse.json({ success: true })
 

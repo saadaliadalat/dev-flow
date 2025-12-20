@@ -125,9 +125,11 @@ function calculateLateNightFactor(stats: any[]): number {
 
     stats.forEach(day => {
         if (day.commits_by_hour) {
-            for (let hour = 23; hour <= 23; hour++) {
+            // Check late night hours: 22, 23 (10pm-midnight)
+            for (let hour = 22; hour <= 23; hour++) {
                 lateNightCommits += day.commits_by_hour[hour] || 0
             }
+            // Check early morning hours: 0, 1, 2 (midnight-3am)
             for (let hour = 0; hour <= 2; hour++) {
                 lateNightCommits += day.commits_by_hour[hour] || 0
             }
