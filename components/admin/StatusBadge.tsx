@@ -1,96 +1,69 @@
 'use client'
 
 import React from 'react'
+import { CheckCircle2, XCircle, AlertCircle, Clock, Ban } from 'lucide-react'
+
+export type StatusType = 'active' | 'inactive' | 'suspended' | 'pending' | 'banned' | 'warning' | 'success' | 'error'
 
 interface StatusBadgeProps {
-    status: 'active' | 'suspended' | 'pending' | 'success' | 'warning' | 'error' | 'info'
-    size?: 'sm' | 'md' | 'lg'
-    pulse?: boolean
+    status: StatusType | string
+    size?: 'sm' | 'md'
+    glow?: boolean
 }
 
-const statusConfig = {
-    active: {
-        bg: 'bg-emerald-500/10',
-        text: 'text-emerald-400',
-        border: 'border-emerald-500/20',
-        dot: 'bg-emerald-500',
-        label: 'Active'
-    },
-    suspended: {
-        bg: 'bg-red-500/10',
-        text: 'text-red-400',
-        border: 'border-red-500/20',
-        dot: 'bg-red-500',
-        label: 'Suspended'
-    },
-    pending: {
-        bg: 'bg-yellow-500/10',
-        text: 'text-yellow-400',
-        border: 'border-yellow-500/20',
-        dot: 'bg-yellow-500',
-        label: 'Pending'
-    },
-    success: {
-        bg: 'bg-emerald-500/10',
-        text: 'text-emerald-400',
-        border: 'border-emerald-500/20',
-        dot: 'bg-emerald-500',
-        label: 'Success'
-    },
-    warning: {
-        bg: 'bg-yellow-500/10',
-        text: 'text-yellow-400',
-        border: 'border-yellow-500/20',
-        dot: 'bg-yellow-500',
-        label: 'Warning'
-    },
-    error: {
-        bg: 'bg-red-500/10',
-        text: 'text-red-400',
-        border: 'border-red-500/20',
-        dot: 'bg-red-500',
-        label: 'Error'
-    },
-    info: {
-        bg: 'bg-blue-500/10',
-        text: 'text-blue-400',
-        border: 'border-blue-500/20',
-        dot: 'bg-blue-500',
-        label: 'Info'
+const getStatusConfig = (status: string) => {
+    switch (status.toLowerCase()) {
+        case 'active':
+        case 'success':
+            return {
+                icon: CheckCircle2,
+                colors: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+                glow: 'shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)]'
+            }
+        case 'inactive':
+        case 'pending':
+            return {
+                icon: Clock,
+                colors: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20',
+                glow: 'shadow-[0_0_15px_-3px_rgba(113,113,122,0.3)]'
+            }
+        case 'suspended':
+        case 'banned':
+        case 'error':
+            return {
+                icon: Ban,
+                colors: 'text-red-400 bg-red-500/10 border-red-500/20',
+                glow: 'shadow-[0_0_15px_-3px_rgba(239,68,68,0.3)]'
+            }
+        case 'warning':
+            return {
+                icon: AlertCircle,
+                colors: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
+                glow: 'shadow-[0_0_15px_-3px_rgba(234,179,8,0.3)]'
+            }
+        default:
+            return {
+                icon: Clock,
+                colors: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+                glow: 'shadow-[0_0_15px_-3px_rgba(59,130,246,0.3)]'
+            }
     }
 }
 
-const sizeConfig = {
-    sm: {
-        padding: 'px-2 py-0.5',
-        text: 'text-xs',
-        dot: 'w-1.5 h-1.5'
-    },
-    md: {
-        padding: 'px-2.5 py-1',
-        text: 'text-xs',
-        dot: 'w-2 h-2'
-    },
-    lg: {
-        padding: 'px-3 py-1.5',
-        text: 'text-sm',
-        dot: 'w-2.5 h-2.5'
-    }
-}
-
-export function StatusBadge({ status, size = 'md', pulse = false }: StatusBadgeProps) {
-    const config = statusConfig[status]
-    const sizeClass = sizeConfig[size]
+export function StatusBadge({ status, size = 'md', glow = true }: StatusBadgeProps) {
+    const config = getStatusConfig(status)
+    const Icon = config.icon
 
     return (
-        <span className={`inline-flex items-center gap-1.5 ${sizeClass.padding} rounded-full ${config.bg} ${config.text} border ${config.border} ${sizeClass.text} font-medium`}>
-            <span className="relative flex">
-                {pulse && (
-                    <span className={`absolute inline-flex h-full w-full rounded-full ${config.dot} opacity-75 animate-ping`} />
-                )}
-                <span className={`relative inline-flex rounded-full ${sizeClass.dot} ${config.dot}`} />
-            </span>
-            {config.label}
+        <span className={`
+            inline-flex items-center gap-1.5 
+            rounded-full border font-medium transition-all duration-300
+            ${config.colors}
+            ${glow ? config.glow : ''}
+            ${size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-sm'}
+        `}>
+            <Icon size={size === 'sm' ? 12 : 14} strokeWidth={2} />
+            <span className="capitalize">{status}</span>
         </span>
     )
 }

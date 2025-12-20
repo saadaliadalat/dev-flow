@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
     ArrowLeft,
-    User,
     Mail,
     MapPin,
     Building,
@@ -15,11 +14,12 @@ import {
     GitPullRequest,
     Flame,
     Trophy,
-    UserX,
     UserCheck,
     Trash2,
-    RefreshCw,
-    ExternalLink
+    ExternalLink,
+    Shield,
+    History,
+    MoreHorizontal
 } from 'lucide-react'
 import {
     AreaChart,
@@ -143,18 +143,17 @@ export default function UserDetailPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            <div className="flex items-center justify-center min-h-[500px]">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-10 h-10 border-2 border-primary/20 border-t-blue-500 rounded-full animate-spin" />
+                    <p className="text-zinc-500 text-sm font-medium animate-pulse">Loading user profile...</p>
+                </div>
             </div>
         )
     }
 
     if (!user) {
-        return (
-            <div className="text-center py-12">
-                <p className="text-zinc-500">User not found</p>
-            </div>
-        )
+        return null
     }
 
     // Prepare chart data
@@ -164,198 +163,238 @@ export default function UserDetailPage() {
     })).reverse()
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center gap-4">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Header / Nav */}
+            <div className="flex items-center justify-between">
                 <button
                     onClick={() => router.push('/admin/users')}
-                    className="p-2 rounded-lg bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                    className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors group"
                 >
-                    <ArrowLeft size={18} />
+                    <div className="p-2 rounded-lg bg-white/5 border border-white/5 group-hover:bg-white/10 transition-colors">
+                        <ArrowLeft size={16} />
+                    </div>
+                    <span className="font-medium text-sm">Back to Users</span>
                 </button>
-                <div className="flex-1">
-                    <h1 className="text-2xl font-bold text-white font-display">User Details</h1>
-                    <p className="text-zinc-500">@{user.username}</p>
+            </div>
+
+            {/* Profile Header */}
+            <div className="relative rounded-3xl overflow-hidden bg-[#09090b] border border-white/10">
+                {/* Banner */}
+                <div className="h-48 bg-gradient-to-r from-blue-900/20 via-purple-900/20 to-blue-900/20 w-full relative">
+                    <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
                 </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setSuspendModal(true)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${user.is_suspended
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
-                            : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20'
-                            }`}
-                    >
-                        {user.is_suspended ? <UserCheck size={16} /> : <UserX size={16} />}
-                        {user.is_suspended ? 'Unsuspend' : 'Suspend'}
-                    </button>
-                    <button
-                        onClick={() => setDeleteModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl font-medium hover:bg-red-500/20 transition-colors"
-                    >
-                        <Trash2 size={16} />
-                        Delete
-                    </button>
+
+                <div className="px-8 pb-8">
+                    <div className="flex flex-col md:flex-row items-end -mt-12 gap-6">
+                        {/* Avatar */}
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="relative"
+                        >
+                            <div className="w-32 h-32 rounded-3xl bg-[#09090b] p-1.5 shadow-2xl">
+                                {user.avatar_url ? (
+                                    <img
+                                        src={user.avatar_url}
+                                        alt={user.username}
+                                        className="w-full h-full rounded-2xl object-cover bg-zinc-800"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full rounded-2xl bg-zinc-800 flex items-center justify-center text-4xl font-bold text-zinc-500">
+                                        {user.username?.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="absolute bottom-2 right-2 translate-x-1/4 translate-y-1/4">
+                                <StatusBadge status={user.is_suspended ? 'suspended' : 'active'} glow={true} size="sm" />
+                            </div>
+                        </motion.div>
+
+                        {/* Info */}
+                        <div className="flex-1 mb-2">
+                            <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                                {user.name || user.username}
+                                {user.is_admin && <Shield size={20} className="text-blue-400 fill-blue-400/10" />}
+                            </h1>
+                            <div className="flex items-center gap-2 text-zinc-500 mt-1">
+                                <span>@{user.username}</span>
+                                <span>•</span>
+                                <span className="flex items-center gap-1.5">
+                                    <Calendar size={14} />
+                                    Joined {format(new Date(user.created_at), 'MMMM yyyy')}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-3 mb-2">
+                            <button
+                                onClick={() => setSuspendModal(true)}
+                                className={`
+                                    px-4 py-2.5 rounded-xl font-medium text-sm transition-all border
+                                    ${user.is_suspended
+                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                                        : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20'
+                                    }
+                                `}
+                            >
+                                {user.is_suspended ? 'Unsuspend Access' : 'Suspend Access'}
+                            </button>
+                            <button
+                                onClick={() => setDeleteModal(true)}
+                                className="p-2.5 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                            >
+                                <Trash2 size={18} />
+                            </button>
+                            <button className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-white transition-colors">
+                                <MoreHorizontal size={18} />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Profile Card */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="lg:col-span-1 p-6 rounded-2xl bg-bg-elevated/50 border border-white/5"
-                >
-                    <div className="text-center mb-6">
-                        {user.avatar_url ? (
-                            <img
-                                src={user.avatar_url}
-                                alt={user.username}
-                                className="w-24 h-24 rounded-full border-2 border-white/10 mx-auto mb-4"
-                            />
-                        ) : (
-                            <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center text-3xl font-bold text-white mx-auto mb-4">
-                                {user.username?.charAt(0).toUpperCase()}
-                            </div>
-                        )}
-                        <h2 className="text-xl font-bold text-white">{user.name || user.username}</h2>
-                        <p className="text-zinc-500">@{user.username}</p>
+            {/* Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column - Details */}
+                <div className="space-y-6">
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="p-6 rounded-3xl bg-[#09090b]/50 border border-white/5 backdrop-blur-sm"
+                    >
+                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <UserCheck size={20} className="text-zinc-400" />
+                            About
+                        </h3>
 
-                        <div className="flex items-center justify-center gap-2 mt-3">
-                            <StatusBadge
-                                status={user.is_suspended ? 'suspended' : 'active'}
-                            />
-                            {user.is_admin && (
-                                <span className="px-2 py-1 text-xs font-medium bg-purple-500/20 text-purple-400 rounded-lg">
-                                    ADMIN
-                                </span>
+                        {user.bio && (
+                            <p className="text-sm text-zinc-400 mb-6 leading-relaxed">{user.bio}</p>
+                        )}
+
+                        <div className="space-y-4">
+                            {user.email && (
+                                <div className="flex items-center gap-3 text-sm group">
+                                    <div className="p-2 rounded-lg bg-white/5 text-zinc-500 group-hover:text-blue-400 transition-colors">
+                                        <Mail size={16} />
+                                    </div>
+                                    <span className="text-zinc-300">{user.email}</span>
+                                </div>
+                            )}
+                            {user.location && (
+                                <div className="flex items-center gap-3 text-sm group">
+                                    <div className="p-2 rounded-lg bg-white/5 text-zinc-500 group-hover:text-blue-400 transition-colors">
+                                        <MapPin size={16} />
+                                    </div>
+                                    <span className="text-zinc-300">{user.location}</span>
+                                </div>
+                            )}
+                            {user.company && (
+                                <div className="flex items-center gap-3 text-sm group">
+                                    <div className="p-2 rounded-lg bg-white/5 text-zinc-500 group-hover:text-blue-400 transition-colors">
+                                        <Building size={16} />
+                                    </div>
+                                    <span className="text-zinc-300">{user.company}</span>
+                                </div>
+                            )}
+                            {user.website && (
+                                <div className="flex items-center gap-3 text-sm group">
+                                    <div className="p-2 rounded-lg bg-white/5 text-zinc-500 group-hover:text-blue-400 transition-colors">
+                                        <Link2 size={16} />
+                                    </div>
+                                    <a
+                                        href={user.website}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-400 hover:text-blue-300 transition-colors"
+                                    >
+                                        {user.website.replace(/^https?:\/\//, '')}
+                                    </a>
+                                </div>
                             )}
                         </div>
-                    </div>
 
-                    {user.bio && (
-                        <p className="text-sm text-zinc-400 text-center mb-6">{user.bio}</p>
-                    )}
-
-                    <div className="space-y-3">
-                        {user.email && (
-                            <div className="flex items-center gap-3 text-sm">
-                                <Mail size={16} className="text-zinc-500" />
-                                <span className="text-zinc-300">{user.email}</span>
+                        <div className="mt-6 pt-6 border-t border-white/5 flex justify-between text-center">
+                            <div>
+                                <div className="text-xl font-bold text-white">{user.followers}</div>
+                                <div className="text-xs text-zinc-500 uppercase font-bold tracking-wider">Followers</div>
                             </div>
-                        )}
-                        {user.location && (
-                            <div className="flex items-center gap-3 text-sm">
-                                <MapPin size={16} className="text-zinc-500" />
-                                <span className="text-zinc-300">{user.location}</span>
+                            <div>
+                                <div className="text-xl font-bold text-white">{user.following}</div>
+                                <div className="text-xs text-zinc-500 uppercase font-bold tracking-wider">Following</div>
                             </div>
-                        )}
-                        {user.company && (
-                            <div className="flex items-center gap-3 text-sm">
-                                <Building size={16} className="text-zinc-500" />
-                                <span className="text-zinc-300">{user.company}</span>
+                            <div>
+                                <div className="text-xl font-bold text-white">{user.total_repos}</div>
+                                <div className="text-xs text-zinc-500 uppercase font-bold tracking-wider">Repos</div>
                             </div>
-                        )}
-                        {user.website && (
-                            <div className="flex items-center gap-3 text-sm">
-                                <Link2 size={16} className="text-zinc-500" />
-                                <a
-                                    href={user.website}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-zinc-300 hover:text-white transition-colors"
-                                >
-                                    {user.website}
-                                </a>
-                            </div>
-                        )}
-                        <div className="flex items-center gap-3 text-sm">
-                            <Calendar size={16} className="text-zinc-500" />
-                            <span className="text-zinc-300">
-                                Joined {format(new Date(user.created_at), 'MMM d, yyyy')}
-                            </span>
                         </div>
-                    </div>
-
-                    <div className="flex items-center justify-center gap-6 mt-6 pt-6 border-t border-white/5">
-                        <div className="text-center">
-                            <p className="text-lg font-bold text-white">{user.followers}</p>
-                            <p className="text-xs text-zinc-500">Followers</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-lg font-bold text-white">{user.following}</p>
-                            <p className="text-xs text-zinc-500">Following</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-lg font-bold text-white">{user.total_repos}</p>
-                            <p className="text-xs text-zinc-500">Repos</p>
-                        </div>
-                    </div>
+                    </motion.div>
 
                     <a
                         href={`https://github.com/${user.username}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 w-full mt-6 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                        className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition-colors font-medium"
                     >
-                        View on GitHub <ExternalLink size={14} />
+                        View on GitHub <ExternalLink size={16} />
                     </a>
-                </motion.div>
+                </div>
 
-                {/* Stats & Activity */}
+                {/* Right Column - Stats & Activity */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* Stats Grid */}
+                    {/* Key Metrics */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="p-4 rounded-xl bg-bg-elevated/50 border border-white/5"
-                        >
-                            <div className="flex items-center gap-2 mb-2">
-                                <GitCommit size={16} className="text-purple-400" />
-                                <span className="text-xs text-zinc-500 font-mono uppercase">Commits</span>
-                            </div>
-                            <p className="text-2xl font-bold text-white">{user.total_commits?.toLocaleString() || 0}</p>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.15 }}
-                            className="p-4 rounded-xl bg-bg-elevated/50 border border-white/5"
-                        >
-                            <div className="flex items-center gap-2 mb-2">
-                                <GitPullRequest size={16} className="text-green-400" />
-                                <span className="text-xs text-zinc-500 font-mono uppercase">PRs</span>
-                            </div>
-                            <p className="text-2xl font-bold text-white">{user.total_prs?.toLocaleString() || 0}</p>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="p-4 rounded-xl bg-bg-elevated/50 border border-white/5"
+                            className="p-5 rounded-2xl bg-[#09090b]/50 border border-white/5 backdrop-blur-sm relative overflow-hidden group"
                         >
-                            <div className="flex items-center gap-2 mb-2">
-                                <Flame size={16} className="text-orange-400" />
-                                <span className="text-xs text-zinc-500 font-mono uppercase">Streak</span>
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <GitCommit size={48} />
                             </div>
-                            <p className="text-2xl font-bold text-white">{user.current_streak || 0} days</p>
+                            <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-1">Total Commits</p>
+                            <p className="text-3xl font-bold text-white">{user.total_commits?.toLocaleString() || 0}</p>
                         </motion.div>
 
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.25 }}
-                            className="p-4 rounded-xl bg-bg-elevated/50 border border-white/5"
+                            className="p-5 rounded-2xl bg-[#09090b]/50 border border-white/5 backdrop-blur-sm relative overflow-hidden group"
                         >
-                            <div className="flex items-center gap-2 mb-2">
-                                <Trophy size={16} className="text-yellow-400" />
-                                <span className="text-xs text-zinc-500 font-mono uppercase">Score</span>
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <GitPullRequest size={48} />
                             </div>
-                            <p className="text-2xl font-bold text-white">{user.productivity_score || 0}</p>
+                            <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-1">Pull Requests</p>
+                            <p className="text-3xl font-bold text-white">{user.total_prs?.toLocaleString() || 0}</p>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="p-5 rounded-2xl bg-[#09090b]/50 border border-white/5 backdrop-blur-sm relative overflow-hidden group"
+                        >
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <Flame size={48} className="text-orange-500" />
+                            </div>
+                            <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-1">Current Streak</p>
+                            <p className="text-3xl font-bold text-white">{user.current_streak || 0} <span className="text-sm font-normal text-zinc-500">days</span></p>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.35 }}
+                            className="p-5 rounded-2xl bg-[#09090b]/50 border border-white/5 backdrop-blur-sm relative overflow-hidden group"
+                        >
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <Trophy size={48} className="text-yellow-500" />
+                            </div>
+                            <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-1">Impact Score</p>
+                            <p className="text-3xl font-bold text-white">{user.productivity_score || 0}</p>
                         </motion.div>
                     </div>
 
@@ -363,28 +402,29 @@ export default function UserDetailPage() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="p-6 rounded-2xl bg-bg-elevated/50 border border-white/5"
+                        transition={{ delay: 0.4 }}
+                        className="p-6 rounded-3xl bg-[#09090b]/50 border border-white/5 backdrop-blur-sm"
                     >
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h3 className="text-lg font-bold text-white">Activity (Last 30 Days)</h3>
-                                <p className="text-sm text-zinc-500">Daily commit activity</p>
+                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <History size={20} className="text-zinc-400" />
+                                    Activity History
+                                </h3>
+                                <p className="text-sm text-zinc-500">Commit volumes over last 30 days</p>
                             </div>
-                            <p className="text-sm text-zinc-500">
-                                Last synced: {user.last_synced
-                                    ? formatDistanceToNow(new Date(user.last_synced), { addSuffix: true })
-                                    : 'Never'}
-                            </p>
+                            <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-400">
+                                Last synced {user.last_synced ? formatDistanceToNow(new Date(user.last_synced), { addSuffix: true }) : 'Never'}
+                            </div>
                         </div>
 
-                        <div className="h-[200px]">
+                        <div className="h-[250px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={chartData}>
                                     <defs>
                                         <linearGradient id="userActivityGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
@@ -392,74 +432,36 @@ export default function UserDetailPage() {
                                         dataKey="date"
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fill: '#71717a', fontSize: 10 }}
+                                        tick={{ fill: '#71717a', fontSize: 11 }}
                                         tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                        interval={6}
+                                        dy={10}
                                     />
                                     <YAxis
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fill: '#71717a', fontSize: 10 }}
+                                        tick={{ fill: '#71717a', fontSize: 11 }}
+                                        dx={-10}
                                     />
                                     <Tooltip
                                         contentStyle={{
-                                            backgroundColor: '#18181b',
+                                            backgroundColor: '#09090b',
                                             border: '1px solid rgba(255,255,255,0.1)',
-                                            borderRadius: '12px'
+                                            borderRadius: '12px',
+                                            boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
                                         }}
+                                        itemStyle={{ color: '#fff' }}
+                                        labelStyle={{ color: '#a1a1aa', marginBottom: '4px' }}
                                         labelFormatter={(label) => new Date(label).toLocaleDateString()}
                                     />
                                     <Area
                                         type="monotone"
                                         dataKey="commits"
-                                        stroke="#a855f7"
-                                        strokeWidth={2}
+                                        stroke="#3b82f6"
+                                        strokeWidth={3}
                                         fill="url(#userActivityGradient)"
                                     />
                                 </AreaChart>
                             </ResponsiveContainer>
-                        </div>
-                    </motion.div>
-
-                    {/* Account Info */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.35 }}
-                        className="p-6 rounded-2xl bg-bg-elevated/50 border border-white/5"
-                    >
-                        <h3 className="text-lg font-bold text-white mb-4">Account Information</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-xs text-zinc-500 font-mono uppercase mb-1">User ID</p>
-                                <p className="text-sm text-white font-mono">{user.id}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-zinc-500 font-mono uppercase mb-1">Created At</p>
-                                <p className="text-sm text-white">{format(new Date(user.created_at), 'PPpp')}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-zinc-500 font-mono uppercase mb-1">Status</p>
-                                <p className="text-sm text-white">{user.is_suspended ? 'Suspended' : 'Active'}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-zinc-500 font-mono uppercase mb-1">Role</p>
-                                <p className="text-sm text-white">{user.is_admin ? 'Administrator' : 'User'}</p>
-                            </div>
-                            {user.is_suspended && (
-                                <>
-                                    <div>
-                                        <p className="text-xs text-zinc-500 font-mono uppercase mb-1">Suspended At</p>
-                                        <p className="text-sm text-white">
-                                            {user.suspended_at ? format(new Date(user.suspended_at), 'PPpp') : '-'}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-zinc-500 font-mono uppercase mb-1">Reason</p>
-                                        <p className="text-sm text-white">{user.suspended_reason || 'No reason provided'}</p>
-                                    </div>
-                                </>
-                            )}
                         </div>
                     </motion.div>
                 </div>
@@ -470,13 +472,13 @@ export default function UserDetailPage() {
                 isOpen={suspendModal}
                 onClose={() => setSuspendModal(false)}
                 onConfirm={handleSuspend}
-                title={user.is_suspended ? 'Unsuspend User' : 'Suspend User'}
-                message={user.is_suspended
-                    ? `Are you sure you want to unsuspend ${user.username}? They will regain access to their account.`
-                    : `Are you sure you want to suspend ${user.username}? They will lose access to their account until unsuspended.`
+                title={user.is_suspended ? 'Restoring User Access' : 'Suspending User Access'}
+                description={user.is_suspended
+                    ? `You are about to restore access for ${user.username}. They will immediately regain ability to log in and use the platform.`
+                    : `You are about to suspend ${user.username}. This will revoke their access immediately. You can reverse this later.`
                 }
-                confirmText={user.is_suspended ? 'Unsuspend' : 'Suspend'}
-                variant={user.is_suspended ? 'default' : 'warning'}
+                confirmText={user.is_suspended ? 'Restore Access' : 'Suspend Account'}
+                variant={user.is_suspended ? 'success' : 'warning'}
                 loading={actionLoading}
             />
 
@@ -484,9 +486,9 @@ export default function UserDetailPage() {
                 isOpen={deleteModal}
                 onClose={() => setDeleteModal(false)}
                 onConfirm={handleDelete}
-                title="Delete User Permanently"
-                message={`Are you sure you want to permanently delete ${user.username}? This action cannot be undone and all their data will be lost forever.`}
-                confirmText="Delete Forever"
+                title="Permanently Delete User"
+                description={`WARNING: This action is irreversible. All data associated with ${user.username} including repositories, stats, and settings will be permanently erased from the database.`}
+                confirmText="Delete Permanently"
                 variant="danger"
                 loading={actionLoading}
             />
