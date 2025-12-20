@@ -122,9 +122,10 @@ export async function POST(req: Request) {
         const commitsByDay = new Map<string, any>()
         let totalCommitsThisYear = 0
 
-        // Process ALL repos that aren't forks (to match GitHub's contribution count)
-        const reposToSync = allRepos.filter(r => !r.fork && !r.archived)
-        console.log(`Processing ${reposToSync.length} non-fork, non-archived repos...`)
+        // Process ALL repos including forks (GitHub counts fork commits in contribution graph!)
+        // Only exclude archived repos
+        const reposToSync = allRepos.filter(r => !r.archived)
+        console.log(`Processing ${reposToSync.length} repos (including forks for accurate count)...`)
 
         for (const repo of reposToSync) {
             try {

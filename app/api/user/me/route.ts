@@ -41,13 +41,20 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'User not found in database' }, { status: 404 })
         }
 
-        // Fetch Daily Stats (Last 7 Days)
+        // Get days parameter from request (default 90 for better charts)
+        const { searchParams } = new URL(req.url)
+        const days = parseInt(searchParams.get('days') || '90')
+
+        // Fetch Daily Stats for requested period
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - days)
+
         const { data: dailyStats } = await supabase
             .from('daily_stats')
             .select('date, total_commits')
             .eq('user_id', user.id)
-            .order('date', { ascending: false }) // Get NEWEST first
-            .limit(7)
+            .gte('date', startDate.toISOString().split('T')[0])
+            .order('date', { ascending: false })
 
         // Calculate productivity score if it's 0 (fallback)
         // Formula: commits * 10 + PRs * 25 + issues * 15 + reviews * 20

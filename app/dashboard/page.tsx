@@ -6,10 +6,10 @@ import { BentoCard } from '@/components/ui/BentoCard'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
 import { containerVariants, itemVariants } from '@/lib/animations'
-import { GitCommit, Flame, Zap, Trophy, TrendingUp, Calendar, ArrowUpRight } from 'lucide-react'
+import { GitCommit, Flame, Zap, Trophy, TrendingUp, Calendar, ArrowUpRight, GitPullRequest, AlertCircle, CheckCircle2, Activity } from 'lucide-react'
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    AreaChart, Area
+    AreaChart, Area, BarChart, Bar
 } from 'recharts'
 import { useSession } from 'next-auth/react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
@@ -35,6 +35,8 @@ export default function DashboardPage() {
     const [weekCommits, setWeekCommits] = useState(0)
     const [achievementStats, setAchievementStats] = useState({ unlocked: 0, pending: 0, total: 0 })
     const [weekTrend, setWeekTrend] = useState(0)
+    const [dateRange, setDateRange] = useState<'7' | '30' | '90'>('30')
+    const [allDailyStats, setAllDailyStats] = useState<any[]>([])
 
     // Function to sync GitHub data
     const syncGitHubData = async () => {
@@ -45,7 +47,7 @@ export default function DashboardPage() {
             const data = await res.json()
 
             if (data.success) {
-                setSyncMessage(`✅ Synced! ${data.stats?.total_commits || 0} commits, ${data.stats?.total_prs || 0} PRs, Score: ${data.stats?.productivity_score || 0}`)
+                setSyncMessage(`Synced! ${data.stats?.total_commits || 0} commits, ${data.stats?.total_prs || 0} PRs`)
                 // Reload after 2 seconds to show updated data
                 setTimeout(() => window.location.reload(), 2000)
             } else {
@@ -60,12 +62,51 @@ export default function DashboardPage() {
         }
     }
 
+    // Update chart when date range changes
+    useEffect(() => {
+        if (allDailyStats.length > 0) {
+            updateChartData(allDailyStats, dateRange)
+        }
+    }, [dateRange, allDailyStats])
+
+    function updateChartData(dailyStats: any[], range: string) {
+        const days = parseInt(range)
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - days)
+        const startDateStr = startDate.toISOString().split('T')[0]
+
+        // Filter stats for the selected range
+        const filteredStats = dailyStats.filter((d: any) => d.date >= startDateStr)
+
+        // Create a map of existing data
+        const dataMap = new Map(filteredStats.map((d: any) => [d.date, d.total_commits]))
+
+        // Generate all dates in range with commits (0 if no data)
+        const chartData: any[] = []
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date()
+            date.setDate(date.getDate() - i)
+            const dateStr = date.toISOString().split('T')[0]
+            const dayName = days <= 7
+                ? date.toLocaleDateString('en-US', { weekday: 'short' })
+                : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
+            chartData.push({
+                name: dayName,
+                date: dateStr,
+                commits: dataMap.get(dateStr) || 0
+            })
+        }
+
+        setActivityData(chartData)
+    }
+
     async function fetchDashboardData() {
         if (!session) return
 
         try {
-            // Fetch User Data & Daily Stats from Server API
-            const res = await fetch('/api/user/me')
+            // Fetch User Data & Daily Stats from Server API (get more days)
+            const res = await fetch('/api/user/me?days=90')
             const data = await res.json()
 
             if (res.ok) {
@@ -86,16 +127,10 @@ export default function DashboardPage() {
                         syncGitHubData()
                     }
 
-                    // Daily stats fetched from API
-                    const _unused = null;
-
+                    // Store all daily stats for filtering
                     if (dailyStats && dailyStats.length > 0) {
-                        // Reverse for Chart (Past -> Today)
-                        const chartStats = [...dailyStats].reverse()
-                        setActivityData(chartStats.map((d: any) => ({
-                            name: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
-                            commits: d.total_commits
-                        })))
+                        setAllDailyStats(dailyStats)
+                        updateChartData(dailyStats, dateRange)
 
                         const today = new Date().toISOString().split('T')[0]
                         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -119,15 +154,8 @@ export default function DashboardPage() {
                             setWeekTrend(Math.round(trend))
                         }
                     } else {
-                        setActivityData([
-                            { name: 'Mon', commits: 0 },
-                            { name: 'Tue', commits: 0 },
-                            { name: 'Wed', commits: 0 },
-                            { name: 'Thu', commits: 0 },
-                            { name: 'Fri', commits: 0 },
-                            { name: 'Sat', commits: 0 },
-                            { name: 'Sun', commits: 0 },
-                        ])
+                        // No data - show empty state
+                        setActivityData([])
                     }
                 }
             }
@@ -136,7 +164,7 @@ export default function DashboardPage() {
             const activityRes = await fetch('/api/github/activity')
             if (activityRes.ok) {
                 const activityJson = await activityRes.json()
-                if (activityJson.events) {
+                if (activityJson.events && activityJson.events.length > 0) {
                     setRecentCommits(activityJson.events)
                 }
             }
@@ -161,6 +189,9 @@ export default function DashboardPage() {
         fetchDashboardData()
     }, [session])
 
+    // Calculate contributions breakdown
+    const totalContributions = (stats?.total_commits || 0) + (stats?.total_prs || 0) + (stats?.total_issues || 0) + (stats?.total_reviews || 0)
+
     return (
         <div className="container mx-auto max-w-7xl pt-8 pb-20">
 
@@ -182,15 +213,16 @@ export default function DashboardPage() {
                         Welcome back, <span className="text-transparent bg-clip-text bg-gradient-primary">{session?.user?.name || 'Developer'}</span>
                     </motion.h1>
                     <motion.p variants={itemVariants} className="text-text-tertiary max-w-xl">
-                        Your quantum productivity field is active. Systems are optimal.
+                        Your coding journey in {new Date().getFullYear()}. Keep the momentum going!
                     </motion.p>
                 </div>
 
-                <motion.div variants={itemVariants} className="flex gap-3 items-center">
+                <motion.div variants={itemVariants} className="flex gap-3 items-center flex-wrap">
                     {/* Last Synced Info */}
                     {stats?.last_synced && (
-                        <span className="text-xs text-zinc-500 font-mono hidden md:block">
-                            Last synced: {new Date(stats.last_synced).toLocaleString()}
+                        <span className="text-xs text-zinc-500 font-mono hidden md:flex items-center gap-1">
+                            <CheckCircle2 size={12} className="text-green-500" />
+                            Synced: {new Date(stats.last_synced).toLocaleString()}
                         </span>
                     )}
 
@@ -257,20 +289,21 @@ export default function DashboardPage() {
                 <QuickActions onSync={syncGitHubData} isSyncing={isSyncing} />
             </motion.div>
 
-            {/* Stats Grid */}
+            {/* Stats Grid - Enhanced with PRs and Total Contributions */}
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8"
             >
-                <GlassCard className="p-6 relative overflow-hidden group" glow="cyan">
+                {/* Total Contributions */}
+                <GlassCard className="p-4 md:p-6 relative overflow-hidden group col-span-2" glow="cyan">
                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity duration-500">
-                        <GitCommit size={80} className="text-cyan-primary" />
+                        <Activity size={60} className="text-cyan-primary" />
                     </div>
-                    <div className="flex justify-between items-start mb-4 relative z-10">
-                        <div className="p-3 rounded-xl bg-cyan-primary/10 text-cyan-primary border border-cyan-primary/20">
-                            <GitCommit size={20} />
+                    <div className="flex justify-between items-start mb-2 relative z-10">
+                        <div className="p-2 md:p-3 rounded-xl bg-cyan-primary/10 text-cyan-primary border border-cyan-primary/20">
+                            <Activity size={18} />
                         </div>
                         {weekTrend !== 0 && (
                             <span className={`text-xs font-medium flex items-center gap-1 px-2 py-1 rounded-lg border ${weekTrend > 0
@@ -282,64 +315,67 @@ export default function DashboardPage() {
                             </span>
                         )}
                     </div>
-                    <div className="text-4xl font-bold font-display mb-1 text-white tracking-tight">
+                    <div className="text-3xl md:text-4xl font-bold font-display mb-1 text-white tracking-tight">
+                        <AnimatedCounter value={totalContributions} />
+                    </div>
+                    <div className="text-xs md:text-sm text-text-tertiary font-mono">CONTRIBUTIONS {new Date().getFullYear()}</div>
+                </GlassCard>
+
+                {/* Commits */}
+                <GlassCard className="p-4 md:p-6 relative overflow-hidden group" glow="none">
+                    <div className="flex justify-between items-start mb-2 relative z-10">
+                        <div className="p-2 rounded-xl bg-purple-primary/10 text-purple-primary border border-purple-primary/20">
+                            <GitCommit size={16} />
+                        </div>
+                    </div>
+                    <div className="text-2xl md:text-3xl font-bold font-display mb-1 text-white tracking-tight">
                         <AnimatedCounter value={stats?.total_commits || 0} />
                     </div>
-                    <div className="text-sm text-text-tertiary font-mono">COMMITS {new Date().getFullYear()}</div>
+                    <div className="text-xs text-text-tertiary font-mono">COMMITS</div>
                 </GlassCard>
 
-                <GlassCard className="p-6 relative overflow-hidden group" glow="purple">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity duration-500">
-                        <Flame size={80} className="text-purple-primary" />
-                    </div>
-                    <div className="flex justify-between items-start mb-4 relative z-10">
-                        <div className="p-3 rounded-xl bg-purple-primary/10 text-purple-primary border border-purple-primary/20">
-                            <Flame size={20} />
+                {/* PRs */}
+                <GlassCard className="p-4 md:p-6 relative overflow-hidden group" glow="none">
+                    <div className="flex justify-between items-start mb-2 relative z-10">
+                        <div className="p-2 rounded-xl bg-green-500/10 text-green-400 border border-green-500/20">
+                            <GitPullRequest size={16} />
                         </div>
-                        <span className="text-xs font-medium text-purple-light flex items-center gap-1 bg-purple-primary/10 px-2 py-1 rounded-lg border border-purple-primary/20">
-                            <Flame size={12} /> ON FIRE
-                        </span>
                     </div>
-                    <div className="text-4xl font-bold font-display mb-1 text-white tracking-tight">
-                        <AnimatedCounter value={stats?.current_streak || 0} suffix=" Days" />
+                    <div className="text-2xl md:text-3xl font-bold font-display mb-1 text-white tracking-tight">
+                        <AnimatedCounter value={stats?.total_prs || 0} />
                     </div>
-                    <div className="text-sm text-text-tertiary font-mono">CURRENT STREAK</div>
+                    <div className="text-xs text-text-tertiary font-mono">PULL REQUESTS</div>
                 </GlassCard>
 
-                <GlassCard className="p-6 relative overflow-hidden group" glow="none">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity duration-500">
-                        <Zap size={80} className="text-yellow-500" />
-                    </div>
-                    <div className="flex justify-between items-start mb-4 relative z-10">
-                        <div className="p-3 rounded-xl bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
-                            <Zap size={20} />
+                {/* Streak */}
+                <GlassCard className="p-4 md:p-6 relative overflow-hidden group" glow="purple">
+                    <div className="flex justify-between items-start mb-2 relative z-10">
+                        <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                            <Flame size={16} />
                         </div>
-                        <span className="text-xs font-medium text-text-tertiary">
-                            Top 5%
-                        </span>
+                        {(stats?.current_streak || 0) > 0 && (
+                            <span className="text-xs font-medium text-orange-400 flex items-center gap-1 bg-orange-500/10 px-2 py-0.5 rounded-lg border border-orange-500/20">
+                                <Flame size={10} /> FIRE
+                            </span>
+                        )}
                     </div>
-                    <div className="text-4xl font-bold font-display mb-1 text-white tracking-tight">
+                    <div className="text-2xl md:text-3xl font-bold font-display mb-1 text-white tracking-tight">
+                        <AnimatedCounter value={stats?.current_streak || 0} suffix="d" />
+                    </div>
+                    <div className="text-xs text-text-tertiary font-mono">STREAK</div>
+                </GlassCard>
+
+                {/* Productivity Score */}
+                <GlassCard className="p-4 md:p-6 relative overflow-hidden group" glow="none">
+                    <div className="flex justify-between items-start mb-2 relative z-10">
+                        <div className="p-2 rounded-xl bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                            <Zap size={16} />
+                        </div>
+                    </div>
+                    <div className="text-2xl md:text-3xl font-bold font-display mb-1 text-white tracking-tight">
                         <AnimatedCounter value={stats?.productivity_score || 0} />
                     </div>
-                    <div className="text-sm text-text-tertiary font-mono">PRODUCTIVITY SCORE</div>
-                </GlassCard>
-
-                <GlassCard className="p-6 relative overflow-hidden group" glow="none">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity duration-500">
-                        <Trophy size={80} className="text-silver" />
-                    </div>
-                    <div className="flex justify-between items-start mb-4 relative z-10">
-                        <div className="p-3 rounded-xl bg-white/5 text-silver border border-white/10">
-                            <Trophy size={20} />
-                        </div>
-                        <span className="text-xs font-medium text-text-tertiary">
-                            {achievementStats.pending} Pending
-                        </span>
-                    </div>
-                    <div className="text-4xl font-bold font-display mb-1 text-white tracking-tight">
-                        <AnimatedCounter value={achievementStats.unlocked} />
-                    </div>
-                    <div className="text-sm text-text-tertiary font-mono">ACHIEVEMENTS</div>
+                    <div className="text-xs text-text-tertiary font-mono">SCORE</div>
                 </GlassCard>
             </motion.div>
 
@@ -349,57 +385,114 @@ export default function DashboardPage() {
                 {/* Main Chart */}
                 <div className="lg:col-span-2">
                     <GlassCard className="h-full min-h-[450px]" glow="purple">
-                        <div className="flex justify-between items-center mb-8">
+                        <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
                             <div>
                                 <h3 className="text-xl font-bold font-display text-white mb-1 flex items-center gap-2">
                                     <TrendingUp size={20} className="text-purple-primary" /> Activity Frequency
                                 </h3>
-                                <p className="text-sm text-text-tertiary">Your coding resonance over time.</p>
+                                <p className="text-sm text-text-tertiary">Your coding activity over time</p>
                             </div>
-                            <select className="bg-bg-deep border border-white/10 rounded-xl px-4 py-2 text-sm text-text-secondary outline-none focus:border-purple-primary/50 transition-colors">
-                                <option>Last 7 Days</option>
-                                <option>Last 30 Days</option>
-                            </select>
+                            <div className="flex gap-2">
+                                {(['7', '30', '90'] as const).map((range) => (
+                                    <button
+                                        key={range}
+                                        onClick={() => setDateRange(range)}
+                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${dateRange === range
+                                            ? 'bg-purple-primary text-white'
+                                            : 'bg-white/5 text-zinc-400 hover:bg-white/10'
+                                            }`}
+                                    >
+                                        {range}d
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         <div className="h-[320px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={activityData.length ? activityData : [{ name: 'No Data', commits: 0 }]}>
-                                    <defs>
-                                        <linearGradient id="colorCommits" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                    <XAxis
-                                        dataKey="name"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fill: '#a1a1aa', fontSize: 12, fontFamily: 'var(--font-mono)' }}
-                                        dy={10}
-                                    />
-                                    <YAxis
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fill: '#a1a1aa', fontSize: 12, fontFamily: 'var(--font-mono)' }}
-                                    />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: '#09090b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
-                                        itemStyle={{ color: '#fff', fontFamily: 'var(--font-mono)' }}
-                                        cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }}
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="commits"
-                                        stroke="#7c3aed"
-                                        strokeWidth={3}
-                                        fillOpacity={1}
-                                        fill="url(#colorCommits)"
-                                        activeDot={{ r: 6, strokeWidth: 0, fill: '#fff' }}
-                                    />
-                                </AreaChart>
+                                {dateRange === '7' ? (
+                                    <AreaChart data={activityData.length ? activityData : [{ name: 'No Data', commits: 0 }]}>
+                                        <defs>
+                                            <linearGradient id="colorCommits" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.4} />
+                                                <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                                        <XAxis
+                                            dataKey="name"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: '#a1a1aa', fontSize: 12, fontFamily: 'var(--font-mono)' }}
+                                            dy={10}
+                                        />
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: '#a1a1aa', fontSize: 12, fontFamily: 'var(--font-mono)' }}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#09090b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+                                            itemStyle={{ color: '#fff', fontFamily: 'var(--font-mono)' }}
+                                            labelFormatter={(label, payload) => payload[0]?.payload?.date || label}
+                                            cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="commits"
+                                            stroke="#7c3aed"
+                                            strokeWidth={3}
+                                            fillOpacity={1}
+                                            fill="url(#colorCommits)"
+                                            activeDot={{ r: 6, strokeWidth: 0, fill: '#fff' }}
+                                        />
+                                    </AreaChart>
+                                ) : (
+                                    <BarChart data={activityData.length ? activityData : [{ name: 'No Data', commits: 0 }]}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                                        <XAxis
+                                            dataKey="name"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+                                            dy={10}
+                                            interval={dateRange === '90' ? 6 : 2}
+                                        />
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: '#a1a1aa', fontSize: 12, fontFamily: 'var(--font-mono)' }}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#09090b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+                                            itemStyle={{ color: '#fff', fontFamily: 'var(--font-mono)' }}
+                                            labelFormatter={(label, payload) => payload[0]?.payload?.date || label}
+                                            cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                        />
+                                        <Bar
+                                            dataKey="commits"
+                                            fill="#7c3aed"
+                                            radius={[4, 4, 0, 0]}
+                                        />
+                                    </BarChart>
+                                )}
                             </ResponsiveContainer>
+                        </div>
+
+                        {/* Stats Summary */}
+                        <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/5">
+                            <div className="text-center">
+                                <p className="text-2xl font-bold text-white">{stats?.total_repos || 0}</p>
+                                <p className="text-xs text-zinc-500 font-mono">REPOSITORIES</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-2xl font-bold text-white">{stats?.longest_streak || 0}</p>
+                                <p className="text-xs text-zinc-500 font-mono">LONGEST STREAK</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-2xl font-bold text-white">{stats?.total_issues || 0}</p>
+                                <p className="text-xs text-zinc-500 font-mono">ISSUES</p>
+                            </div>
                         </div>
                     </GlassCard>
                 </div>
@@ -468,32 +561,37 @@ export default function DashboardPage() {
                         </div>
                     </GlassCard>
 
-                    {/* Recent Commits List */}
+                    {/* Recent Commits List - Live Feed */}
                     <GlassCard className="p-6 flex-1 min-h-[300px]">
                         <h3 className="text-sm font-bold font-mono text-silver-dim uppercase tracking-wider mb-6 flex items-center gap-2">
                             <GitCommit size={14} className="text-purple-primary" /> Live Feed
                         </h3>
-                        <div className="space-y-0">
+                        <div className="space-y-0 max-h-[400px] overflow-y-auto">
                             {recentCommits.length > 0 ? (
-                                recentCommits.map((event: any, i) => (
-                                    <div key={i} className="flex gap-4 items-start group cursor-pointer hover:bg-white/5 p-3 rounded-xl transition-all border border-transparent hover:border-white/5">
-                                        <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-primary shadow-[0_0_10px_var(--cyan-primary)] group-hover:scale-125 transition-transform" />
-                                        <div>
-                                            <p className="text-sm font-medium text-white group-hover:text-cyan-400 transition-colors leading-snug">
+                                recentCommits.slice(0, 15).map((event: any, i) => (
+                                    <div key={event.id || i} className="flex gap-4 items-start group cursor-pointer hover:bg-white/5 p-3 rounded-xl transition-all border border-transparent hover:border-white/5">
+                                        <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-primary shadow-[0_0_10px_var(--cyan-primary)] group-hover:scale-125 transition-transform flex-shrink-0" />
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium text-white group-hover:text-cyan-400 transition-colors leading-snug truncate">
                                                 {event.title}
                                             </p>
                                             <p className="text-xs text-text-tertiary font-mono mt-1">
-                                                {new Date(event.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} •
-                                                <span className="opacity-70 ml-1">{event.repo}</span>
+                                                {new Date(event.created_at).toLocaleString([], {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
                                             </p>
                                         </div>
                                     </div>
                                 ))
                             ) : (
                                 <div className="text-center py-8 text-zinc-500 text-sm">
+                                    <Activity className="mx-auto mb-2 opacity-50" size={24} />
                                     No recent activity found.
                                     <br />
-                                    Push some code to see it here!
+                                    <span className="text-xs">Push some code to see it here!</span>
                                 </div>
                             )}
                         </div>
