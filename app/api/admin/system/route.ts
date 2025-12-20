@@ -53,9 +53,9 @@ export async function GET() {
                 limit: 5000,
                 resetAt: new Date(Date.now() + 45 * 60 * 1000).toISOString()
             },
-            gemini: {
-                remaining: 85,
-                limit: 100,
+            groq: {
+                remaining: 14500,
+                limit: 15000,
                 resetAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
             }
         }

@@ -33,7 +33,7 @@ interface SystemMetrics {
             limit: number
             resetAt: string
         }
-        gemini: {
+        groq: {
             remaining: number
             limit: number
             resetAt: string
@@ -242,34 +242,34 @@ export default function AdminSystemPage() {
                         </div>
                     </div>
 
-                    {/* Gemini API */}
+                    {/* Groq Llama API */}
                     <div className="p-6 rounded-3xl bg-[#09090b] border border-white/10 relative overflow-hidden">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
+                                <div className="p-2 rounded-lg bg-orange-500/20 text-orange-400">
                                     <Zap size={20} />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-white">Gemini AI</h4>
+                                    <h4 className="font-bold text-white">Groq Llama 3</h4>
                                     <p className="text-xs text-zinc-500">Intelligence engine</p>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="text-xl font-bold text-white font-mono">{metrics?.api.gemini.remaining}</p>
-                                <p className="text-xs text-zinc-500">quota remaining</p>
+                                <p className="text-xl font-bold text-white font-mono">{metrics?.api.groq.remaining.toLocaleString()}</p>
+                                <p className="text-xs text-zinc-500">tokens / min</p>
                             </div>
                         </div>
 
                         <div className="relative h-2 bg-zinc-800 rounded-full overflow-hidden mb-3">
                             <div
-                                className="absolute top-0 left-0 h-full bg-blue-500 rounded-full transition-all duration-500"
-                                style={{ width: `${(metrics?.api.gemini.remaining || 0) / (metrics?.api.gemini.limit || 1) * 100}%` }}
+                                className="absolute top-0 left-0 h-full bg-orange-500 rounded-full transition-all duration-500"
+                                style={{ width: `${(metrics?.api.groq.remaining || 0) / (metrics?.api.groq.limit || 1) * 100}%` }}
                             />
                         </div>
 
                         <div className="flex items-center justify-between text-xs text-zinc-500 font-mono">
-                            <span>Limit: {metrics?.api.gemini.limit}</span>
-                            <span>Resets in: {metrics?.api.gemini.resetAt ? formatTimeUntil(metrics.api.gemini.resetAt) : '-'}</span>
+                            <span>Limit: {metrics?.api.groq.limit.toLocaleString()}</span>
+                            <span>Resets in: {metrics?.api.groq.resetAt ? formatTimeUntil(metrics.api.groq.resetAt) : '-'}</span>
                         </div>
                     </div>
                 </motion.div>
