@@ -91,8 +91,7 @@ const PremiumBentoCard = ({ title, description, icon, children, className = '', 
                     </div>
                 </div>
 
-                {/* Subtle Noise Overlay */}
-                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] pointer-events-none" />
+
 
                 {/* Shine Effect on Hover */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
@@ -388,6 +387,9 @@ export function StorytellingFeatures() {
 
     return (
         <section id="features" className="py-32 relative overflow-hidden bg-[#0a0612]">
+            {/* Background Matrix/Grid effect */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
+
             {/* Ambient Background Glows */}
             <div className="absolute top-20 left-1/4 w-[600px] h-[600px] bg-purple-600/5 rounded-full blur-[150px] pointer-events-none" />
             <div className="absolute bottom-20 right-1/4 w-[500px] h-[500px] bg-cyan-600/5 rounded-full blur-[150px] pointer-events-none" />

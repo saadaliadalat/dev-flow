@@ -1,86 +1,126 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { containerVariants, itemVariants } from '@/lib/animations'
-import { GlassCard } from '@/components/ui/GlassCard'
-import { Github, FileCode2, Rocket } from 'lucide-react'
+import React, { useRef } from 'react'
+import { motion, useScroll, useTransform, useInView } from 'framer-motion'
+import { GitCommit, Zap, BarChart3, ArrowRight, Check } from 'lucide-react'
 
-const steps = [
+const features = [
     {
-        number: "01",
-        title: "Connect",
-        description: "Sign in with GitHub in one click. We securely sync your contribution history.",
-        icon: <Github className="w-8 h-8" />
+        title: "Connect & Sync",
+        description: "Link your GitHub in seconds. We automatically backfill your history and start tracking velocity.",
+        icon: <GitCommit className="w-6 h-6 text-purple-400" />,
+        code: "git commit -m 'feat: next-level shit'",
+        color: "from-purple-500/20 to-blue-500/20",
+        delay: 0
     },
     {
-        number: "02",
-        title: "Analyze",
-        description: "Our AI engine processes your commits, languages, and coding patterns.",
-        icon: <FileCode2 className="w-8 h-8" />
+        title: "AI Analysis",
+        description: "Our neural engine scans your patterns to identify peak flow hours and potential burnout risks.",
+        icon: <Zap className="w-6 h-6 text-yellow-400" />,
+        code: "Analyzing... Flow State: 98%",
+        color: "from-yellow-500/20 to-orange-500/20",
+        delay: 0.2
     },
     {
-        number: "03",
         title: "Level Up",
-        description: "Get insights, unlock achievements, and share your Year in Review card.",
-        icon: <Rocket className="w-8 h-8" />
+        description: "Unlock achievements, visualize your growth, and flex your Year in Review.",
+        icon: <BarChart3 className="w-6 h-6 text-cyan-400" />,
+        code: "Achievement Unlocked: 10x Dev",
+        color: "from-cyan-500/20 to-emerald-500/20",
+        delay: 0.4
     }
 ]
 
 export function HowItWorks() {
     return (
-        <section id="how-it-works" className="py-24 relative overflow-hidden bg-bg-mid/30">
-
-            {/* Background Decor */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[300px] bg-gradient-primary opacity-5 blur-[120px] pointer-events-none" />
+        <section id="how-it-works" className="py-32 relative overflow-hidden bg-black">
+            {/* Background Matrix/Grid effect - Subtle */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
             <div className="container mx-auto px-6 relative z-10">
-                <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={containerVariants}
-                    className="text-center max-w-3xl mx-auto mb-20"
-                >
-                    <motion.h2 variants={itemVariants} className="text-4xl md:text-5xl font-display font-bold mb-6">
-                        From GitHub to Insights in <br /><span className="text-gradient">60 Seconds</span>
+                <div className="text-center max-w-3xl mx-auto mb-20">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                        viewport={{ once: true }}
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-zinc-400 mb-6"
+                    >
+                        <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                        Workflow
+                    </motion.div>
+
+                    <motion.h2
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        viewport={{ once: true }}
+                        className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight"
+                    >
+                        From Commit to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Insight</span>
                     </motion.h2>
-                </motion.div>
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        viewport={{ once: true }}
+                        className="text-zinc-400 text-lg"
+                    >
+                        Automated, invisible, and designed for flow. No manual entry required.
+                    </motion.p>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-                    {/* Connecting Line (Desktop) */}
-                    <div className="hidden md:block absolute top-24 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-transparent via-glass-border to-transparent z-0" />
+                    {/* Connection Line */}
+                    <div className="hidden md:block absolute top-[20%] left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-                    {steps.map((step, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: index * 0.2, duration: 0.5 }}
-                            className="relative z-10"
-                        >
-                            <GlassCard className="text-center h-full group" hover>
-                                <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full bg-bg-elevated border border-glass-border shadow-2xl mb-8 group-hover:scale-110 transition-transform duration-300">
-                                    <div className="absolute inset-0 rounded-full bg-cyan-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <span className="text-cyan-400 group-hover:text-cyan-300 transition-colors">
-                                        {step.icon}
-                                    </span>
-                                    <span className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-sm border-4 border-bg-deep">
-                                        {step.number}
-                                    </span>
-                                </div>
-
-                                <h3 className="text-2xl font-bold font-display mb-4 text-white group-hover:text-cyan-300 transition-colors">
-                                    {step.title}
-                                </h3>
-                                <p className="text-text-secondary leading-relaxed">
-                                    {step.description}
-                                </p>
-                            </GlassCard>
-                        </motion.div>
+                    {features.map((feature, i) => (
+                        <FeatureCard key={i} {...feature} index={i} />
                     ))}
                 </div>
             </div>
         </section>
+    )
+}
+
+function FeatureCard({ title, description, icon, code, color, delay, index }: any) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay }}
+            viewport={{ once: true }}
+            className="relative h-full"
+        >
+            <div className="group relative z-10 h-full p-1 rounded-3xl bg-gradient-to-b from-white/10 to-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                <div className="bg-[#0c0c0c] rounded-[22px] h-full p-8 flex flex-col items-center text-center overflow-hidden relative">
+
+                    {/* Top Number */}
+                    <div className="absolute top-4 right-6 text-[80px] font-bold text-white/5 font-display select-none">
+                        0{index + 1}
+                    </div>
+
+                    {/* Icon Circle */}
+                    <div className="relative w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
+                        {icon}
+                        {/* Glow behind icon */}
+                        <div className={`absolute inset-0 bg-gradient-to-br ${color} blur-xl opacity-20 group-hover:opacity-40 transition-opacity`} />
+                    </div>
+
+                    {/* Content */}
+                    <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
+                    <p className="text-zinc-400 text-sm leading-relaxed mb-8">{description}</p>
+
+                    {/* Fake Code Block */}
+                    <div className="mt-auto w-full p-3 rounded-lg bg-[#050505] border border-white/5 font-mono text-xs text-zinc-500 overflow-hidden text-left relative group-hover:border-white/10 transition-colors">
+                        <div className="flex gap-1.5 mb-2 opacity-50">
+                            <div className="w-2 h-2 rounded-full bg-zinc-700" />
+                            <div className="w-2 h-2 rounded-full bg-zinc-700" />
+                        </div>
+                        <span className="text-emerald-500">$</span> {code}
+                    </div>
+                </div>
+            </div>
+        </motion.div>
     )
 }
