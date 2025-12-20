@@ -1,296 +1,162 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
-import { LayoutDashboard, LogOut, Zap, Menu, X } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion'
+import { Menu, X, ChevronRight, Zap } from 'lucide-react'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useSession, signOut } from 'next-auth/react'
 
-// --- Custom DevFlow Logo Component ---
-const DevFlowLogo = ({ className = '' }: { className?: string }) => (
-    <motion.svg
-        viewBox="0 0 40 40"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className={className}
-        whileHover={{ scale: 1.05 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-    >
-        <defs>
-            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="50%" stopColor="#e4e4e7" />
-                <stop offset="100%" stopColor="#71717a" />
-            </linearGradient>
-            <filter id="logoGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="2" result="blur" />
-                <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                </feMerge>
-            </filter>
-        </defs>
-
-        {/* Outer Ring - Dashed */}
-        <motion.circle
-            cx="20" cy="20" r="18"
-            stroke="url(#logoGradient)"
-            strokeWidth="1"
-            fill="none"
-            strokeDasharray="4 4"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-            style={{ transformOrigin: "center" }}
-            opacity="0.3"
-        />
-
-        {/* Solid Background */}
-        <circle cx="20" cy="20" r="14" fill="#000000" stroke="#27272a" strokeWidth="1" />
-
-        {/* The "D" Shape */}
-        <path
-            d="M14 12 L14 28 L20 28 C25 28 28 24 28 20 C28 16 25 12 20 12 L14 12 Z"
-            fill="url(#logoGradient)"
-            opacity="0.9"
-        />
-
-        {/* Pulse Dot */}
-        <motion.circle
-            cx="28" cy="12" r="2"
-            fill="#ffffff"
-            animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0.2, 0.8] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
-    </motion.svg>
-)
-
-// Properly typed props interfaces
-interface NavLinkProps {
-    href: string
-    children: React.ReactNode
-    isActive?: boolean
-    onClick?: () => void
-}
-
-interface MobileNavLinkProps {
-    href: string
-    children: React.ReactNode
-    onClick?: () => void
-}
-
-const NavLink = ({ href, children, isActive, onClick }: NavLinkProps) => (
-    <Link
-        href={href}
-        onClick={onClick}
-        className={cn(
-            "relative px-4 py-1.5 text-sm font-medium transition-colors rounded-full z-10",
-            isActive ? "text-white" : "text-white/60 hover:text-white"
-        )}
-        aria-current={isActive ? 'page' : undefined}
-    >
-        {children}
-        {isActive && (
-            <motion.div
-                layoutId="activeTab"
-                className="absolute inset-0 bg-white/10 rounded-full -z-10 backdrop-blur-sm border border-white/5"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-            />
-        )}
-    </Link>
-)
-
-const MobileNavLink = ({ href, children, onClick }: MobileNavLinkProps) => (
-    <Link
-        href={href}
-        onClick={onClick}
-        className="text-2xl font-medium text-white/70 hover:text-white transition-colors"
-    >
-        {children}
-    </Link>
-)
-
 export function Navbar() {
-    const { data: session, status } = useSession()
     const [isScrolled, setIsScrolled] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [activeTab, setActiveTab] = useState<string>('')
     const { scrollY } = useScroll()
+    const router = useRouter()
+    const pathname = usePathname()
+    const { data: session } = useSession()
 
-    const navY = useTransform(scrollY, [0, 100], [24, 16])
+    useMotionValueEvent(scrollY, "change", (latest) => {
+        setIsScrolled(latest > 20)
+    })
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 20)
-            const sections = ['features', 'how-it-works', 'pricing']
-            const current = sections.find(section => {
-                const el = document.getElementById(section)
-                if (el) {
-                    const rect = el.getBoundingClientRect()
-                    return rect.top >= 0 && rect.top <= 400
-                }
-                return false
-            })
-            if (current) setActiveTab(current)
-        }
-        window.addEventListener('scroll', handleScroll)
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
+    const navLinks = [
+        { name: 'Features', href: '#features' },
+        { name: 'How it works', href: '#how-it-works' },
+        { name: 'Pricing', href: '#pricing' },
+    ]
+
+    if (pathname?.startsWith('/admin')) return null
 
     return (
-        <>
-            {/* --- DESKTOP FLOATING DOCK --- */}
-            <div className="hidden md:flex fixed top-0 left-0 right-0 z-50 justify-center pointer-events-none">
-                <motion.nav
-                    style={{ y: navY }}
-                    className="pointer-events-auto"
-                >
-                    <div className={cn(
-                        "relative flex items-center gap-2 p-2 rounded-full transition-all duration-500",
-                        "bg-[#09090b]/90 backdrop-blur-2xl border border-white/[0.08] shadow-2xl shadow-black/50"
-                    )}>
-
-                        {/* Logo Area - Icon Only */}
-                        <Link href="/" className="pl-2 pr-2 flex items-center justify-center">
-                            <DevFlowLogo className="w-9 h-9" />
-                        </Link>
-
-                        {/* Navigation Links */}
-                        <div className="flex items-center">
-                            {['Features', 'How it Works', 'Pricing', 'Blog'].map((item) => {
-                                const slug = item.toLowerCase().replace(/\s+/g, '-')
-                                return (
-                                    <NavLink
-                                        key={item}
-                                        href={slug === 'blog' ? '/blog' : `/#${slug}`}
-                                        isActive={activeTab === slug}
-                                        onClick={() => setActiveTab(slug)}
-                                    >
-                                        {item}
-                                    </NavLink>
-                                )
-                            })}
-                        </div>
-
-                        {/* Divider */}
-                        <div className="w-[1px] h-6 bg-white/10 mx-2" />
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 pr-1">
-                            {status === 'loading' ? (
-                                <div className="w-20 h-8 bg-white/5 animate-pulse rounded-full" />
-                            ) : session ? (
-                                <div className="flex items-center gap-2">
-                                    <Link href="/dashboard">
-                                        <div className="p-2 rounded-full hover:bg-white/10 transition-colors text-white/70 hover:text-white" title="Dashboard">
-                                            <LayoutDashboard size={18} />
-                                        </div>
-                                    </Link>
-                                    <button onClick={() => signOut()} className="p-2 rounded-full hover:bg-white/10 transition-colors text-white/70 hover:text-white" title="Sign Out">
-                                        <LogOut size={18} />
-                                    </button>
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white/20 to-white/5 p-[1px] mx-1">
-                                        <img
-                                            src={session.user?.image || ''}
-                                            alt="User"
-                                            className="w-full h-full rounded-full bg-black object-cover"
-                                        />
-                                    </div>
-                                </div>
-                            ) : (
-                                <>
-                                    <Link href="/login" className="px-3 text-sm font-medium text-white/70 hover:text-white transition-colors">
-                                        Sign In
-                                    </Link>
-                                    <Link href="/login">
-                                        <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            className="px-4 py-2 rounded-full bg-white text-black text-xs font-bold flex items-center gap-1.5 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-shadow"
-                                        >
-                                            <Zap className="w-3 h-3 text-black fill-black" />
-                                            <span>Start</span>
-                                        </motion.button>
-                                    </Link>
-                                </>
-                            )}
-                        </div>
-
+        <motion.header
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed top-0 inset-x-0 z-50 flex justify-center pt-4"
+        >
+            <div className={cn(
+                "relative flex items-center justify-between w-[95%] max-w-7xl px-4 py-3 rounded-2xl transition-all duration-300",
+                isScrolled
+                    ? "bg-[#09090b]/80 border border-white/10 backdrop-blur-xl shadow-2xl shadow-black/50"
+                    : "bg-transparent border border-transparent"
+            )}>
+                {/* 1. LOGO */}
+                <Link href="/" className="flex items-center gap-3 group">
+                    <div className="relative w-8 h-8 flex items-center justify-center bg-white text-black rounded-lg font-bold font-mono text-lg shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                        D
+                        <div className="absolute inset-0 bg-white blur-md opacity-40 group-hover:opacity-60 transition-opacity" />
                     </div>
-                </motion.nav>
-            </div>
+                    <span className="font-display font-bold text-lg tracking-tight text-white group-hover:text-zinc-200 transition-colors">
+                        DevFlow
+                    </span>
+                </Link>
 
-            {/* --- MOBILE NAVBAR --- */}
-            <div className="md:hidden fixed top-0 left-0 right-0 z-50 p-4 pointer-events-none">
-                <div className="pointer-events-auto flex items-center justify-between p-4 rounded-2xl bg-[#0a0612]/80 backdrop-blur-xl border border-white/10 shadow-2xl">
-                    <Link href="/" className="flex items-center gap-2">
-                        <DevFlowLogo className="w-8 h-8" />
+                {/* 2. CENTER NAV (Desktop) */}
+                <nav className="hidden md:flex items-center gap-8 bg-white/5 px-6 py-2 rounded-full border border-white/5 backdrop-blur-sm">
+                    {navLinks.map((link) => (
+                        <Link
+                            key={link.name}
+                            href={link.href}
+                            className="text-sm font-medium text-zinc-400 hover:text-white transition-colors relative group"
+                        >
+                            {link.name}
+                            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-white rounded-full transition-all group-hover:w-full opacity-0 group-hover:opacity-100" />
+                        </Link>
+                    ))}
+                    <div className="w-px h-4 bg-white/10 mx-2" />
+                    <Link href="/blog" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">
+                        Blog
                     </Link>
-                    <button
-                        onClick={() => setMobileMenuOpen(true)}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/5 text-white"
-                    >
-                        <Menu size={20} />
-                    </button>
+                </nav>
+
+                {/* 3. ACTIONS (Right) */}
+                <div className="hidden md:flex items-center gap-4">
+                    {session ? (
+                        <Link href="/dashboard">
+                            <button className="px-5 py-2 rounded-lg bg-white text-black text-sm font-bold shadow-lg shadow-white/10 hover:shadow-white/20 hover:scale-105 transition-all">
+                                Go to Dashboard
+                            </button>
+                        </Link>
+                    ) : (
+                        <>
+                            <Link
+                                href="/login"
+                                className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+                            >
+                                Sign In
+                            </Link>
+                            <button
+                                onClick={() => router.push('/signup')}
+                                className="group relative px-5 py-2 rounded-lg bg-gradient-to-b from-purple-500 to-purple-600 text-white text-sm font-semibold shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] hover:scale-105 transition-all overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <span className="relative flex items-center gap-1.5">
+                                    Get Started
+                                    <Zap size={14} className="fill-white" />
+                                </span>
+                            </button>
+                        </>
+                    )}
                 </div>
+
+                {/* MOBILE MENU TOGGLE */}
+                <button
+                    onClick={() => setMobileMenuOpen(true)}
+                    className="md:hidden p-2 text-zinc-400 hover:text-white"
+                >
+                    <Menu />
+                </button>
             </div>
 
-            {/* --- MOBILE MENU OVERLAY --- */}
+            {/* MOBILE OVERLAY */}
             <AnimatePresence>
                 {mobileMenuOpen && (
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-2xl md:hidden flex flex-col p-6"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-4 inset-x-4 p-6 bg-[#0a0612] border border-white/10 rounded-2xl shadow-2xl z-50 flex flex-col gap-6"
                     >
-                        <div className="flex items-center justify-between mb-12">
-                            <span className="font-display font-bold text-2xl text-white">Menu</span>
+                        <div className="flex items-center justify-between">
+                            <span className="font-bold text-xl text-white">Menu</span>
                             <button
                                 onClick={() => setMobileMenuOpen(false)}
-                                className="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+                                className="p-2 bg-white/5 rounded-full text-zinc-400"
                             >
-                                <X size={24} />
+                                <X size={20} />
                             </button>
                         </div>
-
-                        <div className="flex flex-col gap-6 items-start">
-                            {['Features', 'How it Works', 'Pricing', 'Blog'].map((item) => (
-                                <MobileNavLink
-                                    key={item}
-                                    href={item === 'Blog' ? '/blog' : `/#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                        <div className="flex flex-col gap-4">
+                            {navLinks.map((link) => (
+                                <Link
+                                    key={link.name}
+                                    href={link.href}
                                     onClick={() => setMobileMenuOpen(false)}
+                                    className="text-lg font-medium text-zinc-300"
                                 >
-                                    {item}
-                                </MobileNavLink>
+                                    {link.name}
+                                </Link>
                             ))}
                         </div>
-
-                        <div className="mt-auto flex flex-col gap-4">
-                            {!session ? (
-                                <>
-                                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                        <button className="w-full py-4 rounded-xl border border-white/10 text-white font-medium hover:bg-white/5">
-                                            Sign In
-                                        </button>
-                                    </Link>
-                                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                        <button className="w-full py-4 rounded-xl bg-white text-black font-bold">
-                                            Get Started
-                                        </button>
-                                    </Link>
-                                </>
-                            ) : (
-                                <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                                    <button className="w-full py-4 rounded-xl bg-white text-black font-bold">
-                                        Go to Dashboard
-                                    </button>
-                                </Link>
-                            )}
+                        <div className="h-px bg-white/10" />
+                        <div className="flex flex-col gap-3">
+                            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                                <button className="w-full py-3 rounded-xl border border-white/10 text-white font-medium">
+                                    Sign In
+                                </button>
+                            </Link>
+                            <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                                <button className="w-full py-3 rounded-xl bg-purple-600 text-white font-bold">
+                                    Get Started
+                                </button>
+                            </Link>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
-        </>
+        </motion.header>
     )
 }
