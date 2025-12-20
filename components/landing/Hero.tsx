@@ -1,155 +1,269 @@
 'use client'
 
-import { motion, useScroll, useTransform, useSpring, useVelocity } from 'framer-motion'
-import { Play, ArrowRight, Sparkles } from 'lucide-react'
-import { GradientButton } from '@/components/ui/GradientButton'
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion'
+import { Play, ArrowRight, Sparkles, Zap, GitCommit, Flame, Trophy } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { DashboardPreview } from '@/components/landing/DashboardPreview'
-import { useRef } from 'react'
+import { useRef, useEffect, useState } from 'react'
+import Image from 'next/image'
 
-// Floating particle component
-const FloatingParticle = ({ delay, size, left, top }: { delay: number; size: number; left: string; top: string }) => (
-    <motion.div
-        className="absolute rounded-full bg-white/20"
-        style={{ width: size, height: size, left, top }}
-        animate={{
-            y: [0, -30, 0],
-            opacity: [0.2, 0.6, 0.2],
-            scale: [1, 1.2, 1],
-        }}
-        transition={{
-            duration: 4 + Math.random() * 2,
-            repeat: Infinity,
-            delay,
-            ease: 'easeInOut',
-        }}
-    />
-)
+// Floating orb component with mouse tracking
+const FloatingOrb = ({
+    size,
+    color,
+    initialX,
+    initialY,
+    delay,
+    mouseX,
+    mouseY
+}: {
+    size: number
+    color: string
+    initialX: string
+    initialY: string
+    delay: number
+    mouseX: any
+    mouseY: any
+}) => {
+    const orbX = useTransform(mouseX, [0, 1], [-20, 20])
+    const orbY = useTransform(mouseY, [0, 1], [-20, 20])
+
+    return (
+        <motion.div
+            className="absolute rounded-full blur-3xl pointer-events-none"
+            style={{
+                width: size,
+                height: size,
+                left: initialX,
+                top: initialY,
+                background: color,
+                x: orbX,
+                y: orbY
+            }}
+            animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.5, 0.3],
+            }}
+            transition={{
+                duration: 8,
+                repeat: Infinity,
+                delay,
+                ease: 'easeInOut',
+            }}
+        />
+    )
+}
+
+// Floating stat card for parallax effect
+const FloatingStatCard = ({
+    icon: Icon,
+    label,
+    value,
+    color,
+    delay,
+    scrollProgress,
+    direction
+}: {
+    icon: any
+    label: string
+    value: string
+    color: string
+    delay: number
+    scrollProgress: any
+    direction: 'left' | 'right'
+}) => {
+    const x = useTransform(
+        scrollProgress,
+        [0, 1],
+        direction === 'left' ? [0, -100] : [0, 100]
+    )
+    const y = useTransform(scrollProgress, [0, 1], [0, 150])
+    const opacity = useTransform(scrollProgress, [0, 0.5], [1, 0])
+    const rotate = useTransform(
+        scrollProgress,
+        [0, 1],
+        direction === 'left' ? [0, -15] : [0, 15]
+    )
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            style={{ x, y, opacity, rotate }}
+            className="absolute hidden lg:flex items-center gap-3 px-5 py-3 rounded-2xl bg-zinc-900/80 border border-white/10 backdrop-blur-xl shadow-2xl"
+        >
+            <div className={`p-2 rounded-xl ${color}`}>
+                <Icon size={18} />
+            </div>
+            <div>
+                <p className="text-xl font-bold text-white">{value}</p>
+                <p className="text-xs text-zinc-400">{label}</p>
+            </div>
+        </motion.div>
+    )
+}
 
 export function Hero() {
     const router = useRouter()
     const containerRef = useRef<HTMLDivElement>(null)
-    const { scrollY } = useScroll()
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ['start start', 'end start']
+    })
 
-    // Smooth spring physics for enhanced parallax
-    const smoothY = useSpring(useTransform(scrollY, [0, 800], [0, 250]), { stiffness: 40, damping: 20 })
-    const smoothRotateX = useSpring(useTransform(scrollY, [0, 800], [15, 40]), { stiffness: 40, damping: 20 })
-    const smoothScale = useSpring(useTransform(scrollY, [0, 800], [0.95, 0.85]), { stiffness: 40, damping: 20 })
-    const smoothOpacity = useSpring(useTransform(scrollY, [0, 400], [1, 0.5]), { stiffness: 40, damping: 20 })
+    // Mouse tracking for orb movement
+    const mouseX = useMotionValue(0.5)
+    const mouseY = useMotionValue(0.5)
 
-    // Background parallax
-    const bgY = useSpring(useTransform(scrollY, [0, 800], [0, 150]), { stiffness: 30, damping: 30 })
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            mouseX.set(e.clientX / window.innerWidth)
+            mouseY.set(e.clientY / window.innerHeight)
+        }
+        window.addEventListener('mousemove', handleMouseMove)
+        return () => window.removeEventListener('mousemove', handleMouseMove)
+    }, [mouseX, mouseY])
 
-    // Generate static lines (Refined for "Event Horizon")
-    const lines = Array.from({ length: 64 }).map((_, i) => ({
-        angle: (i * 360) / 64,
-    }))
+    // Smooth spring animations for parallax
+    const smoothProgress = useSpring(scrollYProgress, { stiffness: 50, damping: 30 })
 
-    // Generate "Ash" particles
-    const particles = Array.from({ length: 30 }).map((_, i) => ({
-        delay: i * 0.2,
-        size: 1 + Math.random() * 2,
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        duration: 5 + Math.random() * 5
-    }))
+    // Dashboard image transforms
+    const dashboardY = useTransform(smoothProgress, [0, 1], [0, 200])
+    const dashboardScale = useTransform(smoothProgress, [0, 0.5], [1, 0.9])
+    const dashboardRotateX = useTransform(smoothProgress, [0, 1], [8, 25])
+    const dashboardOpacity = useTransform(smoothProgress, [0, 0.8], [1, 0.3])
+
+    // Text parallax - moves slower than scroll
+    const headlineY = useTransform(smoothProgress, [0, 1], [0, 100])
+    const headlineOpacity = useTransform(smoothProgress, [0, 0.5], [1, 0])
+
+    // Badge counter animation
+    const badgeScale = useTransform(smoothProgress, [0, 0.3], [1, 0.8])
 
     return (
         <section
             ref={containerRef}
-            className="relative min-h-screen flex flex-col items-center pt-32 md:pt-40 lg:pt-48 overflow-hidden bg-black perspective-[2000px]"
+            className="relative min-h-[130vh] flex flex-col items-center pt-32 md:pt-40 overflow-hidden bg-black"
         >
-            {/* --- BACKGROUND LAYERS --- */}
-            <div className="absolute inset-0 pointer-events-none z-0">
-                {/* 1. The Event Horizon (Spotlight) */}
-                <div className="absolute top-[-30%] left-1/2 -translate-x-1/2 w-[120%] h-[80%] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08)_0%,transparent_70%)] blur-[80px]" />
+            {/* === AMBIENT BACKGROUND === */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                {/* Gradient mesh background */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(124,58,237,0.15)_0%,transparent_50%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(6,182,212,0.1)_0%,transparent_50%)]" />
 
-                {/* 2. Secondary Ambient Glow */}
-                <motion.div
-                    style={{ y: bgY }}
-                    className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-white/[0.02] blur-[120px] rounded-full"
+                {/* Floating orbs that follow mouse */}
+                <FloatingOrb size={600} color="rgba(124,58,237,0.15)" initialX="10%" initialY="20%" delay={0} mouseX={mouseX} mouseY={mouseY} />
+                <FloatingOrb size={400} color="rgba(6,182,212,0.1)" initialX="70%" initialY="60%" delay={2} mouseX={mouseX} mouseY={mouseY} />
+                <FloatingOrb size={300} color="rgba(168,85,247,0.1)" initialX="50%" initialY="10%" delay={4} mouseX={mouseX} mouseY={mouseY} />
+
+                {/* Grid pattern */}
+                <div
+                    className="absolute inset-0 opacity-[0.03]"
+                    style={{
+                        backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+                        backgroundSize: '60px 60px'
+                    }}
                 />
 
-                {/* 3. Radiating Lines (The Grid) */}
-                <div className="absolute inset-0 opacity-[0.15]">
-                    <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
-                        <defs>
-                            <radialGradient id="linesFade" cx="50%" cy="50%" r="50%">
-                                <stop offset="0%" stopColor="white" stopOpacity="1" />
-                                <stop offset="100%" stopColor="transparent" stopOpacity="0" />
-                            </radialGradient>
-                            <mask id="fadeMask">
-                                <circle cx="50" cy="50" r="50" fill="url(#linesFade)" />
-                            </mask>
-                        </defs>
-                        <g mask="url(#fadeMask)">
-                            {lines.map((line, i) => (
-                                <line
-                                    key={i}
-                                    x1="50"
-                                    y1="50"
-                                    x2={50 + 100 * Math.cos((line.angle * Math.PI) / 180)}
-                                    y2={50 + 100 * Math.sin((line.angle * Math.PI) / 180)}
-                                    stroke="white"
-                                    strokeWidth="0.02" // Ultra thin
-                                />
-                            ))}
-                        </g>
-                    </svg>
-                </div>
-
-                {/* 4. Ash Particles */}
-                {particles.map((p, i) => (
-                    <motion.div
-                        key={i}
-                        className="absolute rounded-full bg-white/30"
-                        style={{ width: p.size, height: p.size, left: p.left, top: p.top }}
-                        animate={{
-                            y: [0, -40, 0],
-                            opacity: [0, 0.5, 0],
-                        }}
-                        transition={{
-                            duration: p.duration,
-                            repeat: Infinity,
-                            delay: p.delay,
-                            ease: "easeInOut"
-                        }}
-                    />
-                ))}
-
-                {/* 5. Noise Overlay (Grain) */}
-                <div className="absolute inset-0 opacity-[0.04] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+                {/* Noise texture */}
+                <div className="absolute inset-0 opacity-[0.02] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjc1IiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiIGZpbHRlcj0idXJsKCNhKSIgb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')]" />
             </div>
 
-            {/* --- CONTENT --- */}
+            {/* === FLOATING STAT CARDS (Parallax) === */}
+            <FloatingStatCard
+                icon={GitCommit}
+                label="Commits Today"
+                value="24"
+                color="bg-purple-500/20 text-purple-400"
+                delay={0.8}
+                scrollProgress={smoothProgress}
+                direction="left"
+            />
+            <div className="absolute left-[8%] top-[35%]">
+                <FloatingStatCard
+                    icon={GitCommit}
+                    label="Commits Today"
+                    value="24"
+                    color="bg-purple-500/20 text-purple-400"
+                    delay={0.8}
+                    scrollProgress={smoothProgress}
+                    direction="left"
+                />
+            </div>
+            <div className="absolute right-[8%] top-[40%]">
+                <FloatingStatCard
+                    icon={Flame}
+                    label="Day Streak"
+                    value="15🔥"
+                    color="bg-orange-500/20 text-orange-400"
+                    delay={1}
+                    scrollProgress={smoothProgress}
+                    direction="right"
+                />
+            </div>
+            <div className="absolute left-[12%] top-[55%]">
+                <FloatingStatCard
+                    icon={Trophy}
+                    label="Achievements"
+                    value="12"
+                    color="bg-yellow-500/20 text-yellow-400"
+                    delay={1.2}
+                    scrollProgress={smoothProgress}
+                    direction="left"
+                />
+            </div>
+            <div className="absolute right-[10%] top-[60%]">
+                <FloatingStatCard
+                    icon={Zap}
+                    label="Productivity"
+                    value="92"
+                    color="bg-cyan-500/20 text-cyan-400"
+                    delay={1.4}
+                    scrollProgress={smoothProgress}
+                    direction="right"
+                />
+            </div>
+
+            {/* === MAIN CONTENT === */}
             <motion.div
-                style={{ opacity: smoothOpacity }}
+                style={{ y: headlineY, opacity: headlineOpacity }}
                 className="container mx-auto px-4 sm:px-6 relative z-10 flex flex-col items-center text-center"
             >
                 {/* Badge */}
                 <motion.div
-                    initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                    initial={{ opacity: 0, y: -20, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
+                    style={{ scale: badgeScale }}
                     className="mb-8"
                 >
-                    <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-[11px] font-mono tracking-widest text-zinc-400 uppercase backdrop-blur-md shadow-2xl">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                        v2.0 Obsidian
+                    <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-white/10 text-[11px] font-mono tracking-widest text-zinc-300 uppercase backdrop-blur-md shadow-2xl hover:border-white/20 transition-colors cursor-default">
+                        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                        Developer Analytics Platform
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                     </span>
                 </motion.div>
 
                 {/* Headline */}
                 <motion.h1
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                    className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-display font-bold tracking-tight text-white leading-[1.05] mb-6 drop-shadow-2xl"
+                    transition={{ duration: 0.9, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                    className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight text-white leading-[1.05] mb-6"
                 >
-                    Build Faster With
+                    Your GitHub,
                     <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-500">
-                        DevFlow Insights.
+                    <span className="relative">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+                            Visualized.
+                        </span>
+                        {/* Animated underline */}
+                        <motion.span
+                            className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: '100%' }}
+                            transition={{ delay: 0.8, duration: 0.8, ease: 'easeOut' }}
+                        />
                     </span>
                 </motion.h1>
 
@@ -157,82 +271,110 @@ export function Hero() {
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
-                    className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed"
+                    transition={{ duration: 0.7, delay: 0.3, ease: 'easeOut' }}
+                    className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-12 leading-relaxed"
                 >
-                    Transform your GitHub activity into actionable insights. Track velocity, prevent burnout, and celebrate achievements in style.
+                    Track your coding velocity, prevent burnout with AI insights, and celebrate
+                    your achievements. The ultimate analytics platform for developers.
                 </motion.p>
 
                 {/* CTAs */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
-                    className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 w-full sm:w-auto"
+                    transition={{ duration: 0.6, delay: 0.5, ease: 'easeOut' }}
+                    className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
                 >
-                    <button
+                    <motion.button
                         onClick={() => router.push('/login')}
-                        className="group w-full sm:w-auto px-8 py-4 rounded-full bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition-all duration-200 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] flex items-center justify-center gap-2"
+                        whileHover={{ scale: 1.02, boxShadow: '0 0 40px rgba(124,58,237,0.4)' }}
+                        whileTap={{ scale: 0.98 }}
+                        className="group w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-purple-500 text-white font-semibold text-sm shadow-[0_0_30px_-5px_rgba(124,58,237,0.5)] flex items-center justify-center gap-2 transition-all duration-300"
                     >
-                        Get Started
+                        Get Started Free
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
                         onClick={() => router.push('/#demo')}
-                        className="group w-full sm:w-auto px-8 py-4 rounded-full bg-transparent text-white font-medium text-sm border border-white/10 hover:bg-white/5 transition-all duration-200 flex items-center justify-center gap-2"
+                        whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                        whileTap={{ scale: 0.98 }}
+                        className="group w-full sm:w-auto px-8 py-4 rounded-full bg-white/5 text-white font-medium text-sm border border-white/10 hover:border-white/20 transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-sm"
                     >
                         <Play className="w-4 h-4 group-hover:scale-110 transition-transform fill-white" />
                         Watch Demo
-                    </button>
+                    </motion.button>
                 </motion.div>
+            </motion.div>
 
-                {/* --- 3D BOARD --- */}
-                <motion.div
-                    style={{
-                        y: smoothY,
-                        rotateX: smoothRotateX,
-                        scale: smoothScale,
-                        rotateY: 0,
-                        transformPerspective: 1200, // Deeper perspective
-                    }}
-                    className="w-full relative z-20 max-w-6xl"
-                >
-                    {/* Glow Underneath */}
-                    <div className="absolute -inset-4 bg-white/20 blur-[60px] opacity-20 rounded-[50px] -z-10" />
+            {/* === DASHBOARD IMAGE (3D Parallax) === */}
+            <motion.div
+                style={{
+                    y: dashboardY,
+                    scale: dashboardScale,
+                    rotateX: dashboardRotateX,
+                    opacity: dashboardOpacity,
+                    transformPerspective: 1200,
+                }}
+                className="relative z-20 w-full max-w-6xl mx-auto px-4"
+            >
+                {/* Multiple glow layers */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 via-transparent to-cyan-500/20 blur-[80px] opacity-60 rounded-[50px] -z-10" />
+                <div className="absolute -inset-8 bg-purple-500/10 blur-[120px] opacity-40 rounded-full -z-20" />
 
-                    {/* Window Frame */}
-                    <div className="relative rounded-3xl border border-white/[0.1] bg-[#09090b] shadow-2xl overflow-hidden">
+                {/* Browser frame */}
+                <div className="relative rounded-2xl border border-white/10 bg-zinc-900/80 shadow-[0_0_100px_-20px_rgba(124,58,237,0.3)] overflow-hidden backdrop-blur-xl">
 
-                        {/* Glass Reflection Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.03] via-transparent to-transparent pointer-events-none z-50" />
+                    {/* Reflection overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.02] via-transparent to-white/[0.02] pointer-events-none z-50" />
 
-                        {/* Browser Header (Stealth Mode) */}
-                        <div className="h-10 bg-black/50 border-b border-white/[0.05] flex items-center justify-between px-4">
-                            {/* Stealth Traffic Lights */}
-                            <div className="flex gap-2">
-                                <div className="w-2.5 h-2.5 rounded-full bg-zinc-700/50" />
-                                <div className="w-2.5 h-2.5 rounded-full bg-zinc-700/50" />
-                                <div className="w-2.5 h-2.5 rounded-full bg-zinc-700/50" />
-                            </div>
-                            {/* URL Bar */}
-                            <div className="px-3 py-1 rounded-md bg-white/[0.02] border border-white/[0.04] text-[10px] text-zinc-600 font-mono">
-                                devflow.app/dashboard
-                            </div>
-                            <div className="w-10" /> {/* Spacer */}
+                    {/* Browser header */}
+                    <div className="h-12 bg-zinc-900/90 border-b border-white/5 flex items-center justify-between px-4">
+                        <div className="flex gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-500/60 hover:bg-red-500 transition-colors" />
+                            <div className="w-3 h-3 rounded-full bg-yellow-500/60 hover:bg-yellow-500 transition-colors" />
+                            <div className="w-3 h-3 rounded-full bg-green-500/60 hover:bg-green-500 transition-colors" />
                         </div>
-
-                        {/* Content Area */}
-                        <div className="relative bg-[#000000]">
-                            <DashboardPreview />
-                            {/* Bottom Fade for Scroll Illusion */}
-                            <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-20" />
+                        <div className="px-4 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[11px] text-zinc-500 font-mono">
+                            devflow.app/dashboard
                         </div>
+                        <div className="w-16" />
                     </div>
-                </motion.div>
 
+                    {/* Dashboard image */}
+                    <div className="relative aspect-[16/9] bg-black">
+                        <Image
+                            src="/dashboard-preview.png"
+                            alt="DevFlow Dashboard Preview"
+                            fill
+                            className="object-cover object-top"
+                            priority
+                            quality={95}
+                        />
+                        {/* Bottom fade */}
+                        <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* Scroll indicator */}
+            <motion.div
+                className="absolute bottom-8 left-1/2 -translate-x-1/2"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5, duration: 0.6 }}
+            >
+                <motion.div
+                    animate={{ y: [0, 8, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="w-6 h-10 rounded-full border-2 border-white/20 flex items-start justify-center p-2"
+                >
+                    <motion.div
+                        className="w-1 h-2 bg-white/60 rounded-full"
+                        animate={{ y: [0, 8, 0], opacity: [1, 0.3, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                </motion.div>
             </motion.div>
         </section>
     )
 }
-
-

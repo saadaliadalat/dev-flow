@@ -65,7 +65,21 @@ const DevFlowLogo = ({ className = '' }: { className?: string }) => (
     </motion.svg>
 )
 
-const NavLink = ({ href, children, isActive, onClick }: any) => (
+// Properly typed props interfaces
+interface NavLinkProps {
+    href: string
+    children: React.ReactNode
+    isActive?: boolean
+    onClick?: () => void
+}
+
+interface MobileNavLinkProps {
+    href: string
+    children: React.ReactNode
+    onClick?: () => void
+}
+
+const NavLink = ({ href, children, isActive, onClick }: NavLinkProps) => (
     <Link
         href={href}
         onClick={onClick}
@@ -73,6 +87,7 @@ const NavLink = ({ href, children, isActive, onClick }: any) => (
             "relative px-4 py-1.5 text-sm font-medium transition-colors rounded-full z-10",
             isActive ? "text-white" : "text-white/60 hover:text-white"
         )}
+        aria-current={isActive ? 'page' : undefined}
     >
         {children}
         {isActive && (
@@ -85,7 +100,7 @@ const NavLink = ({ href, children, isActive, onClick }: any) => (
     </Link>
 )
 
-const MobileNavLink = ({ href, children, onClick }: any) => (
+const MobileNavLink = ({ href, children, onClick }: MobileNavLinkProps) => (
     <Link
         href={href}
         onClick={onClick}
