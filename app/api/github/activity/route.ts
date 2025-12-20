@@ -27,8 +27,10 @@ export async function GET(req: Request) {
         }
 
         const octokit = new Octokit({ auth: userData.github_access_token })
-        // @ts-ignore - session.user.username might be missing from type but exists in session
-        const username = session.user.username || session.user.name
+
+        // Get username from GitHub API directly to ensure accuracy
+        const { data: profile } = await octokit.users.getAuthenticated()
+        const username = profile.login
 
         // Fetch user's public events
         const { data: events } = await octokit.activity.listEventsForAuthenticatedUser({

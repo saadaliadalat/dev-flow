@@ -128,17 +128,34 @@ export async function POST(req: Request) {
 
         for (const repo of reposToSync) {
             try {
-                // Fetch commits authored by this user for this year
-                const { data: commits } = await octokit.repos.listCommits({
-                    owner: repo.owner.login,
-                    repo: repo.name,
-                    author: profile.login, // Only this user's commits
-                    since: yearStart.toISOString(),
-                    per_page: 100
-                })
+                // Fetch ALL commits authored by this user for this year (with pagination)
+                let allCommitsForRepo: any[] = []
+                let commitPage = 1
+                let hasMoreCommits = true
 
-                if (!commits || commits.length === 0) continue
+                while (hasMoreCommits) {
+                    const { data: commits } = await octokit.repos.listCommits({
+                        owner: repo.owner.login,
+                        repo: repo.name,
+                        author: profile.login, // Only this user's commits
+                        since: yearStart.toISOString(),
+                        per_page: 100,
+                        page: commitPage
+                    })
 
+                    if (!commits || commits.length === 0) break
+
+                    allCommitsForRepo = [...allCommitsForRepo, ...commits]
+                    hasMoreCommits = commits.length === 100
+                    commitPage++
+
+                    // Safety limit: max 1000 commits per repo
+                    if (commitPage > 10) break
+                }
+
+                if (allCommitsForRepo.length === 0) continue
+
+                const commits = allCommitsForRepo
                 totalCommitsThisYear += commits.length
 
                 // Process each commit for daily stats
@@ -191,18 +208,43 @@ export async function POST(req: Request) {
 
         console.log(`Total commits this year: ${totalCommitsThisYear}`)
 
-        // STEP 6: Count other contributions from events (PRs, Issues, Reviews)
+        // STEP 6: Get accurate PR, Issue, and Review counts using Search API (full year)
+        // Events API only has ~90 days of data, so we use search for accuracy
         let totalPRs = 0
         let totalIssues = 0
         let totalReviews = 0
 
-        for (const event of allEvents) {
-            if (event.type === 'PullRequestEvent') totalPRs++
-            if (event.type === 'IssuesEvent') totalIssues++
-            if (event.type === 'PullRequestReviewEvent') totalReviews++
-        }
+        try {
+            // Count PRs created by user this year
+            const { data: prSearch } = await octokit.search.issuesAndPullRequests({
+                q: `author:${profile.login} type:pr created:>=${yearStart.toISOString().split('T')[0]}`,
+                per_page: 1
+            })
+            totalPRs = prSearch.total_count
 
-        console.log(`PRs: ${totalPRs}, Issues: ${totalIssues}, Reviews: ${totalReviews}`)
+            // Count Issues created by user this year
+            const { data: issueSearch } = await octokit.search.issuesAndPullRequests({
+                q: `author:${profile.login} type:issue created:>=${yearStart.toISOString().split('T')[0]}`,
+                per_page: 1
+            })
+            totalIssues = issueSearch.total_count
+
+            // Estimate reviews from events (no direct search API)
+            for (const event of allEvents) {
+                if (event.type === 'PullRequestReviewEvent') totalReviews++
+            }
+
+            console.log(`PRs: ${totalPRs}, Issues: ${totalIssues}, Reviews: ${totalReviews} (accurate from search API)`)
+        } catch (searchError) {
+            // Fallback to events-based counting if search fails
+            console.warn('Search API failed, falling back to events:', searchError)
+            for (const event of allEvents) {
+                if (event.type === 'PullRequestEvent') totalPRs++
+                if (event.type === 'IssuesEvent') totalIssues++
+                if (event.type === 'PullRequestReviewEvent') totalReviews++
+            }
+            console.log(`PRs: ${totalPRs}, Issues: ${totalIssues}, Reviews: ${totalReviews} (from events fallback)`)
+        }
 
         // STEP 7: Store daily stats
         const dailyStatsInserts = Array.from(commitsByDay.values()).map(day => {
@@ -255,16 +297,18 @@ export async function POST(req: Request) {
         // STEP 9: Calculate total contributions (commits + PRs + issues + reviews)
         const totalContributions = totalCommitsThisYear + totalPRs + totalIssues + totalReviews
 
-        // STEP 10: Calculate productivity score
-        const avgProductivityScore = dailyStatsInserts.length > 0
-            ? Math.round(dailyStatsInserts.reduce((sum, d) => sum + d.productivity_score, 0) / dailyStatsInserts.length)
-            : calculateProductivityScore({
-                total_commits: totalCommitsThisYear,
-                lines_added: 0,
-                lines_deleted: 0,
-                unique_repos: reposToSync.length,
-                active_hours: 8
-            })
+        // STEP 10: Calculate productivity score using the correct formula
+        // Formula: commits * 10 + PRs * 25 + issues * 15 + reviews * 20
+        const avgProductivityScore = calculateProductivityScore({
+            total_commits: totalCommitsThisYear,
+            lines_added: 0,
+            lines_deleted: 0,
+            unique_repos: reposToSync.length,
+            active_hours: 8,
+            total_prs: totalPRs,
+            total_issues: totalIssues,
+            total_reviews: totalReviews
+        })
 
         // STEP 11: Update user record with ALL stats
         await supabase
@@ -318,29 +362,32 @@ export async function POST(req: Request) {
 }
 
 // Helper: Calculate productivity score
+// Formula: commits * 10 + PRs * 25 + issues * 15 + reviews * 20
 function calculateProductivityScore(data: {
     total_commits: number
     lines_added: number
     lines_deleted: number
     unique_repos: number
     active_hours: number
+    total_prs?: number
+    total_issues?: number
+    total_reviews?: number
 }): number {
     const {
         total_commits,
-        lines_added,
-        lines_deleted,
-        unique_repos,
-        active_hours
+        total_prs = 0,
+        total_issues = 0,
+        total_reviews = 0
     } = data
 
-    // Weighted scoring algorithm
-    const commitScore = Math.min(total_commits * 5, 30)
-    const volumeScore = Math.min(Math.log10(lines_added + 1) * 10, 25)
-    const diversityScore = Math.min(unique_repos * 10, 20)
-    const consistencyScore = Math.min(active_hours * 5, 25)
+    // Productivity score formula: commits * 10 + PRs * 25 + issues * 15 + reviews * 20
+    const rawScore = (total_commits * 10) + (total_prs * 25) + (total_issues * 15) + (total_reviews * 20)
 
-    const rawScore = commitScore + volumeScore + diversityScore + consistencyScore
-    return Math.min(Math.round(rawScore), 100)
+    // Normalize to 0-100 scale (assuming ~100 commits, 10 PRs, 10 issues, 5 reviews = max 100)
+    // That would be 1000 + 250 + 150 + 100 = 1500 raw points
+    const normalizedScore = Math.round((rawScore / 1500) * 100)
+
+    return Math.min(normalizedScore, 100)
 }
 
 // Helper: Calculate current and longest streak

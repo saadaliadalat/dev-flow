@@ -153,12 +153,13 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
                         AI Insights
                     </h3>
                 </div>
-                {insights.length === 0 && !isGenerating && (
+                {!isGenerating && (
                     <button
                         onClick={generateInsights}
-                        className="text-xs text-purple-primary hover:text-purple-light transition-colors font-medium"
+                        className="text-xs text-purple-primary hover:text-purple-light transition-colors font-medium flex items-center gap-1"
                     >
-                        Generate
+                        <Sparkles size={12} />
+                        {insights.length === 0 ? 'Generate' : 'Generate New'}
                     </button>
                 )}
             </div>
