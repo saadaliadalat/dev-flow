@@ -1,229 +1,279 @@
+// app/api/insights/generate/route.ts
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY!
+})
 
 export async function POST(req: Request) {
     try {
         const { userId } = await req.json()
 
-        // Fetch user's recent stats
+        if (!userId) {
+            return NextResponse.json({ error: 'userId is required' }, { status: 400 })
+        }
+
+        // Fetch user's recent stats (last 30 days)
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
         const { data: stats } = await supabase
             .from('daily_stats')
             .select('*')
             .eq('user_id', userId)
+            .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
             .order('date', { ascending: false })
-            .limit(30)
 
         if (!stats || stats.length === 0) {
             return NextResponse.json({
                 success: true,
-                message: 'Not enough data for insights'
+                message: 'Not enough data for insights. Sync your GitHub first.'
             })
         }
 
-        // Prepare data summary for AI
+        // Calculate summary stats
+        const totalCommits = stats.reduce((sum, s) => sum + (s.total_commits || 0), 0)
+        const avgProductivity = stats.reduce((sum, s) => sum + (s.productivity_score || 0), 0) / stats.length
+        const mostActiveHours = getMostActiveHours(stats)
+        const topLanguages = getTopLanguages(stats)
+        const activeDays = stats.filter(s => (s.total_commits || 0) > 0).length
+        const weekendActivity = stats.filter(s => s.is_weekend && s.total_commits > 0).length
+        const restDays = stats.filter(s => s.is_rest_day).length
+
         const summary = {
-            totalDays: stats.length,
-            avgCommitsPerDay: stats.reduce((sum, s) => sum + s.total_commits, 0) / stats.length,
-            avgProductivityScore: stats.reduce((sum, s) => sum + s.productivity_score, 0) / stats.length,
-            mostActiveHours: getMostActiveHours(stats),
-            topLanguages: getTopLanguages(stats),
-            weekendActivity: stats.filter(s => s.is_weekend && s.total_commits > 0).length,
-            restDays: stats.filter(s => s.is_rest_day).length
+            totalCommits,
+            avgProductivity: Math.round(avgProductivity),
+            mostActiveHours,
+            topLanguages,
+            activeDays,
+            daysTracked: stats.length,
+            weekendActivity,
+            restDays
         }
 
-        // Generate insights using Gemini 2.0 Flash
-        const prompt = `You are an expert developer productivity coach. Analyze this developer's coding patterns and provide 3-5 actionable insights.
+        console.log('📊 Generating insights for user:', userId)
+        console.log('📈 Stats summary:', summary)
 
-Data:
-- Active days: ${summary.totalDays}
-- Average commits/day: ${summary.avgCommitsPerDay.toFixed(1)}
-- Productivity score: ${summary.avgProductivityScore.toFixed(0)}/100
-- Most active hours: ${summary.mostActiveHours.join(', ')}
-- Top languages: ${summary.topLanguages.join(', ')}
-- Weekend coding days: ${summary.weekendActivity}
-- Rest days: ${summary.restDays}
+        // Create detailed prompt
+        const prompt = `You are an expert developer productivity analyst. Analyze this GitHub activity data and provide 5 actionable insights.
 
-Provide insights in JSON format:
+DEVELOPER DATA (Last 30 Days):
+- Total Commits: ${summary.totalCommits}
+- Average Productivity Score: ${summary.avgProductivity}/100
+- Active Days: ${summary.activeDays} out of ${summary.daysTracked}
+- Most Active Hours: ${summary.mostActiveHours.length > 0 ? summary.mostActiveHours.join(', ') + ':00' : 'Not enough data'}
+- Top Languages: ${summary.topLanguages.length > 0 ? summary.topLanguages.join(', ') : 'Not specified'}
+- Weekend Coding Days: ${summary.weekendActivity}
+- Rest Days: ${summary.restDays}
+
+Generate EXACTLY 5 insights in this JSON format:
 {
   "insights": [
     {
-      "type": "productivity_tip" | "burnout_warning" | "pattern_detected" | "recommendation",
-      "severity": "info" | "warning" | "alert" | "success",
-      "title": "Short title",
-      "message": "Detailed message",
-      "actionItems": ["Action 1", "Action 2"]
+      "type": "productivity|burnout|skill|pattern|optimization",
+      "title": "Brief actionable title (max 60 chars)",
+      "message": "Detailed insight with specific numbers and context (2-3 sentences)",
+      "severity": "info|warning|critical",
+      "actionItems": ["Specific action 1", "Specific action 2"]
     }
   ]
 }
 
-Focus on:
-1. Productivity patterns
-2. Work-life balance
-3. Skill development
-4. Burnout risks
-5. Optimization opportunities`
+FOCUS AREAS:
+1. Productivity patterns and trends
+2. Work-life balance and burnout risk
+3. Skill development opportunities  
+4. Coding habits optimization
+5. Performance improvements
 
-        // Configure Gemini model with JSON response mode
-        const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash-exp",
-            generationConfig: {
-                responseMimeType: "application/json",
-                temperature: 0.7,
-                maxOutputTokens: 2000,
-            }
+REQUIREMENTS:
+- Use actual data from the summary above
+- Be specific with numbers
+- Provide 2-3 actionable items per insight
+- Mix severity levels (mostly info, some warning if needed)
+- Make insights unique and personalized
+- Be encouraging and constructive
+
+Return ONLY valid JSON, no markdown or extra text.`
+
+        // Generate insights with Groq (Llama 3.3 70B)
+        console.log('🚀 Calling Groq API...')
+
+        const completion = await groq.chat.completions.create({
+            messages: [
+                {
+                    role: "system",
+                    content: "You are an expert developer productivity analyst. Always respond with valid JSON only. Be specific, data-driven, and actionable. Focus on being helpful and encouraging."
+                },
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ],
+            model: "llama-3.3-70b-versatile",
+            temperature: 0.7,
+            max_tokens: 2048,
+            top_p: 0.9,
+            response_format: { type: "json_object" }
         })
 
-        // Generate content
-        const result = await model.generateContent(prompt)
-        const response = await result.response
-        const text = response.text()
+        const responseText = completion.choices[0]?.message?.content || '{}'
+
+        console.log('✅ Groq response received')
+        console.log('📊 Tokens used:', {
+            prompt: completion.usage?.prompt_tokens,
+            completion: completion.usage?.completion_tokens,
+            total: completion.usage?.total_tokens
+        })
 
         // Parse JSON response
         let aiResponse
         try {
-            aiResponse = JSON.parse(text)
-        } catch (parseError) {
-            console.error('JSON parsing error:', parseError)
-            console.error('Raw response:', text)
-            throw new Error('Failed to parse AI response as JSON')
+            aiResponse = JSON.parse(responseText)
+        } catch (e) {
+            console.error('❌ JSON parse error:', responseText.substring(0, 500))
+            return NextResponse.json({
+                error: 'Failed to parse AI response',
+                raw: responseText.substring(0, 500)
+            }, { status: 500 })
         }
 
         // Validate response structure
         if (!aiResponse.insights || !Array.isArray(aiResponse.insights)) {
-            throw new Error('Invalid AI response structure')
+            console.error('❌ Invalid response format:', aiResponse)
+            return NextResponse.json({
+                error: 'Invalid AI response format'
+            }, { status: 500 })
         }
 
-        // Store insights in database
-        const insightInserts = aiResponse.insights.map((insight: any) => ({
+        // Validate and filter insights
+        const validInsights = aiResponse.insights
+            .filter((insight: any) =>
+                insight.title &&
+                insight.message &&
+                insight.type &&
+                insight.severity
+            )
+            .slice(0, 5)
+
+        if (validInsights.length === 0) {
+            return NextResponse.json({
+                error: 'No valid insights generated'
+            }, { status: 500 })
+        }
+
+        // Delete old insights for this user
+        await supabase
+            .from('insights')
+            .delete()
+            .eq('user_id', userId)
+
+        // Store new insights in database
+        const insightInserts = validInsights.map((insight: any) => ({
             user_id: userId,
             insight_type: insight.type,
-            title: insight.title,
-            message: insight.message,
+            title: insight.title.substring(0, 100),
+            message: insight.message.substring(0, 500),
             severity: insight.severity,
-            action_items: insight.actionItems || [],
-            is_actionable: (insight.actionItems?.length || 0) > 0,
-            generated_by: 'gemini-2.0-flash',
+            action_items: Array.isArray(insight.actionItems) ? insight.actionItems : [],
+            is_actionable: Array.isArray(insight.actionItems) && insight.actionItems.length > 0,
+            generated_by: 'groq-llama-3.3-70b',
             confidence_score: 0.85,
-            based_on_data: { period: '30 days', stats: summary }
+            based_on_data: {
+                period: '30 days',
+                stats: summary
+            }
         }))
 
-        const { error } = await supabase
+        const { error: insertError } = await supabase
             .from('insights')
             .insert(insightInserts)
 
-        if (error) throw error
+        if (insertError) {
+            console.error('❌ Supabase insert error:', insertError)
+            throw insertError
+        }
+
+        console.log(`✅ Generated and stored ${validInsights.length} insights successfully`)
 
         return NextResponse.json({
             success: true,
-            insights: aiResponse.insights
+            insights: validInsights,
+            count: validInsights.length,
+            generatedBy: 'groq-llama-3.3-70b',
+            tokensUsed: completion.usage?.total_tokens || 0
         })
 
     } catch (error: any) {
-        console.error('Insight generation error:', error)
+        console.error('❌ Insight generation error:', error)
 
-        // Handle specific Gemini errors
-        let errorMessage = 'Failed to generate insights'
-        let statusCode = 500
+        // Handle specific Groq errors
+        if (error.status === 429) {
+            return NextResponse.json({
+                error: 'Rate limit exceeded',
+                message: 'Too many requests. Please try again in a moment.'
+            }, { status: 429 })
+        }
 
-        if (error.message?.includes('API key')) {
-            errorMessage = 'Invalid Gemini API key'
-            statusCode = 401
-        } else if (error.status === 429 || error.message?.includes('quota') || error.message?.includes('rate limit') || error.message?.includes('429')) {
-            // Quota exceeded - generate fallback insights locally
-            console.log('Gemini quota exceeded, generating fallback insights...')
-
-            try {
-                const { userId } = await req.json().catch(() => ({ userId: null }))
-
-                if (userId) {
-                    const fallbackInsights = [
-                        {
-                            user_id: userId,
-                            insight_type: 'productivity_tip',
-                            title: 'Keep Up the Momentum!',
-                            message: 'Your coding activity shows consistent engagement. Consider setting specific daily goals to maintain this streak.',
-                            severity: 'info',
-                            action_items: ['Set a daily commit goal', 'Use time-blocking for focused coding sessions'],
-                            is_actionable: true,
-                            generated_by: 'fallback',
-                            confidence_score: 0.7
-                        },
-                        {
-                            user_id: userId,
-                            insight_type: 'recommendation',
-                            title: 'Review Your Progress',
-                            message: 'Take a moment to review your recent commits and identify patterns in your most productive hours.',
-                            severity: 'info',
-                            action_items: ['Check your activity chart', 'Optimize your schedule around peak hours'],
-                            is_actionable: true,
-                            generated_by: 'fallback',
-                            confidence_score: 0.6
-                        }
-                    ]
-
-                    await supabase.from('insights').insert(fallbackInsights)
-
-                    return NextResponse.json({
-                        success: true,
-                        message: 'Generated fallback insights (AI quota exceeded)',
-                        insights: fallbackInsights
-                    })
-                }
-            } catch (fallbackError) {
-                console.error('Fallback insight generation failed:', fallbackError)
-            }
-
-            errorMessage = 'AI quota exceeded. Try again later or upgrade your Gemini API plan.'
-            statusCode = 429
-        } else if (error.message?.includes('parse')) {
-            errorMessage = 'Failed to parse AI response'
+        if (error.status === 401) {
+            return NextResponse.json({
+                error: 'Invalid API key',
+                message: 'GROQ_API_KEY is invalid or missing'
+            }, { status: 401 })
         }
 
         return NextResponse.json({
-            error: errorMessage,
-            details: error.message
-        }, { status: statusCode })
+            error: 'Failed to generate insights',
+            message: error.message,
+            type: error.constructor.name
+        }, { status: 500 })
     }
 }
 
+// Helper: Get most active coding hours
 function getMostActiveHours(stats: any[]): number[] {
-    const hourCounts: Record<number, number> = {}
+    const hourCounts: { [key: number]: number } = {}
 
     stats.forEach(day => {
-        if (day.commits_by_hour) {
-            Object.entries(day.commits_by_hour).forEach(([hour, count]: [string, any]) => {
-                hourCounts[parseInt(hour)] = (hourCounts[parseInt(hour)] || 0) + count
+        if (day.commits_by_hour && typeof day.commits_by_hour === 'object') {
+            Object.entries(day.commits_by_hour).forEach(([hour, count]) => {
+                const h = parseInt(hour)
+                if (!isNaN(h) && h >= 0 && h <= 23) {
+                    hourCounts[h] = (hourCounts[h] || 0) + (count as number)
+                }
             })
         }
     })
 
     return Object.entries(hourCounts)
-        .sort((a, b) => b[1] - a[1])
+        .sort(([, a], [, b]) => (b as number) - (a as number))
         .slice(0, 3)
         .map(([hour]) => parseInt(hour))
 }
 
+// Helper: Get top programming languages
 function getTopLanguages(stats: any[]): string[] {
-    const langCounts: Record<string, number> = {}
+    const langCounts: { [key: string]: number } = {}
 
     stats.forEach(day => {
-        if (day.languages) {
-            Object.entries(day.languages).forEach(([lang, count]: [string, any]) => {
-                langCounts[lang] = (langCounts[lang] || 0) + count
+        if (day.languages && typeof day.languages === 'object') {
+            Object.entries(day.languages).forEach(([lang, count]) => {
+                if (lang && lang !== 'null' && lang !== 'undefined') {
+                    langCounts[lang] = (langCounts[lang] || 0) + (count as number)
+                }
             })
         }
     })
 
     return Object.entries(langCounts)
-        .sort((a, b) => b[1] - a[1])
+        .sort(([, a], [, b]) => (b as number) - (a as number))
         .slice(0, 5)
         .map(([lang]) => lang)
 }
