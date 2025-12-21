@@ -8,72 +8,52 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                background: 'var(--bg-deepest)',
-                foreground: 'var(--text-primary)',
-
-                // Deep Space Backgrounds
+                // Primary Backgrounds
                 bg: {
-                    deepest: 'var(--bg-deepest)',
-                    deep: 'var(--bg-deep)',
-                    mid: 'var(--bg-mid)',
-                    elevated: 'var(--bg-elevated)',
+                    deepest: '#050505',
+                    deep: '#0a0a0a',
+                    mid: '#18181B',
+                    elevated: '#27272A',
+                    surface: '#303030',
                 },
-
-                // Glass system
-                glass: {
-                    bg: 'var(--glass-bg)',
-                    border: 'var(--glass-border)',
-                    hover: 'var(--glass-hover-bg)',
-                    stroke: 'var(--glass-hover-border)',
-                },
-
-                // Quantum Brand Colors - Remapped to Obsidian/Zinc System
+                // Purple Accent System
                 purple: {
-                    ...require('tailwindcss/colors').zinc,
-                    DEFAULT: 'var(--purple-primary)',
-                    light: 'var(--purple-light)',
-                    dark: 'var(--purple-dark)',
-                    glow: 'var(--purple-glow)',
+                    DEFAULT: '#7C3AED',
+                    50: '#F5F3FF',
+                    100: '#EDE9FE',
+                    200: '#DDD6FE',
+                    300: '#C4B5FD',
+                    400: '#A78BFA',
+                    500: '#8B5CF6',
+                    600: '#7C3AED',
+                    700: '#6D28D9',
+                    800: '#5B21B6',
+                    900: '#4C1D95',
+                    950: '#2E1065',
+                    glow: 'rgba(124, 58, 237, 0.4)',
+                    subtle: 'rgba(124, 58, 237, 0.1)',
                 },
-                // Force other cosmic colors to Monochrome/Zinc
-                fuchsia: require('tailwindcss/colors').zinc,
-                pink: require('tailwindcss/colors').zinc,
-                violet: require('tailwindcss/colors').zinc,
-                indigo: require('tailwindcss/colors').zinc,
-                blue: require('tailwindcss/colors').zinc,
-                cyan: require('tailwindcss/colors').zinc,
-                sky: require('tailwindcss/colors').zinc,
-                teal: require('tailwindcss/colors').zinc,
-                emerald: require('tailwindcss/colors').emerald, // Keep emerald for success
-
+                // Silver System
                 silver: {
-                    DEFAULT: 'var(--silver-primary)',
-                    light: 'var(--silver-light)',
-                    dark: 'var(--silver-dark)',
+                    DEFAULT: '#D4D4D8',
+                    light: '#E4E4E7',
+                    dark: '#A1A1AA',
                 },
-                zinc: {
-                    DEFAULT: 'var(--zinc)',
-                    ...require('tailwindcss/colors').zinc,
+                // Glass System
+                glass: {
+                    bg: 'rgba(10, 10, 10, 0.8)',
+                    border: 'rgba(255, 255, 255, 0.06)',
+                    'hover-bg': 'rgba(255, 255, 255, 0.03)',
+                    'hover-border': 'rgba(255, 255, 255, 0.12)',
                 },
-                cosmic: {
-                    pink: 'var(--cosmic-pink)',
-                    blue: 'var(--cosmic-blue)',
-                    cyan: 'var(--cosmic-cyan)',
-                },
-
-                // Text hierarchy
+                // Text Hierarchy
                 text: {
-                    primary: 'var(--text-primary)',
-                    secondary: 'var(--text-secondary)',
-                    tertiary: 'var(--text-tertiary)',
-                    muted: 'var(--text-muted)',
-                }
-            },
-            backgroundImage: {
-                'gradient-primary': 'var(--gradient-primary)',
-                'gradient-purple': 'var(--gradient-purple-deep)',
-                'cosmic': 'var(--bg-cosmic)',
-                'planet': 'var(--planet-gradient)',
+                    primary: '#FFFFFF',
+                    secondary: '#D4D4D8',
+                    tertiary: '#A1A1AA',
+                    muted: '#71717A',
+                    faint: '#52525B',
+                },
             },
             fontFamily: {
                 display: ['var(--font-display)', 'system-ui', 'sans-serif'],
@@ -81,13 +61,14 @@ module.exports = {
                 mono: ['var(--font-mono)', 'monospace'],
             },
             animation: {
-                'fade-in': 'fadeIn 0.5s ease-out forwards',
-                'slide-up': 'slideUp 0.5s ease-out forwards',
-                'scale-up': 'scaleUp 0.3s ease-out forwards',
-                'pulse-glow': 'pulseGlow 2s infinite ease-in-out',
+                'fade-in': 'fadeIn 0.6s ease-out forwards',
+                'slide-up': 'slideUp 0.6s ease-out forwards',
+                'scale-up': 'scaleUp 0.4s ease-out forwards',
+                'pulse-glow': 'pulseGlow 3s infinite ease-in-out',
                 'float': 'float 6s ease-in-out infinite',
                 'shimmer': 'shimmer 2s linear infinite',
-                'spin-slow': 'spin 8s linear infinite',
+                'spin-slow': 'spin 20s linear infinite',
+                'gradient-shift': 'gradient-shift 8s ease-in-out infinite',
             },
             keyframes: {
                 fadeIn: {
@@ -103,23 +84,40 @@ module.exports = {
                     '100%': { opacity: '1', transform: 'scale(1)' },
                 },
                 pulseGlow: {
-                    '0%, 100%': { opacity: '1', boxShadow: '0 0 20px var(--purple-glow)' },
-                    '50%': { opacity: '0.8', boxShadow: '0 0 30px var(--purple-glow)' },
+                    '0%, 100%': { opacity: '1', boxShadow: '0 0 20px rgba(124, 58, 237, 0.3)' },
+                    '50%': { opacity: '0.8', boxShadow: '0 0 40px rgba(124, 58, 237, 0.5)' },
                 },
                 float: {
                     '0%, 100%': { transform: 'translateY(0)' },
-                    '50%': { transform: 'translateY(-20px)' },
+                    '50%': { transform: 'translateY(-10px)' },
                 },
                 shimmer: {
                     '0%': { backgroundPosition: '-1000px 0' },
                     '100%': { backgroundPosition: '1000px 0' },
                 },
+                'gradient-shift': {
+                    '0%, 100%': { backgroundPosition: '0% 50%' },
+                    '50%': { backgroundPosition: '100% 50%' },
+                },
             },
             backgroundImage: {
-                'gradient-primary': 'var(--gradient-primary)',
-                'gradient-secondary': 'var(--gradient-secondary)',
-                'gradient-mesh': 'var(--gradient-mesh)',
-            }
+                'gradient-purple': 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+                'gradient-purple-glow': 'linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%)',
+                'gradient-silver': 'linear-gradient(135deg, #D4D4D8 0%, #A1A1AA 100%)',
+                'gradient-dark': 'linear-gradient(180deg, #0a0a0a 0%, #050505 100%)',
+                'gradient-radial-purple': 'radial-gradient(ellipse at center, rgba(124, 58, 237, 0.15) 0%, transparent 70%)',
+            },
+            boxShadow: {
+                'purple': '0 0 40px -10px rgba(124, 58, 237, 0.5)',
+                'purple-lg': '0 0 60px -15px rgba(124, 58, 237, 0.4)',
+                'glow': '0 0 40px -10px rgba(255, 255, 255, 0.3)',
+            },
+            transitionTimingFunction: {
+                'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
+                'out-quart': 'cubic-bezier(0.25, 1, 0.5, 1)',
+                'in-out-quart': 'cubic-bezier(0.76, 0, 0.24, 1)',
+                'spring': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+            },
         },
     },
     plugins: [],

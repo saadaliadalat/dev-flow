@@ -4,103 +4,235 @@
 
 @layer base {
     :root {
-        /* --- OBSIDIAN THEME CORE (Formerly Quantum) --- */
+        /* === DEVFLOW 2026 PREMIUM COLOR SYSTEM === */
 
-        /* Backgrounds - Pure Black & Zinc */
-        --bg-deepest: #000000;
-        --bg-deep: #09090b;
-        /* Zinc 950 */
-        --bg-mid: #18181b;
-        /* Zinc 900 */
-        --bg-elevated: #27272a;
-        /* Zinc 800 */
+        /* Primary Backgrounds */
+        --bg-deepest: #050505;
+        --bg-deep: #0a0a0a;
+        --bg-mid: #18181B;
+        --bg-elevated: #27272A;
+        --bg-surface: #303030;
 
-        /* Text - High Contrast White & Zinc */
-        --text-primary: #ffffff;
-        --text-secondary: #a1a1aa;
-        /* Zinc 400 */
-        --text-tertiary: #71717a;
-        /* Zinc 500 */
-        --text-muted: #52525b;
-        /* Zinc 600 */
+        /* Text Hierarchy */
+        --text-primary: #FFFFFF;
+        --text-secondary: #D4D4D8;
+        --text-tertiary: #A1A1AA;
+        --text-muted: #71717A;
+        --text-faint: #52525B;
 
-        /* Glass System - Smoked & Crystal */
-        --glass-bg: rgba(9, 9, 11, 0.7);
-        /* Zinc 950 alpha */
-        --glass-border: rgba(255, 255, 255, 0.08);
-        --glass-hover-bg: rgba(255, 255, 255, 0.05);
-        --glass-hover-border: rgba(255, 255, 255, 0.15);
+        /* Purple Accent System (AI / Insights / Motion) */
+        --purple-primary: #7C3AED;
+        --purple-light: #A855F7;
+        --purple-dark: #5B21B6;
+        --purple-glow: rgba(124, 58, 237, 0.4);
+        --purple-subtle: rgba(124, 58, 237, 0.1);
 
-        /* "Purple" Variables Remapped to Obsidian/Silver */
-        --purple-primary: #ffffff;
-        --purple-light: #e4e4e7;
-        /* Zinc 200 */
-        --purple-dark: #18181b;
-        /* Zinc 900 */
-        --purple-glow: rgba(255, 255, 255, 0.25);
+        /* Silver Accent System */
+        --silver-primary: #D4D4D8;
+        --silver-light: #E4E4E7;
+        --silver-dark: #A1A1AA;
 
-        /* "Cosmic" Accents Remapped to Monochrome */
-        --cosmic-pink: #d4d4d8;
-        /* Zinc 300 */
-        --cosmic-blue: #a1a1aa;
-        /* Zinc 400 */
-        --cosmic-cyan: #ffffff;
-        /* White */
+        /* Glass System */
+        --glass-bg: rgba(10, 10, 10, 0.8);
+        --glass-border: rgba(255, 255, 255, 0.06);
+        --glass-hover-bg: rgba(255, 255, 255, 0.03);
+        --glass-hover-border: rgba(255, 255, 255, 0.12);
 
-        /* Silver Accents */
-        --silver-primary: #e4e4e7;
-        --silver-light: #ffffff;
-        --silver-dark: #a1a1aa;
-        --zinc: #52525b;
+        /* Semantic Colors */
+        --success: #10B981;
+        --warning: #F59E0B;
+        --error: #EF4444;
 
         /* Gradients */
-        --gradient-primary: linear-gradient(to right, #ffffff, #d4d4d8);
-        /* White Silver */
-        --gradient-secondary: linear-gradient(to right, #a1a1aa, #52525b);
-        /* Zinc Fade */
-        --gradient-purple-deep: linear-gradient(to bottom, #000000, #09090b);
-        /* Deepest Dark */
-        --gradient-mesh: radial-gradient(at top left, rgba(255, 255, 255, 0.05), transparent 50%);
+        --gradient-purple: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%);
+        --gradient-purple-glow: linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%);
+        --gradient-silver: linear-gradient(135deg, #D4D4D8 0%, #A1A1AA 100%);
+        --gradient-dark: linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
+        --gradient-radial-purple: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.15) 0%, transparent 70%);
+        --gradient-mesh: radial-gradient(at 40% 20%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+                         radial-gradient(at 80% 80%, rgba(168, 85, 247, 0.05) 0%, transparent 50%);
 
-        /* Legacy Backgrounds (Neutralized) */
-        --bg-cosmic: radial-gradient(circle at center, #18181b 0%, #000000 100%);
-        --planet-gradient: linear-gradient(45deg, #ffffff, #52525b);
+        /* Motion System */
+        --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+        --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+        --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-        /* Font Families (Inter / JetBrains Mono mapping) */
-        --font-display: "Inter", system-ui, sans-serif;
-        --font-body: "Inter", system-ui, sans-serif;
-        --font-mono: "JetBrains Mono", monospace;
+        /* Shadows */
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+        --shadow-purple: 0 0 40px -10px rgba(124, 58, 237, 0.5);
+        --shadow-glow: 0 0 60px -15px rgba(124, 58, 237, 0.4);
+
+        /* Typography */
+        --font-display: "Inter", system-ui, -apple-system, sans-serif;
+        --font-body: "Inter", system-ui, -apple-system, sans-serif;
+        --font-mono: "JetBrains Mono", "Fira Code", monospace;
+    }
+
+    * {
+        @apply border-white/5;
+    }
+
+    html {
+        scroll-behavior: smooth;
     }
 
     body {
-        @apply bg-bg-deepest text-text-primary antialiased selection:bg-white/20;
-        font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+        @apply bg-[#050505] text-white antialiased;
+        font-feature-settings: "ss01", "ss02", "cv01", "cv02", "calt";
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Custom Scrollbar */
+    ::selection {
+        @apply bg-purple-500/30 text-white;
+    }
+
+    /* Premium Scrollbar */
     ::-webkit-scrollbar {
-        width: 6px;
+        width: 8px;
+        height: 8px;
     }
 
     ::-webkit-scrollbar-track {
-        @apply bg-black;
+        @apply bg-transparent;
     }
 
     ::-webkit-scrollbar-thumb {
-        @apply bg-zinc-800 rounded-full hover:bg-zinc-700 transition-colors;
+        @apply bg-white/10 rounded-full;
+        transition: background-color 0.2s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        @apply bg-white/20;
+    }
+
+    /* Firefox */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    }
+}
+
+@layer components {
+    /* Glass Card Component */
+    .glass-card {
+        @apply relative overflow-hidden rounded-2xl;
+        background: linear-gradient(135deg, rgba(24, 24, 27, 0.5) 0%, rgba(10, 10, 10, 0.8) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .glass-card::before {
+        content: '';
+        @apply absolute inset-0 opacity-0 transition-opacity duration-500;
+        background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(124, 58, 237, 0.06), transparent 40%);
+    }
+
+    .glass-card:hover::before {
+        @apply opacity-100;
+    }
+
+    /* Magnetic Button Base */
+    .btn-magnetic {
+        @apply relative overflow-hidden;
+        transition: transform 0.2s var(--ease-out-expo);
+    }
+
+    /* Purple Gradient Text */
+    .text-gradient-purple {
+        @apply bg-clip-text text-transparent;
+        background-image: linear-gradient(135deg, #7C3AED 0%, #A855F7 50%, #C084FC 100%);
+    }
+
+    /* Silver Gradient Text */
+    .text-gradient-silver {
+        @apply bg-clip-text text-transparent;
+        background-image: linear-gradient(135deg, #FFFFFF 0%, #D4D4D8 50%, #A1A1AA 100%);
+    }
+
+    /* Glow Effects */
+    .glow-purple {
+        box-shadow: 0 0 40px -10px rgba(124, 58, 237, 0.5),
+                    0 0 80px -20px rgba(168, 85, 247, 0.3);
+    }
+
+    .glow-white {
+        box-shadow: 0 0 40px -10px rgba(255, 255, 255, 0.3);
+    }
+
+    /* Ambient Animation */
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .animate-pulse-subtle {
+        animation: pulse-subtle 4s ease-in-out infinite;
+    }
+
+    .animate-gradient-shift {
+        animation: gradient-shift 8s ease-in-out infinite;
+        background-size: 200% 200%;
     }
 }
 
 @layer utilities {
+    /* GPU Acceleration Helper */
+    .gpu-accelerated {
+        transform: translateZ(0);
+        will-change: transform;
+        backface-visibility: hidden;
+    }
+
+    /* Text Gradient Utility */
     .text-gradient {
         @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-300 to-zinc-500;
     }
 
-    .glass-card {
-        @apply bg-zinc-800 bg-opacity-10 backdrop-blur-xl border border-white/5;
+    /* Noise Texture Overlay */
+    .noise-overlay::after {
+        content: '';
+        @apply absolute inset-0 pointer-events-none opacity-[0.015];
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     }
+}
 
-    .animate-shimmer {
-        animation: shimmer 2s linear infinite;
-    }
+/* Keyframe Animations */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-subtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+@keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Canvas Container for 3D */
+.canvas-container {
+    @apply absolute inset-0 w-full h-full;
+    z-index: 0;
+}
+
+.canvas-container canvas {
+    @apply w-full h-full;
+    touch-action: none;
 }
