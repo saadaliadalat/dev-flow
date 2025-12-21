@@ -8,7 +8,7 @@ import { springs } from '@/lib/animations'
 interface GlassCardProps {
     children: React.ReactNode
     hover?: boolean
-    glow?: 'purple' | 'white' | 'none'
+    glow?: 'purple' | 'cyan' | 'white' | 'none'
     className?: string
     onClick?: () => void
 }
@@ -55,6 +55,7 @@ export function GlassCard({
 
     const glowStyles = {
         purple: 'hover:shadow-purple',
+        cyan: 'hover:shadow-purple', // Map cyan to purple for consistency
         white: 'hover:shadow-glow',
         none: '',
     }
