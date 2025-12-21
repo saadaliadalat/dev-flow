@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useRef } from 'react'
-import { motion, useScroll, useTransform, useInView } from 'framer-motion'
-import { GitCommit, Zap, BarChart3, ArrowRight, Check } from 'lucide-react'
+import React from 'react'
+import { motion } from 'framer-motion'
+import { GitCommit, Zap, BarChart3 } from 'lucide-react'
 
 const features = [
     {
@@ -34,7 +34,6 @@ const features = [
 export function HowItWorks() {
     return (
         <section id="how-it-works" className="py-32 relative overflow-hidden bg-black">
-            {/* Background Matrix/Grid effect - Subtle */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
             <div className="container mx-auto px-6 relative z-10">
@@ -71,9 +70,7 @@ export function HowItWorks() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-                    {/* Connection Line */}
                     <div className="hidden md:block absolute top-[20%] left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
                     {features.map((feature, i) => (
                         <FeatureCard key={i} {...feature} index={i} />
                     ))}
@@ -94,24 +91,15 @@ function FeatureCard({ title, description, icon, code, color, delay, index }: an
         >
             <div className="group relative z-10 h-full p-1 rounded-3xl bg-gradient-to-b from-white/10 to-white/5 border border-white/5 hover:border-white/10 transition-colors">
                 <div className="bg-[#0c0c0c] rounded-[22px] h-full p-8 flex flex-col items-center text-center overflow-hidden relative">
-
-                    {/* Top Number */}
                     <div className="absolute top-4 right-6 text-[80px] font-bold text-white/5 font-display select-none">
                         0{index + 1}
                     </div>
-
-                    {/* Icon Circle */}
                     <div className="relative w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
                         {icon}
-                        {/* Glow behind icon */}
                         <div className={`absolute inset-0 bg-gradient-to-br ${color} blur-xl opacity-20 group-hover:opacity-40 transition-opacity`} />
                     </div>
-
-                    {/* Content */}
                     <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
                     <p className="text-zinc-400 text-sm leading-relaxed mb-8">{description}</p>
-
-                    {/* Fake Code Block */}
                     <div className="mt-auto w-full p-3 rounded-lg bg-[#050505] border border-white/5 font-mono text-xs text-zinc-500 overflow-hidden text-left relative group-hover:border-white/10 transition-colors">
                         <div className="flex gap-1.5 mb-2 opacity-50">
                             <div className="w-2 h-2 rounded-full bg-zinc-700" />

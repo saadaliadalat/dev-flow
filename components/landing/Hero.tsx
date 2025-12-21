@@ -1,10 +1,9 @@
 'use client'
 
-import React, { useRef, useState, useEffect } from 'react'
-import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate } from 'framer-motion'
-import { ArrowRight, Play, Sparkles, Zap, Command, GitCommit, ChevronRight } from 'lucide-react'
+import React, { useRef } from 'react'
+import { motion, useScroll, useTransform, useMotionValue, useMotionTemplate } from 'framer-motion'
+import { ArrowRight, Play, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 
 // --- UTILITY COMPONENTS ---
 
@@ -42,7 +41,6 @@ const MagneticButton = ({ children, className, onClick }: { children: React.Reac
 }
 
 const StarField = () => {
-    // Generate random stars for background depth
     const stars = Array.from({ length: 50 }).map((_, i) => ({
         id: i,
         top: `${Math.random() * 100}%`,
@@ -80,37 +78,6 @@ const StarField = () => {
     )
 }
 
-const CodeSnippetCard = ({ code, language, delay, x, y, rotate }: { code: string, language: string, delay: number, x: string, y: string, rotate: number }) => {
-    return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay, duration: 0.8 }}
-            className="absolute hidden xl:block p-4 rounded-2xl bg-[#09090b]/90 border border-white/10 backdrop-blur-xl shadow-2xl font-mono text-xs"
-            style={{ left: x, top: y, rotate }}
-        >
-            <div className="flex items-center gap-2 mb-3 opacity-50">
-                <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
-                </div>
-                <span className="text-[10px]">{language}</span>
-            </div>
-            <pre className="text-zinc-300">
-                <code>
-                    {code.split('\n').map((line, i) => (
-                        <div key={i} className="flex">
-                            <span className="w-6 inline-block text-zinc-600 select-none">{i + 1}</span>
-                            <span dangerouslySetInnerHTML={{ __html: line }} />
-                        </div>
-                    ))}
-                </code>
-            </pre>
-        </motion.div>
-    )
-}
-
 // --- MAIN HERO COMPONENT ---
 
 export function Hero() {
@@ -118,14 +85,6 @@ export function Hero() {
     const containerRef = useRef<HTMLDivElement>(null)
     const { scrollY } = useScroll()
 
-    // Parallax & Transform hooks
-    const y1 = useTransform(scrollY, [0, 500], [0, 200])
-    const y2 = useTransform(scrollY, [0, 500], [0, -150])
-    const opacity = useTransform(scrollY, [0, 500], [1, 0])
-    const rotateX = useTransform(scrollY, [0, 600], [20, 45])
-    const scale = useTransform(scrollY, [0, 600], [1, 0.9])
-
-    // Mouse Spotlight Effect
     const mouseX = useMotionValue(0)
     const mouseY = useMotionValue(0)
 
@@ -139,26 +98,18 @@ export function Hero() {
         <section
             ref={containerRef}
             onMouseMove={handleMouseMove}
-            className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-32 overflow-hidden bg-black selection:bg-purple-500/30"
+            className="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-20 overflow-hidden bg-bg-deepest selection:bg-cyan-500/30"
         >
-            {/* 1. LAYERED AMBIENT BACKGROUND */}
-            <div className="absolute inset-0 pointer-events-none">
-
-
-                {/* Aurora Gradients */}
-                <div className="absolute top-[-20%] left-[20%] w-[500px] h-[500px] bg-purple-600/20 blur-[120px] rounded-full mix-blend-screen animate-pulse-slow" />
-                <div className="absolute bottom-[-10%] right-[20%] w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full mix-blend-screen" />
-
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black z-0" />
                 <StarField />
-
-                {/* Mouse Follower Spotlight */}
                 <motion.div
-                    className="pointer-events-none absolute -inset-px rounded-xl opacity-0 hover:opacity-100 transition duration-300 group-hover:opacity-100"
+                    className="pointer-events-none absolute -inset-px opacity-0 hover:opacity-100 transition duration-300"
                     style={{
                         background: useMotionTemplate`
                             radial-gradient(
                                 650px circle at ${mouseX}px ${mouseY}px,
-                                rgba(124, 58, 237, 0.1),
+                                rgba(120, 119, 198, 0.1),
                                 transparent 80%
                             )
                         `
@@ -166,28 +117,7 @@ export function Hero() {
                 />
             </div>
 
-            {/* 2. FLOATING CODE ELEMENTS (Atmosphere) */}
-            <CodeSnippetCard
-                x="5%"
-                y="20%"
-                rotate={-6}
-                delay={0.5}
-                language="stats.ts"
-                code={`interface Stats {<br/>  commits: number;<br/>  <span class="text-purple-400">velocity</span>: number;<br/>  burnout: boolean;<br/>}`}
-            />
-            <CodeSnippetCard
-                x="80%"
-                y="15%"
-                rotate={6}
-                delay={0.7}
-                language="ai-insight.tsx"
-                code={`<span class="text-blue-400">const</span> insight = <br/>  await <span class="text-yellow-400">ai</span>.analyze({<br/>    pattern: 'burnout'<br/>  });`}
-            />
-
-            {/* 3. MAIN CONTENT */}
             <div className="container relative z-10 px-4 flex flex-col items-center text-center">
-
-                {/* Announcement Badge */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -200,7 +130,6 @@ export function Hero() {
                     <ChevronRight size={14} className="text-zinc-500 group-hover:text-white transition-colors" />
                 </motion.div>
 
-                {/* Hero Typography */}
                 <motion.h1
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -229,12 +158,11 @@ export function Hero() {
                     without leaving your CLI.
                 </motion.p>
 
-                {/* CTA Buttons */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.8, delay: 0.3 }}
-                    className="flex flex-col sm:flex-row items-center gap-4"
+                    className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
                 >
                     <MagneticButton
                         onClick={() => router.push('/signup')}
@@ -259,57 +187,6 @@ export function Hero() {
                 </motion.div>
             </div>
 
-            {/* 4. HERO VISUAL (3D Dashboard) */}
-            <motion.div
-                style={{ opacity, y: y1, scale, rotateX: useTransform(scrollY, [0, 400], [15, 25]) }}
-                className="relative w-full max-w-[1400px] px-4 -mt-12 perspective-2000"
-            >
-                {/* Glow behind dashboard */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[70%] bg-purple-500/15 blur-[100px] rounded-full z-0" />
-
-                <div className="relative z-10 rounded-xl bg-[#0a0a0a] border border-white/10 shadow-2xl overflow-hidden ring-1 ring-white/5">
-                    {/* Fake Browser Toolbar */}
-                    <div className="flex items-center justify-between px-4 py-3 bg-[#0a0a0a] border-b border-white/5">
-                        <div className="flex gap-2">
-                            <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50" />
-                            <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50" />
-                            <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50" />
-                        </div>
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 text-[11px] font-mono text-zinc-500">
-                            <Command size={10} />
-                            devflow.app/dashboard
-                        </div>
-                        <div className="w-10" />
-                    </div>
-
-                    {/* Screenshot Container */}
-                    <div className="relative aspect-[16/9] bg-zinc-900 group cursor-default">
-                        <Image
-                            src="/dashboard-preview.png"
-                            alt="DevFlow Dashboard"
-                            fill
-                            className="object-cover object-top"
-                            priority
-                            sizes="100vw"
-                        />
-
-                        {/* Interactive Overlay Points (Fake UI interaction) */}
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 1, type: 'spring' }}
-                            className="absolute top-[20%] left-[15%] w-8 h-8 rounded-full bg-purple-500/30 flex items-center justify-center animate-pulse"
-                        >
-                            <div className="w-3 h-3 bg-purple-400 rounded-full" />
-                        </motion.div>
-                    </div>
-                </div>
-
-                {/* Reflection/Shine overlay */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-transparent pointer-events-none rounded-xl z-20" />
-            </motion.div>
-
-            {/* Scroll Indicator */}
             <motion.div
                 style={{ opacity: useTransform(scrollY, [0, 100], [1, 0]) }}
                 className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"

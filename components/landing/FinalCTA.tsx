@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, Github } from 'lucide-react'
+import { Github } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export function FinalCTA() {
@@ -10,8 +10,6 @@ export function FinalCTA() {
 
     return (
         <section className="relative py-32 overflow-hidden flex items-center justify-center bg-black">
-
-
             <div className="container relative z-10 px-6 text-center">
                 <motion.h2
                     initial={{ opacity: 0, y: 20 }}
