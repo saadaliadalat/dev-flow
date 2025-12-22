@@ -98,24 +98,21 @@ export function Hero() {
         <section
             ref={containerRef}
             onMouseMove={handleMouseMove}
-            className="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-20 overflow-hidden bg-bg-deepest selection:bg-cyan-500/30"
+            className="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-20 overflow-hidden bg-transparent selection:bg-zinc-500/30"
         >
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black z-0" />
-                <StarField />
-                <motion.div
-                    className="pointer-events-none absolute -inset-px opacity-0 hover:opacity-100 transition duration-300"
-                    style={{
-                        background: useMotionTemplate`
-                            radial-gradient(
-                                650px circle at ${mouseX}px ${mouseY}px,
-                                rgba(120, 119, 198, 0.1),
-                                transparent 80%
-                            )
-                        `
-                    }}
-                />
-            </div>
+            {/* Subtle mouse-following glow - kept minimal */}
+            <motion.div
+                className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500"
+                style={{
+                    background: useMotionTemplate`
+                        radial-gradient(
+                            800px circle at ${mouseX}px ${mouseY}px,
+                            rgba(255, 255, 255, 0.03),
+                            transparent 60%
+                        )
+                    `
+                }}
+            />
 
             <div className="container relative z-10 px-4 flex flex-col items-center text-center">
                 <motion.div
@@ -123,10 +120,10 @@ export function Hero() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     onClick={() => router.push('/release-notes')}
-                    className="cursor-pointer group flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all duration-300 mb-8 backdrop-blur-md"
+                    className="cursor-pointer group flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:border-white/30 hover:bg-white/10 transition-all duration-300 mb-8 backdrop-blur-md"
                 >
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500 text-white shadow-lg shadow-purple-500/20">NEW</span>
-                    <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">DevFlow 2.0 is live</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500 text-white">FREE</span>
+                    <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">100% free forever — no credit card needed</span>
                     <ChevronRight size={14} className="text-zinc-500 group-hover:text-white transition-colors" />
                 </motion.div>
 
@@ -137,12 +134,12 @@ export function Hero() {
                     className="max-w-5xl mx-auto text-6xl md:text-8xl font-bold tracking-tight text-white mb-8 leading-[0.9]"
                 >
                     <span className="block text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 pb-2">
-                        Code at the
+                        Your code.
                     </span>
                     <span className="relative inline-block">
-                        <span className="absolute -inset-2 bg-gradient-to-r from-purple-500/40 via-blue-500/40 to-purple-500/40 blur-2xl opacity-50" />
-                        <span className="relative text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 animate-gradient-x">
-                            Speed of Thought
+                        <span className="absolute -inset-2 bg-white/10 blur-2xl opacity-50" />
+                        <span className="relative text-transparent bg-clip-text bg-gradient-to-r from-zinc-200 via-white to-zinc-300">
+                            Your story.
                         </span>
                     </span>
                 </motion.h1>
@@ -153,9 +150,8 @@ export function Hero() {
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="max-w-2xl mx-auto text-lg md:text-xl text-zinc-400 mb-12 leading-relaxed"
                 >
-                    The developer analytics platform that understands your flow.
-                    Visualize your velocity, prevent burnout, and unlock achievements
-                    without leaving your CLI.
+                    See your year in code. Track your velocity, celebrate milestones,
+                    and get AI-powered insights — like Spotify Wrapped, but for developers.
                 </motion.p>
 
                 <motion.div
@@ -166,23 +162,22 @@ export function Hero() {
                 >
                     <MagneticButton
                         onClick={() => router.push('/signup')}
-                        className="group relative px-8 py-4 rounded-full bg-white text-black font-semibold text-lg hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-all duration-300"
+                        className="group relative px-8 py-4 rounded-full bg-white text-black font-semibold text-lg transition-all duration-300 hover:shadow-[0_0_50px_rgba(255,255,255,0.4)] hover:scale-105"
                     >
                         <span className="relative z-10 flex items-center gap-2">
-                            Get Started
+                            Start Free
                             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </span>
                     </MagneticButton>
 
                     <MagneticButton
                         onClick={() => {
-                            const demoSection = document.getElementById('demo')
-                            demoSection?.scrollIntoView({ behavior: 'smooth' })
+                            const featuresSection = document.getElementById('features')
+                            featuresSection?.scrollIntoView({ behavior: 'smooth' })
                         }}
-                        className="px-8 py-4 rounded-full bg-white/5 border border-white/10 text-white font-medium text-lg hover:bg-white/10 backdrop-blur-md transition-all duration-300 flex items-center gap-2"
+                        className="px-8 py-4 rounded-full bg-white/5 border border-white/10 text-white font-medium text-lg hover:bg-white/10 hover:border-white/20 backdrop-blur-md transition-all duration-300 flex items-center gap-2"
                     >
-                        <Play size={18} fill="currentColor" />
-                        Watch Demo
+                        See Features
                     </MagneticButton>
                 </motion.div>
             </div>

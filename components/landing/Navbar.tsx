@@ -39,14 +39,14 @@ export function Navbar() {
             <div className={cn(
                 "pointer-events-auto relative flex items-center justify-between w-[95%] max-w-7xl px-4 py-3 rounded-full transition-all duration-500",
                 isScrolled
-                    ? "bg-[#0a0612]/70 border border-white/10 backdrop-blur-md shadow-lg shadow-purple-900/10"
+                    ? "bg-black/80 border border-white/[0.08] backdrop-blur-md shadow-lg shadow-black/20"
                     : "bg-transparent border border-transparent"
             )}>
                 {/* 1. LOGO */}
                 <Link href="/" className="flex items-center gap-2 group relative z-10">
-                    <div className="relative flex items-center justify-center p-1.5 rounded-xl bg-white/5 border border-white/10 group-hover:border-purple-500/30 group-hover:bg-purple-500/10 transition-colors duration-300">
+                    <div className="relative flex items-center justify-center p-1.5 rounded-xl bg-white/5 border border-white/10 group-hover:border-white/20 group-hover:bg-white/10 transition-colors duration-300">
                         <DevFlowLogo className="w-6 h-6" />
-                        <div className="absolute inset-0 bg-purple-500/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute inset-0 bg-white/10 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
                     <span className="font-display font-bold text-lg tracking-tight text-white group-hover:text-purple-100 transition-colors">
                         DevFlow
@@ -63,7 +63,7 @@ export function Navbar() {
                         >
                             <span className="relative z-10">{link.name}</span>
                             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
-                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-purple-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-white/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         </Link>
                     ))}
                     <div className="w-px h-4 bg-white/10 mx-2" />
@@ -101,13 +101,12 @@ export function Navbar() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => router.push('/signup')}
-                                className="group relative px-6 py-2.5 rounded-full bg-[#0a0612] border border-purple-500/30 text-white text-sm font-semibold overflow-hidden shadow-[0_0_20px_rgba(168,85,247,0.15)]"
+                                className="group relative px-6 py-2.5 rounded-full bg-white text-black text-sm font-semibold overflow-hidden shadow-lg shadow-white/10"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-20 group-hover:opacity-30 transition-opacity duration-300" />
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                 <span className="relative flex items-center gap-2">
                                     Get Started
-                                    <Zap size={14} className="fill-purple-400 text-purple-400 group-hover:text-white group-hover:fill-white transition-colors" />
+                                    <Zap size={14} className="fill-black text-black" />
                                 </span>
                             </motion.button>
                         </>
@@ -131,11 +130,11 @@ export function Navbar() {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -20 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute top-4 inset-x-4 p-6 bg-[#0a0612]/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl z-50 flex flex-col gap-6 pointer-events-auto"
+                        className="absolute top-4 inset-x-4 p-6 bg-black/95 backdrop-blur-xl border border-white/[0.08] rounded-3xl shadow-2xl z-50 flex flex-col gap-6 pointer-events-auto"
                     >
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                                <div className="p-1.5 rounded-lg bg-white/5 border border-white/10">
                                     <DevFlowLogo className="w-5 h-5" />
                                 </div>
                                 <span className="font-bold text-lg text-white">Menu</span>
@@ -174,7 +173,7 @@ export function Navbar() {
                                 </button>
                             </Link>
                             <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                                <button className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold shadow-lg shadow-purple-900/20">
+                                <button className="w-full py-3.5 rounded-xl bg-white text-black font-bold shadow-lg shadow-white/5">
                                     Get Started
                                 </button>
                             </Link>

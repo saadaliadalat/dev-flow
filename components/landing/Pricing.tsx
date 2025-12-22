@@ -15,12 +15,12 @@ export function Pricing() {
             <div className="container mx-auto px-6 relative z-10">
                 <div className="text-center max-w-3xl mx-auto mb-16">
                     <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-6">
-                        Professional Tools. <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">Zero Cost.</span>
+                        No pricing page. <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300">Just free.</span>
                     </h2>
                     <p className="text-zinc-400 text-lg">
-                        We believe advanced analytics should be accessible to every developer.
-                        <br /> No credit card required. Open source forever.
+                        We believe developer tools should be accessible to everyone.
+                        <br />No trials. No tiers. No credit card required.
                     </p>
                 </div>
 
@@ -53,10 +53,10 @@ export function Pricing() {
                                     <div className="flex flex-col gap-3">
                                         <button
                                             onClick={() => router.push('/signup')}
-                                            className="w-full py-4 rounded-xl bg-white text-black font-bold text-base hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
+                                            className="w-full py-4 rounded-xl bg-white text-black font-bold text-base transition-all duration-300 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-[1.02] flex items-center justify-center gap-2"
                                         >
                                             <Github className="w-5 h-5" />
-                                            Start with GitHub
+                                            Continue with GitHub
                                         </button>
                                         <p className="text-center text-xs text-zinc-500 mt-2">
                                             No credit card required.
