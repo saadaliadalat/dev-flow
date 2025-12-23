@@ -19,7 +19,7 @@ import { signOut } from 'next-auth/react'
 
 const sidebarItems = [
     { icon: Home, label: 'Overview', href: '/dashboard' },
-    { icon: Activity, label: 'Activity', href: '/dashboard/activity' },
+    { icon: Activity, label: 'Analytics', href: '/dashboard/analytics' },
     { icon: Target, label: 'Goals', href: '/dashboard/goals' },
     { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ]

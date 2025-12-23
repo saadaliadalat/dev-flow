@@ -77,9 +77,8 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
     }
 
     async function generateInsights() {
-        // Check cooldown before generating
         if (!canGenerateInsights()) {
-            console.log(`Insight generation on cooldown. ${getCooldownRemaining()} minutes remaining.`)
+            warning('Rate Limit Exceeded', `Please wait ${getCooldownRemaining()} minutes before generating again.`)
             return
         }
 
@@ -90,7 +89,7 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
             const userData = await userRes.json()
 
             if (!userRes.ok || !userData.user?.id) {
-                console.error('Failed to get user ID for insights')
+                error('Authentication Error', 'Could not identify user. Please sign in again.')
                 return
             }
 
@@ -105,11 +104,17 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
                 // Store generation time for cooldown
                 localStorage.setItem('devflow_last_insight_gen', Date.now().toString())
                 await fetchInsights()
+                success('Analysis Complete', 'New optimization insights generated.')
             } else {
-                console.error('Insights generation failed:', data.error)
+                if (res.status === 429) {
+                    error('Plan Limit Reached', 'You have used your free AI generations. Upgrade to Pro.')
+                } else {
+                    error('Generation Failed', data.error || 'Something went wrong.')
+                }
             }
-        } catch (error) {
-            console.error('Error generating insights:', error)
+        } catch (err) {
+            console.error('Error generating insights:', err)
+            error('Network Error', 'Failed to connect to AI engine.')
         } finally {
             setIsGenerating(false)
         }
@@ -167,6 +172,7 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
         setTimeout(() => {
             setIsApplyingFix(false)
             setFixApplied(true)
+            success('Optimization Applied', 'Code changes have been committed successfully.')
             setTimeout(() => setFixApplied(false), 3000)
         }, 1500)
     }
