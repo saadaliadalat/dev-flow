@@ -10,7 +10,7 @@ const features = [
         description: "Link your GitHub in seconds. We automatically backfill your history and start tracking velocity.",
         icon: <GitCommit className="w-6 h-6 text-purple-400" />,
         code: "git commit -m 'feat: next-level shit'",
-        color: "from-purple-500/20 to-blue-500/20",
+        color: "from-purple-500/20 to-zinc-500/20",
         delay: 0
     },
     {

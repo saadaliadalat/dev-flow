@@ -34,7 +34,7 @@ const socialLinks = [
 
 export function Footer() {
     return (
-        <footer className="relative border-t border-white/[0.06] bg-black/80 backdrop-blur-xl">
+        <footer className="relative border-t border-white/[0.06] bg-[#050508]">
             {/* Gradient Top Border */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
 

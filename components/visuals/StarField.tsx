@@ -7,7 +7,7 @@ import * as random from 'maath/random/dist/maath-random.esm'
 
 export function StarField() {
     return (
-        <div className="fixed inset-0 z-[-1] bg-[#030014] pointer-events-none">
+        <div className="absolute inset-x-0 top-0 w-full h-[100vh] pointer-events-none [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)]">
             <Canvas camera={{ position: [0, 0, 1] }} gl={{ toneMapping: 3 }}>{/* ACESFilmicToneMapping */}
                 <StarFieldContent />
             </Canvas>

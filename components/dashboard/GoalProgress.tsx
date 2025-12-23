@@ -13,25 +13,25 @@ interface GoalProgressProps {
 }
 
 const colorConfig = {
-    blue: {
-        gradient: 'linear-gradient(90deg, #3B82F6, #60A5FA)',
-        bg: 'rgba(59, 130, 246, 0.1)',
-        glow: 'rgba(59, 130, 246, 0.4)',
+    blue: { // Mapped to White/Silver
+        gradient: 'linear-gradient(90deg, #FFFFFF, #e4e4e7)',
+        bg: 'rgba(255, 255, 255, 0.1)', // Dark Grey Track
+        glow: 'rgba(255, 255, 255, 0.2)',
     },
-    emerald: {
-        gradient: 'linear-gradient(90deg, #10B981, #34D399)',
-        bg: 'rgba(16, 185, 129, 0.1)',
-        glow: 'rgba(16, 185, 129, 0.4)',
+    emerald: { // Mapped to White/Silver
+        gradient: 'linear-gradient(90deg, #FFFFFF, #e4e4e7)',
+        bg: 'rgba(255, 255, 255, 0.1)',
+        glow: 'rgba(255, 255, 255, 0.2)',
     },
-    amber: {
-        gradient: 'linear-gradient(90deg, #F59E0B, #FBBF24)',
-        bg: 'rgba(245, 158, 11, 0.1)',
-        glow: 'rgba(245, 158, 11, 0.4)',
+    amber: { // Mapped to White/Silver
+        gradient: 'linear-gradient(90deg, #FFFFFF, #e4e4e7)',
+        bg: 'rgba(255, 255, 255, 0.1)',
+        glow: 'rgba(255, 255, 255, 0.2)',
     },
-    purple: {
-        gradient: 'linear-gradient(90deg, #8B5CF6, #A78BFA)',
-        bg: 'rgba(139, 92, 246, 0.1)',
-        glow: 'rgba(139, 92, 246, 0.4)',
+    purple: { // Mapped to White/Silver (or Purple if requested? Prompt said "Daily Goals" progress bars to be White)
+        gradient: 'linear-gradient(90deg, #FFFFFF, #e4e4e7)',
+        bg: 'rgba(255, 255, 255, 0.1)',
+        glow: 'rgba(255, 255, 255, 0.2)',
     },
 }
 

@@ -8,59 +8,74 @@ module.exports = {
     theme: {
         extend: {
             colors: {
+                // Text hierarchy
+                text: {
+                    primary: 'var(--text-primary)',
+                    secondary: 'var(--text-secondary)',
+                    tertiary: 'var(--text-tertiary)',
+                    muted: 'var(--text-muted)',
+                },
+
+                // === SILVER & VOID SYSTEM ===
                 background: 'var(--bg-deepest)',
                 foreground: 'var(--text-primary)',
 
-                // Deep Space Backgrounds
+                // Remap EVERYTHING to Zinc/Black/Purple
                 bg: {
-                    deepest: '#030014', // Overridden for Series A
-                    'deep-space': '#030014',
+                    deepest: '#000000',
+                    'deep-space': '#000000',
                     deep: 'var(--bg-deep)',
-                    mid: 'var(--bg-mid)',
+                    mid: 'var(--bg-card)',
+                    card: 'var(--bg-card)',
                     elevated: 'var(--bg-elevated)',
+                    hover: 'var(--bg-hover)',
                 },
 
-                // Glass system
                 glass: {
                     bg: 'var(--glass-bg)',
                     border: 'var(--glass-border)',
-                    hover: 'var(--glass-hover-bg)',
-                    stroke: 'var(--glass-hover-border)',
+                    hover: 'var(--bg-hover)',
+                    stroke: 'var(--glass-border-hover)',
                 },
 
-                // Quantum Brand Colors - Remapped to Obsidian/Zinc System
                 purple: {
-                    ...require('tailwindcss/colors').zinc,
-                    DEFAULT: 'var(--purple-primary)',
-                    light: 'var(--purple-light)',
-                    dark: 'var(--purple-dark)',
-                    glow: 'var(--purple-glow)',
+                    DEFAULT: '#8b5cf6',
+                    50: '#faf5ff',
+                    100: '#f3e8ff',
+                    200: '#e9d5ff',
+                    300: '#d8b4fe',
+                    400: '#c084fc',
+                    500: '#a855f7',
+                    600: '#9333ea',
+                    700: '#7e22ce',
+                    800: '#6b21a8',
+                    900: '#581c87',
+                    glow: 'var(--accent-purple-glow)',
                 },
-                // Force other cosmic colors to Monochrome/Zinc
-                fuchsia: require('tailwindcss/colors').zinc,
-                pink: require('tailwindcss/colors').zinc,
-                violet: require('tailwindcss/colors').zinc,
+
+                // FORCE MAP colors to Zinc to prevent accidents
+                slate: require('tailwindcss/colors').zinc,
+                gray: require('tailwindcss/colors').zinc,
+                neutron: require('tailwindcss/colors').zinc,
+                stone: require('tailwindcss/colors').zinc,
+
+                // Remap Colorful accents to Purple or Zinc
+                blue: {
+                    ...require('tailwindcss/colors').zinc,
+                    DEFAULT: '#8b5cf6', // Map default blue to purple
+                    500: '#8b5cf6',
+                },
                 indigo: require('tailwindcss/colors').zinc,
-                blue: require('tailwindcss/colors').zinc,
                 cyan: require('tailwindcss/colors').zinc,
                 sky: require('tailwindcss/colors').zinc,
                 teal: require('tailwindcss/colors').zinc,
-                emerald: require('tailwindcss/colors').emerald, // Keep emerald for success
+                fuchsia: require('tailwindcss/colors').zinc,
+                pink: require('tailwindcss/colors').zinc,
 
-                silver: {
-                    DEFAULT: 'var(--silver-primary)',
-                    light: 'var(--silver-light)',
-                    dark: 'var(--silver-dark)',
-                },
-                zinc: {
-                    DEFAULT: 'var(--zinc)',
-                    ...require('tailwindcss/colors').zinc,
-                },
-                cosmic: {
-                    pink: 'var(--cosmic-pink)',
-                    blue: 'var(--cosmic-blue)',
-                    cyan: 'var(--cosmic-cyan)',
-                },
+                // Keep Emerald/Amber for status indicators ONLY
+                emerald: require('tailwindcss/colors').emerald,
+                amber: require('tailwindcss/colors').amber,
+                red: require('tailwindcss/colors').red,
 
                 // Text hierarchy
                 text: {

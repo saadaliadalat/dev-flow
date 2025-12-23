@@ -11,11 +11,11 @@ import { StarField } from '@/components/visuals/StarField'
 
 export default function Home() {
     return (
-        <main className="min-h-screen text-slate-300 selection:bg-cyan-500/30 relative">
+        <main className="min-h-screen text-slate-300 selection:bg-purple-500/30 relative bg-black">
             <StarField />
 
-            {/* Stage Light: Top Center Gradient */}
-            <div className="fixed top-[-20%] left-1/2 -translate-x-1/2 w-[80%] h-[600px] bg-indigo-500/20 blur-[120px] rounded-full pointer-events-none z-[-1]" />
+            {/* Stage Light: Top Center Gradient - Updated to Purple */}
+            <div className="fixed top-[-20%] left-1/2 -translate-x-1/2 w-[80%] h-[600px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none z-[-1]" />
 
             <div className="relative z-10">
                 <Navbar />

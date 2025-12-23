@@ -18,12 +18,12 @@ interface PremiumStatCardProps {
 
 const accentColors = {
     blue: {
-        bg: 'rgba(59, 130, 246, 0.1)',
-        border: 'rgba(59, 130, 246, 0.2)',
-        text: 'var(--accent-blue)',
-        glow: 'rgba(59, 130, 246, 0.3)',
+        bg: 'rgba(139, 92, 246, 0.1)',
+        border: 'rgba(139, 92, 246, 0.2)',
+        text: 'var(--accent-purple)',
+        glow: 'rgba(139, 92, 246, 0.3)',
     },
-    emerald: {
+    emerald: { // Keeping semantic meaning but muting slightly or mapping to theme if strict
         bg: 'rgba(16, 185, 129, 0.1)',
         border: 'rgba(16, 185, 129, 0.2)',
         text: 'var(--accent-emerald)',
@@ -127,7 +127,7 @@ export function PremiumStatCard({
     change,
     changeLabel,
     icon,
-    accentColor = 'blue',
+    accentColor = 'purple',
     sparklineData,
 }: PremiumStatCardProps) {
     const { count, ref } = useAnimatedCounter(value)

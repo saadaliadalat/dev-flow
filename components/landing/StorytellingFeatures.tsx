@@ -42,11 +42,11 @@ const AnalyticsStory = () => {
             {[...Array(5)].map((_, i) => (
                 <motion.div
                     key={i}
-                    className="absolute w-1.5 h-1.5 rounded-full bg-cyan-400"
+                    className="absolute w-1.5 h-1.5 rounded-full bg-purple-500"
                     style={{
                         left: `${20 + i * 15}%`,
                         top: `${30 + Math.sin(i) * 20}%`,
-                        boxShadow: '0 0 8px 2px rgba(34, 211, 238, 0.6)'
+                        boxShadow: '0 0 8px 2px rgba(139, 92, 246, 0.6)'
                     }}
                     animate={{
                         y: [0, -10, 0],
@@ -60,8 +60,8 @@ const AnalyticsStory = () => {
             <svg className="w-full h-full absolute inset-0" preserveAspectRatio="none">
                 <defs>
                     <linearGradient id="waveGradient" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="rgba(34, 211, 238, 0.25)" />
-                        <stop offset="100%" stopColor="rgba(34, 211, 238, 0)" />
+                        <stop offset="0%" stopColor="rgba(139, 92, 246, 0.25)" />
+                        <stop offset="100%" stopColor="rgba(139, 92, 246, 0)" />
                     </linearGradient>
                     <filter id="glow">
                         <feGaussianBlur stdDeviation="3" result="coloredBlur" />
@@ -71,10 +71,9 @@ const AnalyticsStory = () => {
                         </feMerge>
                     </filter>
                 </defs>
-                {/* Wave Path */}
                 <motion.path
                     fill="url(#waveGradient)"
-                    stroke="rgba(34, 211, 238, 0.9)"
+                    stroke="rgba(139, 92, 246, 0.9)"
                     strokeWidth="2"
                     filter="url(#glow)"
                     initial={{ d: "M0,100 C100,100 200,100 400,100 L400,200 L0,200 Z" }}
@@ -94,8 +93,8 @@ const AnalyticsStory = () => {
             <motion.div
                 className="absolute top-0 bottom-0 w-[2px] z-10"
                 style={{
-                    background: 'linear-gradient(to bottom, transparent, rgba(34, 211, 238, 1), transparent)',
-                    boxShadow: '0 0 20px 4px rgba(34, 211, 238, 0.6)'
+                    background: 'linear-gradient(to bottom, transparent, rgba(139, 92, 246, 1), transparent)',
+                    boxShadow: '0 0 20px 4px rgba(139, 92, 246, 0.6)'
                 }}
                 animate={{ left: ["0%", "100%"] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
@@ -189,7 +188,7 @@ const VitalityStory = () => {
                             y1="6"
                             x2="56"
                             y2={i % 3 === 0 ? 10 : 8}
-                            stroke={i < 32 ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.1)"}
+                            stroke={i < 32 ? "rgba(161, 161, 170, 0.4)" : "rgba(255,255,255,0.05)"}
                             strokeWidth="1"
                             transform={`rotate(${i * 10} 56 56)`}
                         />
@@ -200,8 +199,8 @@ const VitalityStory = () => {
                 <svg className="absolute inset-0 w-full h-full -rotate-90">
                     <defs>
                         <linearGradient id="vitalityGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#f97316" />
-                            <stop offset="100%" stopColor="#fb923c" />
+                            <stop offset="0%" stopColor="#a1a1aa" />
+                            <stop offset="100%" stopColor="#8b5cf6" />
                         </linearGradient>
                     </defs>
                     <motion.circle
@@ -213,14 +212,14 @@ const VitalityStory = () => {
                         whileInView={{ strokeDashoffset: 28 }}
                         viewport={{ once: true }}
                         transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-                        style={{ filter: 'drop-shadow(0 0 6px rgba(249, 115, 22, 0.5))' }}
+                        style={{ filter: 'drop-shadow(0 0 6px rgba(139, 92, 246, 0.4))' }}
                     />
                 </svg>
 
                 {/* Center Content */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-2xl font-bold text-white tracking-tighter font-mono tabular-nums">{count}</span>
-                    <span className="text-[9px] text-orange-400/80 font-mono tracking-[0.15em] uppercase mt-0.5">Vitality</span>
+                    <span className="text-[9px] text-zinc-400 font-mono tracking-[0.15em] uppercase mt-0.5">Vitality</span>
                 </div>
             </div>
         </div>
@@ -289,15 +288,15 @@ const ConstellationStory = () => {
                 // Draw glow for hot nodes
                 if (p.isHot) {
                     const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 8)
-                    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)')
-                    gradient.addColorStop(1, 'rgba(99, 102, 241, 0)')
+                    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.4)')
+                    gradient.addColorStop(1, 'rgba(139, 92, 246, 0)')
                     ctx.fillStyle = gradient
                     ctx.beginPath()
                     ctx.arc(p.x, p.y, 8, 0, Math.PI * 2)
                     ctx.fill()
                 }
 
-                ctx.fillStyle = p.isHot ? '#818cf8' : 'rgba(99, 102, 241, 0.6)'
+                ctx.fillStyle = p.isHot ? '#8b5cf6' : 'rgba(139, 92, 246, 0.6)'
                 ctx.beginPath()
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
                 ctx.fill()
@@ -312,7 +311,7 @@ const ConstellationStory = () => {
 
                     if (dist < CONNECTION_DISTANCE) {
                         const opacity = 1 - (dist / CONNECTION_DISTANCE)
-                        ctx.strokeStyle = `rgba(99, 102, 241, ${opacity * 0.2})`
+                        ctx.strokeStyle = `rgba(139, 92, 246, ${opacity * 0.2})`
                         ctx.lineWidth = 1
                         ctx.beginPath()
                         ctx.moveTo(particles[i].x, particles[i].y)
@@ -355,7 +354,7 @@ const MasteryStory = () => (
         <div className="relative">
             {/* Glow */}
             <motion.div
-                className="absolute -inset-6 bg-yellow-400/15 blur-[50px] rounded-full"
+                className="absolute -inset-6 bg-purple-500/15 blur-[50px] rounded-full"
                 animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.7, 0.4] }}
                 transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
             />
@@ -364,11 +363,11 @@ const MasteryStory = () => (
             {[...Array(6)].map((_, i) => (
                 <motion.div
                     key={i}
-                    className="absolute w-1 h-1 bg-yellow-300 rounded-full"
+                    className="absolute w-1 h-1 bg-zinc-300 rounded-full"
                     style={{
                         left: '50%',
                         top: '50%',
-                        boxShadow: '0 0 4px 1px rgba(253, 224, 71, 0.6)'
+                        boxShadow: '0 0 4px 1px rgba(161, 161, 170, 0.6)'
                     }}
                     animate={{
                         x: [0, Math.cos(i * 60 * Math.PI / 180) * 50],
@@ -386,12 +385,12 @@ const MasteryStory = () => (
                 whileHover={{ scale: 1.1, rotateZ: 5 }}
                 className="relative z-10 cursor-pointer"
             >
-                <Trophy className="w-16 h-16 text-yellow-300 stroke-[1.2] drop-shadow-[0_0_25px_rgba(253,224,71,0.5)]" />
+                <Trophy className="w-16 h-16 text-zinc-200 stroke-[1.2] drop-shadow-[0_0_25px_rgba(139,92,246,0.5)]" />
                 <motion.div
-                    className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full"
+                    className="absolute -top-1 -right-1 w-3 h-3 bg-purple-400 rounded-full"
                     animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
-                    style={{ boxShadow: '0 0 8px 2px rgba(255, 255, 255, 0.8)' }}
+                    style={{ boxShadow: '0 0 8px 2px rgba(139, 92, 246, 0.8)' }}
                 />
             </motion.div>
         </div>
@@ -411,7 +410,7 @@ const CommitHistoryStory = () => {
     return (
         <div className="absolute inset-0 p-5 flex flex-col justify-center overflow-hidden">
             {/* Connection Line */}
-            <div className="absolute left-[22px] top-4 bottom-4 w-[2px] bg-gradient-to-b from-emerald-500/60 via-emerald-500/30 to-transparent" />
+            <div className="absolute left-[22px] top-4 bottom-4 w-[2px] bg-gradient-to-b from-purple-500/60 via-purple-500/30 to-transparent" />
 
             {commits.map((commit, i) => (
                 <motion.div
@@ -424,19 +423,19 @@ const CommitHistoryStory = () => {
                 >
                     {/* Node */}
                     <motion.div
-                        className="w-2.5 h-2.5 rounded-full bg-emerald-500 relative z-10 flex-shrink-0"
-                        style={{ boxShadow: '0 0 10px 2px rgba(16, 185, 129, 0.6)' }}
+                        className="w-2.5 h-2.5 rounded-full bg-white relative z-10 flex-shrink-0"
+                        style={{ boxShadow: '0 0 10px 2px rgba(255, 255, 255, 0.4)' }}
                         animate={i === 0 ? { scale: [1, 1.3, 1] } : {}}
                         transition={{ duration: 2, repeat: Infinity }}
                     />
 
                     {/* Message */}
                     <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-mono text-emerald-200/90 truncate">{commit.message}</p>
+                        <p className="text-[11px] font-mono text-purple-200/90 truncate">{commit.message}</p>
                     </div>
 
                     {/* Timestamp */}
-                    <span className="text-[9px] font-mono text-emerald-500/50 flex-shrink-0">{commit.time}</span>
+                    <span className="text-[9px] font-mono text-zinc-500 flex-shrink-0">{commit.time}</span>
                 </motion.div>
             ))}
         </div>
@@ -477,7 +476,7 @@ const PremiumBentoCard = ({ title, description, icon, children, className = '', 
     return (
         <TiltCard
             variants={bentoVariants}
-            className={cn(`rounded-3xl bg-white/[0.02] backdrop-blur-md border border-white/[0.06] group cursor-pointer ${colSpan} ${className}`)}
+            className={cn(`rounded-3xl bg-[#09090b] border border-zinc-800 group cursor-pointer ${colSpan} ${className}`)}
             glareColor={accentColor}
             style={{
                 boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.04), 0 20px 50px -20px rgba(0,0,0,0.5)'
@@ -519,10 +518,9 @@ const PremiumBentoCard = ({ title, description, icon, children, className = '', 
 // --- EXPORT ---
 export function StorytellingFeatures() {
     return (
-        <section id="features" className="py-32 relative overflow-hidden">
-            {/* Background Effects */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950/30 via-black to-black pointer-events-none" />
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+        <section id="features" className="py-32 relative overflow-hidden bg-[#000000]">
+            {/* Gradient fade at top - creates the effect of starfield ending/diffusing into the section */}
+            <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-transparent to-[#000000] pointer-events-none" />
 
             <div className="container mx-auto px-6 relative z-10">
                 <div className="mb-16 max-w-2xl">
@@ -533,7 +531,7 @@ export function StorytellingFeatures() {
                         className="flex items-center gap-3 mb-6"
                     >
                         <div className="h-px w-8 bg-gradient-to-r from-indigo-500/80 to-transparent" />
-                        <span className="text-indigo-400/80 text-xs font-mono tracking-[0.2em] uppercase">
+                        <span className="text-zinc-500 text-xs font-mono tracking-[0.2em] uppercase">
                             System Capabilities
                         </span>
                     </motion.div>
@@ -545,7 +543,7 @@ export function StorytellingFeatures() {
                         className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 font-display leading-[1.1] tracking-tight"
                     >
                         Engineering Intelligence <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400">Reimagined.</span>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-200 via-purple-300 to-white">Reimagined.</span>
                     </motion.h2>
                 </div>
 
@@ -562,7 +560,7 @@ export function StorytellingFeatures() {
                             title="Live Analytics"
                             description="Real-time velocity and performance tracking."
                             icon={<BarChart2 size={18} strokeWidth={1.5} />}
-                            accentColor="#22d3ee"
+                            accentColor="#8b5cf6"
                             colSpan="md:col-span-2"
                         >
                             <AnalyticsStory />
@@ -572,7 +570,7 @@ export function StorytellingFeatures() {
                             title="Neural Engine"
                             description="AI-powered pattern recognition."
                             icon={<Brain size={18} strokeWidth={1.5} />}
-                            accentColor="#a855f7"
+                            accentColor="#8b5cf6"
                         >
                             <NeuralStory />
                         </PremiumBentoCard>
@@ -581,7 +579,7 @@ export function StorytellingFeatures() {
                             title="Vitality Score"
                             description="Predictive burnout prevention."
                             icon={<Activity size={18} strokeWidth={1.5} />}
-                            accentColor="#f97316"
+                            accentColor="#8b5cf6"
                         >
                             <VitalityStory />
                         </PremiumBentoCard>
@@ -591,7 +589,7 @@ export function StorytellingFeatures() {
                             title="Global Mesh"
                             description="Elite distributed network connectivity."
                             icon={<Network size={18} strokeWidth={1.5} />}
-                            accentColor="#6366f1"
+                            accentColor="#8b5cf6"
                             colSpan="md:col-span-2"
                         >
                             <ConstellationStory />
@@ -601,7 +599,7 @@ export function StorytellingFeatures() {
                             title="Mastery"
                             description="Gamified skill progression."
                             icon={<Trophy size={18} strokeWidth={1.5} />}
-                            accentColor="#eab308"
+                            accentColor="#8b5cf6"
                         >
                             <MasteryStory />
                         </PremiumBentoCard>
@@ -610,7 +608,7 @@ export function StorytellingFeatures() {
                             title="Time Travel"
                             description="Complete evolution history."
                             icon={<Clock size={18} strokeWidth={1.5} />}
-                            accentColor="#10b981"
+                            accentColor="#8b5cf6"
                         >
                             <CommitHistoryStory />
                         </PremiumBentoCard>

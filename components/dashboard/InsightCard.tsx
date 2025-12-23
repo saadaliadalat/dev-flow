@@ -18,29 +18,29 @@ interface InsightCardProps {
 const typeConfig = {
     success: {
         icon: CheckCircle2,
-        bg: 'rgba(16, 185, 129, 0.1)',
-        border: 'rgba(16, 185, 129, 0.2)',
-        iconColor: 'var(--accent-emerald)',
-        badgeBg: 'rgba(16, 185, 129, 0.15)',
-        badgeText: 'var(--accent-emerald)',
+        bg: 'rgba(255, 255, 255, 0.05)',
+        border: 'rgba(255, 255, 255, 0.1)',
+        iconColor: '#FFFFFF', // White
+        badgeBg: 'rgba(255, 255, 255, 0.1)',
+        badgeText: '#FFFFFF',
         badge: 'Completed',
     },
     warning: {
         icon: AlertTriangle,
-        bg: 'rgba(245, 158, 11, 0.1)',
-        border: 'rgba(245, 158, 11, 0.2)',
-        iconColor: 'var(--accent-amber)',
-        badgeBg: 'rgba(245, 158, 11, 0.15)',
-        badgeText: 'var(--accent-amber)',
+        bg: 'rgba(255, 255, 255, 0.05)',
+        border: 'rgba(255, 255, 255, 0.1)',
+        iconColor: '#a1a1aa', // Silver
+        badgeBg: 'rgba(255, 255, 255, 0.1)',
+        badgeText: '#a1a1aa', // Silver
         badge: 'Action Required',
     },
     tip: {
         icon: Lightbulb,
-        bg: 'rgba(59, 130, 246, 0.1)',
-        border: 'rgba(59, 130, 246, 0.2)',
-        iconColor: 'var(--accent-blue)',
-        badgeBg: 'rgba(59, 130, 246, 0.15)',
-        badgeText: 'var(--accent-blue)',
+        bg: 'rgba(139, 92, 246, 0.1)', // Purple Tint
+        border: 'rgba(139, 92, 246, 0.2)',
+        iconColor: '#a78bfa', // Purple Light
+        badgeBg: 'rgba(139, 92, 246, 0.15)',
+        badgeText: '#a78bfa',
         badge: 'Suggestion',
     },
 }
