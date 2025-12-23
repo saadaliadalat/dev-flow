@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Target, Calendar, Clock, MoreHorizontal, LayoutGrid, List, Trash2, Edit2, CheckCircle, X, Loader2 } from 'lucide-react'
+import { Plus, Target, Calendar, Clock, LayoutGrid, List, Trash2, Edit2, CheckCircle, X, Loader2, AlertCircle } from 'lucide-react'
 
 interface Goal {
     id: string
@@ -21,6 +21,7 @@ export default function GoalsPage() {
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
     const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
     // Form state
     const [formTitle, setFormTitle] = useState('')
@@ -38,9 +39,13 @@ export default function GoalsPage() {
             const data = await res.json()
             if (res.ok) {
                 setGoals(data.goals || [])
+                setError(null)
+            } else if (data.code === 'TABLE_NOT_FOUND') {
+                setError('Database table not set up. Please run the SQL setup script.')
             }
-        } catch (error) {
-            console.error('Error fetching goals:', error)
+        } catch (err) {
+            console.error('Error fetching goals:', err)
+            setError('Failed to connect to database')
         } finally {
             setIsLoading(false)
         }
@@ -65,11 +70,13 @@ export default function GoalsPage() {
             if (res.ok && data.goal) {
                 setGoals([data.goal, ...goals])
                 closeModal()
+                setError(null)
             } else {
-                console.error('Failed to create goal:', data.error)
+                setError(data.error || 'Failed to create goal')
             }
-        } catch (error) {
-            console.error('Error creating goal:', error)
+        } catch (err) {
+            console.error('Error creating goal:', err)
+            setError('Failed to create goal')
         } finally {
             setIsSaving(false)
         }
@@ -86,8 +93,8 @@ export default function GoalsPage() {
             if (res.ok) {
                 setGoals(goals.map(g => g.id === goalId ? { ...g, ...updates } : g))
             }
-        } catch (error) {
-            console.error('Error updating goal:', error)
+        } catch (err) {
+            console.error('Error updating goal:', err)
         }
     }
 
@@ -97,8 +104,8 @@ export default function GoalsPage() {
             if (res.ok) {
                 setGoals(goals.filter(g => g.id !== goalId))
             }
-        } catch (error) {
-            console.error('Error deleting goal:', error)
+        } catch (err) {
+            console.error('Error deleting goal:', err)
         }
     }
 
@@ -189,8 +196,19 @@ export default function GoalsPage() {
                 </div>
             </div>
 
+            {/* Error Banner */}
+            {error && (
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3">
+                    <AlertCircle className="text-red-400 flex-shrink-0" size={20} />
+                    <div className="flex-1">
+                        <p className="text-red-400 text-sm font-medium">{error}</p>
+                        <p className="text-red-400/60 text-xs mt-1">Run the SQL setup in Supabase to enable Goals.</p>
+                    </div>
+                </div>
+            )}
+
             {/* Empty State */}
-            {goals.length === 0 ? (
+            {goals.length === 0 && !error ? (
                 <div className="min-h-[400px] flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/50">
                     <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mb-4 border border-purple-500/20">
                         <Target size={32} className="text-purple-400" />
@@ -203,7 +221,7 @@ export default function GoalsPage() {
                         Initialize Goal
                     </button>
                 </div>
-            ) : (
+            ) : goals.length > 0 && (
                 /* Goals Grid */
                 <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
                     {goals.map((goal) => (
@@ -307,6 +325,7 @@ export default function GoalsPage() {
                                     onChange={(e) => setFormTitle(e.target.value)}
                                     placeholder="e.g., Refactor API Layer"
                                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:border-purple-500 outline-none"
+                                    autoFocus
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
