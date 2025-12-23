@@ -1,9 +1,11 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ArrowRight, Terminal, Activity, GitBranch, Zap, ChevronRight } from 'lucide-react'
+import { ArrowRight, Terminal, Activity, GitBranch, Zap, ChevronRight, Github } from 'lucide-react'
 import { GlassButton } from '@/components/ui/GlassButton'
 import { DashboardPreview } from './DashboardPreview'
+import { useSession, signIn } from 'next-auth/react'
+import Link from 'next/link'
 
 // --- Text Reveal Animation ---
 const textContainer = {
@@ -32,6 +34,12 @@ const textItem = {
 }
 
 export const Hero = () => {
+    const { data: session } = useSession()
+
+    const handleGithubLogin = () => {
+        signIn('github', { callbackUrl: '/dashboard' })
+    }
+
     return (
         <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden items-center justify-center flex flex-col">
 
@@ -82,9 +90,20 @@ export const Hero = () => {
                     className="flex flex-col sm:flex-row items-center gap-4 mb-20"
                 >
                     {/* Primary CTA */}
-                    <GlassButton className="bg-white/10 border-white/20 text-lg px-8 py-4 h-auto min-w-[200px]">
-                        Start Integration <ChevronRight className="w-4 h-4 ml-2 opacity-50" />
-                    </GlassButton>
+                    {session ? (
+                        <Link href="/dashboard">
+                            <GlassButton className="bg-white/10 border-white/20 text-lg px-8 py-4 h-auto min-w-[200px]">
+                                Go to Dashboard <ChevronRight className="w-4 h-4 ml-2 opacity-50" />
+                            </GlassButton>
+                        </Link>
+                    ) : (
+                        <GlassButton
+                            onClick={handleGithubLogin}
+                            className="bg-white/10 border-white/20 text-lg px-8 py-4 h-auto min-w-[200px]"
+                        >
+                            Continue with GitHub <Github className="w-4 h-4 ml-2 opacity-50" />
+                        </GlassButton>
+                    )}
 
                     {/* Secondary CTA */}
                     <GlassButton variant="secondary" className="text-lg px-8 py-4 h-auto min-w-[200px] text-slate-400 border-white/5 bg-transparent hover:bg-white/5">

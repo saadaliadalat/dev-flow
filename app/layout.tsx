@@ -21,14 +21,14 @@ const firaCode = Fira_Code({
 });
 
 export const metadata: Metadata = {
-    title: "DevFlow - Spotify Wrapped for Developers",
-    description: "Track your coding productivity, unlock achievements, and share your developer journey. AI-powered insights to prevent burnout.",
+    title: {
+        default: 'DevFlow | Engineering Intelligence',
+        template: '%s | DevFlow'
+    },
+    description: 'Visualise velocity, prevent burnout, and ship faster with AI-powered engineering analytics.',
     keywords: ["developer analytics", "github stats", "coding productivity", "developer tools", "burnout prevention"],
     authors: [{ name: "DevFlow Team" }],
     openGraph: {
-        title: "DevFlow - Spotify Wrapped for Developers",
-        description: "Track your coding productivity, unlock achievements, and share your developer journey.",
-        type: "website",
         siteName: "DevFlow",
     },
     twitter: {

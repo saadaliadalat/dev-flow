@@ -186,27 +186,31 @@ const ConstellationStory = () => {
             <svg className="w-full h-full">
                 {/* Lines */}
                 {nodes.slice(1).map((node, i) => (
-                    <g key={i}>
-                        <line
-                            x1={`${nodes[0].x}%`} y1={`${nodes[0].y}%`}
-                            x2={`${node.x}%`} y2={`${node.y}%`}
-                            stroke="rgba(99,102,241,0.2)"
-                            strokeWidth="1"
-                        />
-                        {/* Traveling Packet */}
-                        <motion.div
-                            className="absolute w-1.5 h-1.5 rounded-full bg-indigo-300 shadow-[0_0_8px_rgba(129,140,248,1)]"
-                            animate={{
-                                left: [`${nodes[0].x}%`, `${node.x}%`],
-                                top: [`${nodes[0].y}%`, `${node.y}%`],
-                                opacity: [0, 1, 0]
-                            }}
-                            transition={{ duration: 1.5 + i * 0.4, repeat: Infinity, ease: "linear", delay: i * 0.2 }}
-                            style={{ transform: 'translate(-50%, -50%)' }}
-                        />
-                    </g>
+                    <line
+                        key={i}
+                        x1={`${nodes[0].x}%`} y1={`${nodes[0].y}%`}
+                        x2={`${node.x}%`} y2={`${node.y}%`}
+                        stroke="rgba(99,102,241,0.2)"
+                        strokeWidth="1"
+                    />
                 ))}
             </svg>
+
+            {/* Traveling Packet (Moved outside SVG to avoid div in g error) */}
+            {nodes.slice(1).map((node, i) => (
+                <motion.div
+                    key={`packet-${i}`}
+                    className="absolute w-1.5 h-1.5 rounded-full bg-indigo-300 shadow-[0_0_8px_rgba(129,140,248,1)]"
+                    animate={{
+                        left: [`${nodes[0].x}%`, `${node.x}%`],
+                        top: [`${nodes[0].y}%`, `${node.y}%`],
+                        opacity: [0, 1, 0]
+                    }}
+                    transition={{ duration: 1.5 + i * 0.4, repeat: Infinity, ease: "linear", delay: i * 0.2 }}
+                    style={{ transform: 'translate(-50%, -50%)' }}
+                />
+            ))}
+
             {/* Nodes */}
             {nodes.map((node, i) => (
                 <div

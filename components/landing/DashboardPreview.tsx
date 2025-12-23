@@ -1,20 +1,33 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import React, { useRef } from 'react'
+import { useScroll, useTransform, motion } from 'framer-motion'
 import { GitCommit, GitPullRequest, Flame, TrendingUp, Activity } from 'lucide-react'
 
 export function DashboardPreview() {
+    const ref = useRef<HTMLDivElement>(null)
+    const { scrollYProgress } = useScroll({
+        target: ref,
+        offset: ["start end", "center center"]
+    })
+
+    const rotateX = useTransform(scrollYProgress, [0, 1], [15, 0])
+    const scale = useTransform(scrollYProgress, [0, 1], [0.9, 1])
+    const opacity = useTransform(scrollYProgress, [0, 0.5], [0.5, 1])
+
     return (
-        <div className="relative w-full max-w-[1200px] mx-auto perspective-[2000px]">
+        <div ref={ref} className="relative w-full max-w-[1200px] mx-auto aspect-[16/9] perspective-1000 mb-20">
             {/* Glow Behind */}
             <div className="absolute inset-0 bg-white/5 blur-[100px] rounded-full opacity-30 pointer-events-none" />
 
             <motion.div
-                initial={{ rotateX: 20, rotateY: 0, opacity: 0, y: 100 }}
-                whileInView={{ rotateX: 20, rotateY: 0, opacity: 1, y: 0 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                style={{ transformStyle: 'preserve-3d' }}
-                className="w-full aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-[#09090b] to-[#18181b] border border-zinc-500/20 shadow-2xl relative"
+                style={{
+                    rotateX,
+                    scale,
+                    opacity,
+                    transformStyle: 'preserve-3d'
+                }}
+                className="w-full h-full rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative bg-[#09090b]"
             >
                 {/* Top Bar */}
                 <div className="h-12 border-b border-white/5 bg-zinc-900/50 backdrop-blur-xl flex items-center justify-between px-6">
@@ -25,9 +38,9 @@ export function DashboardPreview() {
                         DevFlow
                     </div>
                     <div className="flex gap-2">
-                        <div className="w-3 h-3 rounded-full bg-zinc-600/50" />
-                        <div className="w-3 h-3 rounded-full bg-zinc-600/50" />
-                        <div className="w-3 h-3 rounded-full bg-white" />
+                        <div className="w-3 h-3 rounded-full bg-red-500/20" />
+                        <div className="w-3 h-3 rounded-full bg-yellow-500/20" />
+                        <div className="w-3 h-3 rounded-full bg-green-500/20" />
                     </div>
                 </div>
 
@@ -69,11 +82,12 @@ export function DashboardPreview() {
                                 <span>Activity Heatmap</span>
                                 <span className="text-xs text-zinc-500">Last 12 Months</span>
                             </div>
-                            <div className="flex gap-1 h-32 w-full overflow-hidden mask-gradient-right">
+                            <div className="flex gap-1 h-32 w-full overflow-hidden">
                                 {Array.from({ length: 50 }).map((_, colIndex) => (
                                     <div key={colIndex} className="flex flex-col gap-1 flex-1">
                                         {Array.from({ length: 7 }).map((_, rowIndex) => {
-                                            const opacity = Math.random();
+                                            const seed = colIndex * 7 + rowIndex
+                                            const opacity = (Math.sin(seed * 9999) + 1) / 2
                                             const isActive = opacity > 0.4;
                                             return (
                                                 <div
@@ -98,16 +112,6 @@ export function DashboardPreview() {
                 {/* Subtle Scan Line */}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent animate-[scan_4s_ease-in-out_infinite] pointer-events-none" />
             </motion.div>
-
-            <style jsx global>{`
-                @keyframes scan {
-                    0%, 100% { transform: translateY(-100%); }
-                    50% { transform: translateY(100%); }
-                }
-                .mask-gradient-right {
-                    mask-image: linear-gradient(to right, black 80%, transparent 100%);
-                }
-            `}</style>
         </div>
     )
 }

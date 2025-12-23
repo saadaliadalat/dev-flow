@@ -409,7 +409,7 @@ export default function DashboardPage() {
                                 <h3 className="text-xl font-bold font-display text-white mb-1 flex items-center gap-2">
                                     <TrendingUp size={20} className="text-purple-primary" /> Activity Frequency
                                 </h3>
-                                <p className="text-sm text-text-tertiary">Your coding activity over time</p>
+                                <p className="text-sm text-text-tertiary">Neon-visualized coding velocity</p>
                             </div>
                             <div className="flex gap-2">
                                 {(['7', '30', '90'] as const).map((range) => (
@@ -427,74 +427,79 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        <div className="h-[320px] w-full">
+                        <div className="h-[320px] w-full relative">
+                            {/* Empty State / Ghosted Wireframe */}
+                            {(!activityData.length || activityData.every(d => d.commits === 0)) && (
+                                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-black/40 backdrop-blur-sm rounded-xl border border-white/5">
+                                    <div className="p-4 rounded-full bg-white/5 mb-4 border border-white/10 animate-pulse">
+                                        <Activity size={32} className="text-zinc-500" />
+                                    </div>
+                                    <h4 className="text-lg font-bold text-white mb-2">Awaiting Data Signal</h4>
+                                    <p className="text-sm text-zinc-400 text-center max-w-sm mb-6">
+                                        Connect your repository sources to visualize your dev velocity in real-time.
+                                    </p>
+                                    <div className="absolute inset-0 pointer-events-none opacity-20">
+                                        {/* Fake ghost chart rendered below in grayscale */}
+                                    </div>
+                                </div>
+                            )}
+
                             <ResponsiveContainer width="100%" height="100%">
-                                {dateRange === '7' ? (
-                                    <AreaChart data={activityData.length ? activityData : [{ name: 'No Data', commits: 0 }]}>
-                                        <defs>
-                                            <linearGradient id="colorCommits" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.4} />
-                                                <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                        <XAxis
-                                            dataKey="name"
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tick={{ fill: '#a1a1aa', fontSize: 12, fontFamily: 'var(--font-mono)' }}
-                                            dy={10}
-                                        />
-                                        <YAxis
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tick={{ fill: '#a1a1aa', fontSize: 12, fontFamily: 'var(--font-mono)' }}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: '#09090b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
-                                            itemStyle={{ color: '#fff', fontFamily: 'var(--font-mono)' }}
-                                            labelFormatter={(label, payload) => payload[0]?.payload?.date || label}
-                                            cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }}
-                                        />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="commits"
-                                            stroke="#7c3aed"
-                                            strokeWidth={3}
-                                            fillOpacity={1}
-                                            fill="url(#colorCommits)"
-                                            activeDot={{ r: 6, strokeWidth: 0, fill: '#fff' }}
-                                        />
-                                    </AreaChart>
-                                ) : (
-                                    <BarChart data={activityData.length ? activityData : [{ name: 'No Data', commits: 0 }]}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                        <XAxis
-                                            dataKey="name"
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tick={{ fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-                                            dy={10}
-                                            interval={dateRange === '90' ? 6 : 2}
-                                        />
-                                        <YAxis
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tick={{ fill: '#a1a1aa', fontSize: 12, fontFamily: 'var(--font-mono)' }}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: '#09090b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
-                                            itemStyle={{ color: '#fff', fontFamily: 'var(--font-mono)' }}
-                                            labelFormatter={(label, payload) => payload[0]?.payload?.date || label}
-                                            cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                                        />
-                                        <Bar
-                                            dataKey="commits"
-                                            fill="#7c3aed"
-                                            radius={[4, 4, 0, 0]}
-                                        />
-                                    </BarChart>
-                                )}
+                                <AreaChart data={(!activityData.length || activityData.every(d => d.commits === 0)) ? Array(7).fill(0).map((_, i) => ({ name: `Day ${i}`, commits: [4, 7, 2, 9, 5, 8, 3][i] })) : activityData}>
+                                    <defs>
+                                        <linearGradient id="colorCommits" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.5} />
+                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                        </linearGradient>
+                                        <filter id="neon" height="200%" width="200%" x="-50%" y="-50%">
+                                            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                                            <feMerge>
+                                                <feMergeNode in="coloredBlur" />
+                                                <feMergeNode in="SourceGraphic" />
+                                            </feMerge>
+                                        </filter>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#71717a', fontSize: 12, fontFamily: 'var(--font-mono)' }}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#71717a', fontSize: 12, fontFamily: 'var(--font-mono)' }}
+                                    />
+                                    <Tooltip
+                                        content={({ active, payload, label }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <div className="bg-black/80 backdrop-blur-xl border border-white/10 p-3 rounded-xl shadow-2xl">
+                                                        <p className="text-xs text-zinc-400 font-mono mb-1">{label}</p>
+                                                        <p className="text-lg font-bold text-white flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_#a855f7]" />
+                                                            {payload[0].value} <span className="text-xs font-normal text-zinc-500">commits</span>
+                                                        </p>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                        cursor={{ stroke: '#8b5cf6', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="commits"
+                                        stroke="#8b5cf6"
+                                        strokeWidth={3}
+                                        fillOpacity={1}
+                                        fill="url(#colorCommits)"
+                                        filter="url(#neon)"
+                                        className={(!activityData.length || activityData.every(d => d.commits === 0)) ? "grayscale opacity-20 blur-sm" : ""}
+                                    />
+                                </AreaChart>
                             </ResponsiveContainer>
                         </div>
 

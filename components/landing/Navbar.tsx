@@ -79,16 +79,32 @@ export function Navbar() {
                 {/* 3. ACTIONS (Right) */}
                 <div className="hidden md:flex items-center gap-4 relative z-10">
                     {session ? (
-                        <Link href="/dashboard">
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="px-5 py-2.5 rounded-full bg-white text-black text-sm font-semibold shadow-lg shadow-white/5 hover:shadow-white/20 transition-all flex items-center gap-2"
-                            >
-                                Dashboard
-                                <ChevronRight size={14} />
-                            </motion.button>
-                        </Link>
+                        <div className="flex items-center gap-4">
+                            <Link href="/dashboard/settings" className="relative group">
+                                {session.user?.image ? (
+                                    <img
+                                        src={session.user.image}
+                                        alt={session.user.name || "User"}
+                                        className="w-9 h-9 rounded-full border border-white/10 group-hover:border-white/30 transition-colors"
+                                    />
+                                ) : (
+                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center text-xs font-bold text-white group-hover:border-white/30 transition-colors">
+                                        {session.user?.name?.[0] || "U"}
+                                    </div>
+                                )}
+                            </Link>
+
+                            <Link href="/dashboard">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="px-5 py-2.5 rounded-full bg-white text-black text-sm font-semibold shadow-lg shadow-white/5 hover:shadow-white/20 transition-all flex items-center gap-2"
+                                >
+                                    Dashboard
+                                    <ChevronRight size={14} />
+                                </motion.button>
+                            </Link>
+                        </div>
                     ) : (
                         <>
                             <Link
