@@ -38,18 +38,34 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
 
     // Cooldown: 5 minutes between generations
     const GENERATION_COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
+    const [cooldownRemaining, setCooldownRemaining] = useState(0)
 
     const canGenerateInsights = () => {
         const lastGenerated = localStorage.getItem('devflow_last_insight_gen')
         if (!lastGenerated) return true
-        return Date.now() - parseInt(lastGenerated) >= GENERATION_COOLDOWN_MS
+        const elapsed = Date.now() - parseInt(lastGenerated)
+        return elapsed >= GENERATION_COOLDOWN_MS
     }
 
-    const getCooldownRemaining = () => {
-        const lastGenerated = localStorage.getItem('devflow_last_insight_gen')
-        if (!lastGenerated) return 0
-        const remaining = GENERATION_COOLDOWN_MS - (Date.now() - parseInt(lastGenerated))
-        return Math.max(0, Math.ceil(remaining / 60000)) // minutes
+    // Update cooldown timer every second
+    useEffect(() => {
+        const updateCooldown = () => {
+            const lastGenerated = localStorage.getItem('devflow_last_insight_gen')
+            if (!lastGenerated) {
+                setCooldownRemaining(0)
+                return
+            }
+            const remaining = GENERATION_COOLDOWN_MS - (Date.now() - parseInt(lastGenerated))
+            setCooldownRemaining(Math.max(0, Math.ceil(remaining / 1000))) // seconds
+        }
+        updateCooldown()
+        const interval = setInterval(updateCooldown, 1000)
+        return () => clearInterval(interval)
+    }, [])
+
+    const resetCooldown = () => {
+        localStorage.removeItem('devflow_last_insight_gen')
+        setCooldownRemaining(0)
     }
 
     useEffect(() => {
@@ -78,7 +94,8 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
 
     async function generateInsights() {
         if (!canGenerateInsights()) {
-            warning('Rate Limit Exceeded', `Please wait ${getCooldownRemaining()} minutes before generating again.`)
+            const mins = Math.ceil(cooldownRemaining / 60)
+            warning('Cooldown Active', `Please wait ${mins} minute${mins !== 1 ? 's' : ''} before generating again.`)
             return
         }
 
@@ -218,20 +235,30 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
                         </h3>
                     </div>
                     {!isGenerating && (
-                        <button
-                            onClick={generateInsights}
-                            disabled={!canGenerateInsights()}
-                            className={`text-xs font-medium flex items-center gap-1 transition-colors ${canGenerateInsights()
-                                ? 'text-purple-primary hover:text-purple-light'
-                                : 'text-zinc-600 cursor-not-allowed'
-                                }`}
-                            title={canGenerateInsights() ? 'Generate new insights' : `Cooldown: ${getCooldownRemaining()} min remaining`}
-                        >
-                            <Sparkles size={12} />
-                            {!canGenerateInsights()
-                                ? `Wait ${getCooldownRemaining()}m`
-                                : insights.length === 0 ? 'Generate' : 'Refresh'}
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={generateInsights}
+                                disabled={cooldownRemaining > 0}
+                                className={`text-xs font-medium flex items-center gap-1 transition-colors ${cooldownRemaining === 0
+                                    ? 'text-purple-primary hover:text-purple-light'
+                                    : 'text-zinc-600 cursor-not-allowed'
+                                    }`}
+                                title={cooldownRemaining === 0 ? 'Generate new insights' : `Cooldown: ${Math.ceil(cooldownRemaining / 60)}m remaining`}
+                            >
+                                <Sparkles size={12} />
+                                {cooldownRemaining > 0
+                                    ? `${Math.ceil(cooldownRemaining / 60)}m`
+                                    : insights.length === 0 ? 'Generate' : 'Refresh'}
+                            </button>
+                            {cooldownRemaining > 0 && (
+                                <button
+                                    onClick={resetCooldown}
+                                    className="text-[10px] text-zinc-600 hover:text-zinc-400 underline"
+                                >
+                                    Reset
+                                </button>
+                            )}
+                        </div>
                     )}
                 </div>
 
