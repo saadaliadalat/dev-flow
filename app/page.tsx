@@ -7,12 +7,16 @@ import { Pricing } from '@/components/landing/Pricing'
 import { FinalCTA } from '@/components/landing/FinalCTA'
 import { Footer } from '@/components/landing/Footer'
 
-import { StarFieldBackground } from '@/components/landing/StarFieldBackground'
+import { StarField } from '@/components/visuals/StarField'
 
 export default function Home() {
     return (
-        <main className="min-h-screen bg-bg-deepest text-text-primary selection:bg-cyan-500/30 relative">
-            <StarFieldBackground />
+        <main className="min-h-screen text-slate-300 selection:bg-cyan-500/30 relative">
+            <StarField />
+
+            {/* Stage Light: Top Center Gradient */}
+            <div className="fixed top-[-20%] left-1/2 -translate-x-1/2 w-[80%] h-[600px] bg-indigo-500/20 blur-[120px] rounded-full pointer-events-none z-[-1]" />
+
             <div className="relative z-10">
                 <Navbar />
                 <Hero />

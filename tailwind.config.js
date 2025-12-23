@@ -13,7 +13,8 @@ module.exports = {
 
                 // Deep Space Backgrounds
                 bg: {
-                    deepest: 'var(--bg-deepest)',
+                    deepest: '#030014', // Overridden for Series A
+                    'deep-space': '#030014',
                     deep: 'var(--bg-deep)',
                     mid: 'var(--bg-mid)',
                     elevated: 'var(--bg-elevated)',

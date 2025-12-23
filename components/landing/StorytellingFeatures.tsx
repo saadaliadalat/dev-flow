@@ -4,9 +4,10 @@ import { motion, useInView, useMotionValue, useTransform, useSpring, useScroll, 
 import { BarChart3, Brain, Flame, Trophy, Share2, Users, Command, Star, Activity, Layers, Globe, Sparkles } from 'lucide-react'
 import { useRef, useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { ScrollTiltWrapper } from '../visuals/ScrollTilt'
 
 // --- Cinematic Animation Config ---
-const SPRING_OPTS = { type: "spring", stiffness: 150, damping: 15, mass: 1 }
+const SPRING_PHYSICS = { type: "spring", stiffness: 150, damping: 15 }
 
 // --- Stagger Animation Variants ---
 const containerVariants = {
@@ -20,27 +21,7 @@ const containerVariants = {
     }
 }
 
-// --- 3D Scroll Tilt Wrapper ---
-const ScrollTiltWrapper = ({ children }: { children: React.ReactNode }) => {
-    const ref = useRef<HTMLDivElement>(null)
-    const { scrollYProgress } = useScroll({
-        target: ref,
-        offset: ["0 1", "0.2 1"]
-    })
 
-    const rotateX = useTransform(scrollYProgress, [0, 1], [15, 0])
-    const opacity = useTransform(scrollYProgress, [0, 1], [0, 1])
-    const y = useTransform(scrollYProgress, [0, 1], [100, 0])
-
-    return (
-        <motion.div
-            ref={ref}
-            style={{ rotateX, opacity, y, transformStyle: "preserve-3d", perspective: 1200 }}
-        >
-            {children}
-        </motion.div>
-    )
-}
 
 // --- Premium Bento Card Component ---
 interface BentoCardProps {
@@ -74,34 +55,35 @@ const PremiumBentoCard = ({ title, description, icon, children, className = '', 
         mouseY.set(yNorm)
     }
 
-    const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [5, -5]), SPRING_OPTS)
-    const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-5, 5]), SPRING_OPTS)
-    const scale = useSpring(1, SPRING_OPTS)
+    // Smooth reset on mouse leave
+    const handleMouseLeave = () => {
+        mouseX.set(0)
+        mouseY.set(0)
+    }
+
+    const rotateX = useTransform(mouseY, [-0.5, 0.5], [5, -5])
+    const rotateY = useTransform(mouseX, [-0.5, 0.5], [-5, 5])
 
     return (
         <motion.div
             ref={cardRef}
-            className={cn("group relative rounded-3xl z-0 h-full", colSpan, className)}
+            className={cn(`relative overflow-hidden rounded-xl bg-[#09090b] border border-white/5 group ${colSpan} ${className}`, 'dev-flow-card')}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
             style={{
                 rotateX,
                 rotateY,
-                scale,
                 transformStyle: "preserve-3d",
                 perspective: 1000
             }}
-            whileHover={{ scale: 1.02, zIndex: 10 }}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={() => {
-                mouseX.set(0); mouseY.set(0);
-                scale.set(1);
-            }}
-            transition={SPRING_OPTS}
+            whileHover={{ scale: 1.02 }}
+            transition={SPRING_PHYSICS}
         >
-            {/* Spotlight Border */}
+            {/* Spotlight Gradient */}
             <div
-                className="absolute inset-0 rounded-3xl z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 style={{
-                    background: `radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), ${accentColor}40, transparent 40%)`
+                    background: `radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.06), transparent 40%)`
                 }}
             />
             {/* Masked Border */}
@@ -156,7 +138,7 @@ const LiveBar = ({ index }: { index: number }) => {
             <motion.div
                 className="w-full bg-cyan-500 relative"
                 animate={{ height: `${height}%` }}
-                transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                transition={SPRING_PHYSICS}
             >
                 <div className="absolute top-0 inset-x-0 h-4 bg-gradient-to-b from-white/30 to-transparent" />
             </motion.div>
@@ -172,12 +154,15 @@ const NeuralStory = () => {
             {/* Spinning Ring */}
             <motion.div
                 className="absolute w-32 h-32 rounded-full border border-purple-500/20 border-t-purple-500/80"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                animate={{ rotate: 360, scale: [1, 1.05, 1] }}
+                transition={{
+                    rotate: { duration: 8, repeat: Infinity, ease: "linear" },
+                    scale: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+                }}
             />
             {/* Pulsing Core */}
             <motion.div
-                animate={{ scale: [1, 1.05, 1], filter: ["brightness(1)", "brightness(1.5)", "brightness(1)"] }}
+                animate={{ scale: [1, 1.1, 1], filter: ["brightness(1)", "brightness(1.5)", "brightness(1)"] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
                 <Brain className="w-16 h-16 text-purple-400 drop-shadow-[0_0_20px_rgba(168,85,247,0.5)]" />
@@ -202,17 +187,22 @@ const ConstellationStory = () => {
                 {/* Lines */}
                 {nodes.slice(1).map((node, i) => (
                     <g key={i}>
-                        <line x1={`${nodes[0].x}%`} y1={`${nodes[0].y}%`} x2={`${node.x}%`} y2={`${node.y}%`} stroke="rgba(99,102,241,0.2)" strokeWidth="1" />
-                        {/* Packet */}
-                        <motion.circle
-                            r="3"
-                            fill="#818cf8"
-                            initial={{ cx: `${nodes[0].x}%`, cy: `${nodes[0].y}%` }}
+                        <line
+                            x1={`${nodes[0].x}%`} y1={`${nodes[0].y}%`}
+                            x2={`${node.x}%`} y2={`${node.y}%`}
+                            stroke="rgba(99,102,241,0.2)"
+                            strokeWidth="1"
+                        />
+                        {/* Traveling Packet */}
+                        <motion.div
+                            className="absolute w-1.5 h-1.5 rounded-full bg-indigo-300 shadow-[0_0_8px_rgba(129,140,248,1)]"
                             animate={{
-                                cx: [`${nodes[0].x}%`, `${node.x}%`, `${nodes[0].x}%`],
-                                cy: [`${nodes[0].y}%`, `${node.y}%`, `${nodes[0].y}%`]
+                                left: [`${nodes[0].x}%`, `${node.x}%`],
+                                top: [`${nodes[0].y}%`, `${node.y}%`],
+                                opacity: [0, 1, 0]
                             }}
-                            transition={{ duration: 2 + i * 0.5, repeat: Infinity, ease: "linear" }}
+                            transition={{ duration: 1.5 + i * 0.4, repeat: Infinity, ease: "linear", delay: i * 0.2 }}
+                            style={{ transform: 'translate(-50%, -50%)' }}
                         />
                     </g>
                 ))}

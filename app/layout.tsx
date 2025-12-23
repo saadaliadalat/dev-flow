@@ -48,7 +48,10 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" className={`${inter.variable} ${outfit.variable} ${firaCode.variable}`}>
-            <body className="antialiased bg-background text-foreground overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-100">
+            <body
+                className="antialiased bg-deep-space text-foreground overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-100"
+                style={{ fontFeatureSettings: '"cv11", "ss01"' }}
+            >
                 {/* Skip to content link for keyboard accessibility */}
                 <a
                     href="#main-content"
