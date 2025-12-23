@@ -18,7 +18,7 @@ export function Navbar() {
     const { data: session } = useSession()
 
     useMotionValueEvent(scrollY, "change", (latest) => {
-        setIsScrolled(latest > 20)
+        setIsScrolled(latest > 50)
     })
 
     const navLinks = [

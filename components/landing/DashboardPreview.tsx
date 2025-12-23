@@ -5,18 +5,16 @@ import { useScroll, useTransform, motion } from 'framer-motion'
 import { GitCommit, GitPullRequest, Flame, TrendingUp, Activity } from 'lucide-react'
 
 export function DashboardPreview() {
-    const ref = useRef<HTMLDivElement>(null)
-    const { scrollYProgress } = useScroll({
-        target: ref,
-        offset: ["start end", "center center"]
-    })
+    // Linked to page scroll for "scrubbable" feel
+    const { scrollY } = useScroll()
 
-    const rotateX = useTransform(scrollYProgress, [0, 1], [15, 0])
-    const scale = useTransform(scrollYProgress, [0, 1], [0.9, 1])
-    const opacity = useTransform(scrollYProgress, [0, 0.5], [0.5, 1])
+    // Transforms based on absolute pixel scroll [0, 500]
+    const rotateX = useTransform(scrollY, [0, 500], [15, 0])
+    const scale = useTransform(scrollY, [0, 500], [0.95, 1])
+    const opacity = useTransform(scrollY, [0, 200], [0.8, 1])
 
     return (
-        <div ref={ref} className="relative w-full max-w-[1200px] mx-auto aspect-[16/9] perspective-1000 mb-20">
+        <div className="relative w-full max-w-[1200px] mx-auto aspect-[16/9] perspective-1000 mb-20">
             {/* Glow Behind */}
             <div className="absolute inset-0 bg-white/5 blur-[100px] rounded-full opacity-30 pointer-events-none" />
 
@@ -29,8 +27,11 @@ export function DashboardPreview() {
                 }}
                 className="w-full h-full rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative bg-[#09090b]"
             >
+                {/* Micro-Grid Background */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+
                 {/* Top Bar */}
-                <div className="h-12 border-b border-white/5 bg-zinc-900/50 backdrop-blur-xl flex items-center justify-between px-6">
+                <div className="h-12 border-b border-white/5 bg-zinc-900/50 backdrop-blur-xl flex items-center justify-between px-6 relative z-10">
                     <div className="text-white font-semibold flex items-center gap-2">
                         <span className="w-4 h-4 rounded bg-white/10 flex items-center justify-center">
                             <Activity size={10} className="text-zinc-400" />
@@ -45,12 +46,12 @@ export function DashboardPreview() {
                 </div>
 
                 {/* Main Content */}
-                <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4 h-[calc(100%-48px)]">
+                <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4 h-[calc(100%-48px)] relative z-10">
 
                     {/* Productivity Score Card */}
                     <div className="col-span-1 md:col-span-1 p-6 rounded-xl bg-gradient-to-br from-zinc-800/10 to-transparent border border-white/5 flex flex-col justify-center relative overflow-hidden group">
                         <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/5 blur-2xl rounded-full group-hover:bg-white/10 transition-colors" />
-                        <div className="text-zinc-400 text-sm mb-2 relative z-10">Productivity Score</div>
+                        <div className="text-zinc-400 text-sm mb-2 relative z-10 font-mono">Productivity Score</div>
                         <div className="text-5xl font-bold text-white mb-4 relative z-10 tracking-tight">87</div>
                         <div className="flex items-center gap-2 text-green-400 text-sm relative z-10 font-mono">
                             <TrendingUp className="w-4 h-4" />
@@ -70,17 +71,17 @@ export function DashboardPreview() {
                                     <div className={`p-2 rounded-lg bg-white/5 ${stat.color} group-hover:scale-110 transition-transform`}>
                                         <stat.icon className="w-5 h-5" />
                                     </div>
-                                    <div className="text-2xl font-bold text-white font-display">{stat.value}</div>
+                                    <div className="text-2xl font-bold text-white font-display tracking-tight">{stat.value}</div>
                                 </div>
-                                <div className="text-zinc-500 text-sm">{stat.label}</div>
+                                <div className="text-zinc-500 text-xs font-mono">{stat.label}</div>
                             </div>
                         ))}
 
-                        {/* Commit Heatmap - Spanning full width of the 3 cols */}
+                        {/* Commit Heatmap */}
                         <div className="col-span-1 sm:col-span-3 p-6 rounded-xl bg-zinc-900/40 border border-white/5 flex flex-col justify-center">
-                            <div className="text-white font-medium mb-4 flex items-center justify-between">
+                            <div className="text-white font-medium mb-4 flex items-center justify-between tracking-tight">
                                 <span>Activity Heatmap</span>
-                                <span className="text-xs text-zinc-500">Last 12 Months</span>
+                                <span className="text-xs text-zinc-500 font-mono">Last 12 Months</span>
                             </div>
                             <div className="flex gap-1 h-32 w-full overflow-hidden">
                                 {Array.from({ length: 50 }).map((_, colIndex) => (

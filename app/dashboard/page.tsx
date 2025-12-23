@@ -214,7 +214,9 @@ export default function DashboardPage() {
     const totalContributions = (stats?.total_commits || 0) + (stats?.total_prs || 0) + (stats?.total_issues || 0) + (stats?.total_reviews || 0)
 
     return (
-        <div className="container mx-auto max-w-7xl pt-8 pb-20">
+        <div className="container mx-auto max-w-7xl pt-8 pb-20 relative">
+            {/* Micro-Grid Background */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none -z-10" />
 
             {/* Header */}
             <motion.div
@@ -230,10 +232,10 @@ export default function DashboardPage() {
                         </span>
                         <span className="h-px w-20 bg-gradient-to-r from-purple-primary/50 to-transparent" />
                     </motion.div>
-                    <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-display font-bold mb-2">
+                    <motion.h1 variants={itemVariants} className="text-2xl md:text-3xl font-display font-medium mb-2 tracking-tight">
                         Welcome back, <span className="text-transparent bg-clip-text bg-gradient-primary">{session?.user?.name || 'Developer'}</span>
                     </motion.h1>
-                    <motion.p variants={itemVariants} className="text-text-tertiary max-w-xl">
+                    <motion.p variants={itemVariants} className="text-slate-500 font-mono text-xs max-w-xl">
                         Your coding journey in {new Date().getFullYear()}. Keep the momentum going!
                     </motion.p>
                 </div>
@@ -406,10 +408,10 @@ export default function DashboardPage() {
                     <GlassCard className="h-full min-h-[450px]" glow="purple">
                         <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
                             <div>
-                                <h3 className="text-xl font-bold font-display text-white mb-1 flex items-center gap-2">
+                                <h3 className="text-xl font-bold font-display text-white mb-1 flex items-center gap-2 tracking-tight">
                                     <TrendingUp size={20} className="text-purple-primary" /> Activity Frequency
                                 </h3>
-                                <p className="text-sm text-text-tertiary">Neon-visualized coding velocity</p>
+                                <p className="text-sm text-text-tertiary font-mono">Neon-visualized coding velocity</p>
                             </div>
                             <div className="flex gap-2">
                                 {(['7', '30', '90'] as const).map((range) => (
@@ -448,8 +450,8 @@ export default function DashboardPage() {
                                 <AreaChart data={(!activityData.length || activityData.every(d => d.commits === 0)) ? Array(7).fill(0).map((_, i) => ({ name: `Day ${i}`, commits: [4, 7, 2, 9, 5, 8, 3][i] })) : activityData}>
                                     <defs>
                                         <linearGradient id="colorCommits" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.5} />
-                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                            <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                                            <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
                                         </linearGradient>
                                         <filter id="neon" height="200%" width="200%" x="-50%" y="-50%">
                                             <feGaussianBlur stdDeviation="4" result="coloredBlur" />
@@ -493,7 +495,7 @@ export default function DashboardPage() {
                                         type="monotone"
                                         dataKey="commits"
                                         stroke="#8b5cf6"
-                                        strokeWidth={3}
+                                        strokeWidth={2}
                                         fillOpacity={1}
                                         fill="url(#colorCommits)"
                                         filter="url(#neon)"
