@@ -15,7 +15,7 @@ interface GoalProgressProps {
 const colorConfig = {
     blue: { // Mapped to White/Silver
         gradient: 'linear-gradient(90deg, #FFFFFF, #e4e4e7)',
-        bg: 'rgba(255, 255, 255, 0.1)', // Dark Grey Track
+        bg: '#27272a', // Zinc-800 Track
         glow: 'rgba(255, 255, 255, 0.2)',
     },
     emerald: { // Mapped to White/Silver

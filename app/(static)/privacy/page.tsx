@@ -9,7 +9,7 @@ export default function PrivacyPage() {
     return (
         <div className="container mx-auto px-6 max-w-4xl">
             <h1 className="text-4xl font-display font-bold mb-8">Privacy Policy</h1>
-            <GlassCard className="p-10 prose prose-invert max-w-none">
+            <GlassCard className="p-10 prose prose-invert prose-zinc max-w-none">
                 <p>Last updated: December 2024</p>
                 <h3>1. Introduction</h3>
                 <p>Welcome to DevFlow. We respect your privacy and are committed to protecting your personal data.</p>

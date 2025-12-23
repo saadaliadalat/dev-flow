@@ -20,6 +20,26 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'userId is required' }, { status: 400 })
         }
 
+        // 1. Rate Limiting Check (5 requests per hour)
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+        const { count, error: countError } = await supabase
+            .from('insights')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .gte('created_at', oneHourAgo)
+
+        if (countError) {
+            console.error('Rate limit check failed:', countError)
+        }
+
+        if (count && count >= 5) {
+            return NextResponse.json({
+                error: 'Rate limit exceeded',
+                message: 'Neural Engine Overload: You have reached the limit of 5 insights per hour. Upgrade to Pro for unlimited analysis.',
+                upgrade: true
+            }, { status: 429 })
+        }
+
         // Fetch user's recent stats (last 30 days)
         const thirtyDaysAgo = new Date()
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -31,31 +51,34 @@ export async function POST(req: Request) {
             .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
             .order('date', { ascending: false })
 
+        let summary;
+        let isMockData = false;
+
+        // 2. Mock Data Generation (if no stats found)
         if (!stats || stats.length === 0) {
-            return NextResponse.json({
-                success: true,
-                message: 'Not enough data for insights. Sync your GitHub first.'
-            })
-        }
+            console.log('⚠️ No stats found for user. Generating mock data for AI context...')
+            summary = getMockStats()
+            isMockData = true
+        } else {
+            // Calculate real summary stats
+            const totalCommits = stats.reduce((sum, s) => sum + (s.total_commits || 0), 0)
+            const avgProductivity = stats.reduce((sum, s) => sum + (s.productivity_score || 0), 0) / stats.length
+            const mostActiveHours = getMostActiveHours(stats)
+            const topLanguages = getTopLanguages(stats)
+            const activeDays = stats.filter(s => (s.total_commits || 0) > 0).length
+            const weekendActivity = stats.filter(s => s.is_weekend && s.total_commits > 0).length
+            const restDays = stats.filter(s => s.is_rest_day).length
 
-        // Calculate summary stats
-        const totalCommits = stats.reduce((sum, s) => sum + (s.total_commits || 0), 0)
-        const avgProductivity = stats.reduce((sum, s) => sum + (s.productivity_score || 0), 0) / stats.length
-        const mostActiveHours = getMostActiveHours(stats)
-        const topLanguages = getTopLanguages(stats)
-        const activeDays = stats.filter(s => (s.total_commits || 0) > 0).length
-        const weekendActivity = stats.filter(s => s.is_weekend && s.total_commits > 0).length
-        const restDays = stats.filter(s => s.is_rest_day).length
-
-        const summary = {
-            totalCommits,
-            avgProductivity: Math.round(avgProductivity),
-            mostActiveHours,
-            topLanguages,
-            activeDays,
-            daysTracked: stats.length,
-            weekendActivity,
-            restDays
+            summary = {
+                totalCommits,
+                avgProductivity: Math.round(avgProductivity),
+                mostActiveHours,
+                topLanguages,
+                activeDays,
+                daysTracked: stats.length,
+                weekendActivity,
+                restDays
+            }
         }
 
         console.log('📊 Generating insights for user:', userId)
@@ -63,6 +86,7 @@ export async function POST(req: Request) {
 
         // Create detailed prompt
         const prompt = `You are an expert developer productivity analyst. Analyze this GitHub activity data and provide 5 actionable insights.
+${isMockData ? 'NOTE: This is a new user with empty history. Generate "getting started" and "best practice" insights based on these idealized beginner stats.' : ''}
 
 DEVELOPER DATA (Last 30 Days):
 - Total Commits: ${summary.totalCommits}
@@ -89,7 +113,7 @@ Generate EXACTLY 5 insights in this JSON format:
 FOCUS AREAS:
 1. Productivity patterns and trends
 2. Work-life balance and burnout risk
-3. Skill development opportunities  
+3. Skill development opportunities
 4. Coding habits optimization
 5. Performance improvements
 
@@ -188,7 +212,8 @@ Return ONLY valid JSON, no markdown or extra text.`
             confidence_score: 0.85,
             based_on_data: {
                 period: '30 days',
-                stats: summary
+                stats: summary,
+                is_mock: isMockData
             }
         }))
 
@@ -208,7 +233,8 @@ Return ONLY valid JSON, no markdown or extra text.`
             insights: validInsights,
             count: validInsights.length,
             generatedBy: 'groq-llama-3.3-70b',
-            tokensUsed: completion.usage?.total_tokens || 0
+            tokensUsed: completion.usage?.total_tokens || 0,
+            isMockData
         })
 
     } catch (error: any) {
@@ -234,6 +260,20 @@ Return ONLY valid JSON, no markdown or extra text.`
             message: error.message,
             type: error.constructor.name
         }, { status: 500 })
+    }
+}
+
+// Helper: Get mock stats for new users
+function getMockStats() {
+    return {
+        totalCommits: 45,
+        avgProductivity: 72,
+        mostActiveHours: [10, 14, 16],
+        topLanguages: ['TypeScript', 'JavaScript', 'Python'],
+        activeDays: 12,
+        daysTracked: 30,
+        weekendActivity: 2,
+        restDays: 18
     }
 }
 

@@ -38,18 +38,18 @@ export default function ContactPage() {
                     <motion.div variants={itemVariants} className="space-y-6">
                         <GlassCard className="p-6 flex items-start gap-4">
                             <div className="p-3 bg-white/5 rounded-lg">
-                                <Mail className="text-cyan-400" size={24} />
+                                <Mail className="text-purple-400" size={24} />
                             </div>
                             <div>
                                 <h3 className="font-bold mb-1">Email Us</h3>
                                 <p className="text-text-tertiary text-sm mb-2">For general inquiries and support.</p>
-                                <a href="mailto:hello@devflow.com" className="text-white hover:text-cyan-400 transition-colors">hello@devflow.com</a>
+                                <a href="mailto:hello@devflow.com" className="text-white hover:text-purple-400 transition-colors">hello@devflow.com</a>
                             </div>
                         </GlassCard>
 
                         <GlassCard className="p-6 flex items-start gap-4">
                             <div className="p-3 bg-white/5 rounded-lg">
-                                <MessageSquare className="text-purple-400" size={24} />
+                                <MessageSquare className="text-white" size={24} />
                             </div>
                             <div>
                                 <h3 className="font-bold mb-1">Discord Community</h3>
@@ -60,7 +60,7 @@ export default function ContactPage() {
 
                         <GlassCard className="p-6 flex items-start gap-4">
                             <div className="p-3 bg-white/5 rounded-lg">
-                                <MapPin className="text-green-400" size={24} />
+                                <MapPin className="text-zinc-400" size={24} />
                             </div>
                             <div>
                                 <h3 className="font-bold mb-1">HQ</h3>
@@ -122,7 +122,7 @@ export default function ContactPage() {
                                             name="name"
                                             type="text"
                                             required
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-colors"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder:text-zinc-600 focus:outline-none focus:border-purple-500 transition-colors"
                                             placeholder="Jane Doe"
                                         />
                                     </div>
@@ -132,7 +132,7 @@ export default function ContactPage() {
                                             name="email"
                                             type="email"
                                             required
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-colors"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder:text-zinc-600 focus:outline-none focus:border-purple-500 transition-colors"
                                             placeholder="jane@example.com"
                                         />
                                     </div>
@@ -142,7 +142,7 @@ export default function ContactPage() {
                                             name="message"
                                             required
                                             rows={4}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-colors"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder:text-zinc-600 focus:outline-none focus:border-purple-500 transition-colors"
                                             placeholder="How can we help?"
                                         />
                                     </div>

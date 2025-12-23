@@ -10,7 +10,7 @@ export default function StaticLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="min-h-screen bg-bg-deepest text-text-primary selection:bg-cyan-500/30">
+        <div className="min-h-screen bg-bg-deepest text-text-primary selection:bg-purple-500/30">
             <Navbar />
             <main className="pt-24 pb-12">
                 {children}

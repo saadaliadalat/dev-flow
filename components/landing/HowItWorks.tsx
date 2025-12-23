@@ -16,17 +16,17 @@ const features = [
     {
         title: "AI Analysis",
         description: "Our neural engine scans your patterns to identify peak flow hours and potential burnout risks.",
-        icon: <Zap className="w-6 h-6 text-yellow-400" />,
+        icon: <Zap className="w-6 h-6 text-purple-300" />,
         code: "Analyzing... Flow State: 98%",
-        color: "from-yellow-500/20 to-orange-500/20",
+        color: "from-purple-500/20 to-zinc-500/20",
         delay: 0.2
     },
     {
         title: "Level Up",
         description: "Unlock achievements, visualize your growth, and flex your Year in Review.",
-        icon: <BarChart3 className="w-6 h-6 text-cyan-400" />,
+        icon: <BarChart3 className="w-6 h-6 text-white" />,
         code: "Achievement Unlocked: 10x Dev",
-        color: "from-cyan-500/20 to-emerald-500/20",
+        color: "from-zinc-500/20 to-purple-500/20",
         delay: 0.4
     }
 ]
@@ -56,7 +56,7 @@ export function HowItWorks() {
                         viewport={{ once: true }}
                         className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight"
                     >
-                        From Commit to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Insight</span>
+                        From Commit to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-white">Insight</span>
                     </motion.h2>
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
@@ -105,7 +105,7 @@ function FeatureCard({ title, description, icon, code, color, delay, index }: an
                             <div className="w-2 h-2 rounded-full bg-zinc-700" />
                             <div className="w-2 h-2 rounded-full bg-zinc-700" />
                         </div>
-                        <span className="text-emerald-500">$</span> {code}
+                        <span className="text-purple-400">$</span> {code}
                     </div>
                 </div>
             </div>

@@ -1,14 +1,13 @@
 'use client'
 
-import { motion, useMotionValue, useTransform, useSpring, useAnimationFrame } from 'framer-motion'
-import { Brain, Flame, Trophy, Activity, Layers, Globe, Zap, BarChart2, GitCommit, Network, Clock, Cpu, Signal, Lock } from 'lucide-react'
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { motion } from 'framer-motion'
+import { Brain, Trophy, Activity, Network, Clock, BarChart2 } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { ScrollTiltWrapper } from '../visuals/ScrollTilt'
 import { TiltCard } from '../motion/TiltCard'
 
 // --- Physics Config ---
-const SPRING_SMOOTH = { type: "spring", stiffness: 120, damping: 20, mass: 0.8 }
 const SPRING_BOUNCY = { type: "spring", stiffness: 400, damping: 25, mass: 0.5 }
 
 // --- Stagger Config ---
@@ -31,14 +30,14 @@ const bentoVariants = {
     }
 }
 
-// --- 1. LIVE ANALYTICS (Premium Sine Wave + Scanner) ---
+// --- 1. LIVE ANALYTICS (Purple Sine Wave + Scanner) ---
 const AnalyticsStory = () => {
     return (
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-            {/* Scanned Grid Background */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#22d3ee08_1px,transparent_1px),linear-gradient(to_bottom,#22d3ee08_1px,transparent_1px)] bg-[size:16px_16px] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,#000_60%,transparent_100%)]" />
+            {/* Scanned Grid Background - Pure Zinc */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#27272a_1px,transparent_1px),linear-gradient(to_bottom,#27272a_1px,transparent_1px)] bg-[size:16px_16px] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,#000_60%,transparent_100%)] opacity-20" />
 
-            {/* Floating Data Points */}
+            {/* Floating Data Points - Purple */}
             {[...Array(5)].map((_, i) => (
                 <motion.div
                     key={i}
@@ -70,12 +69,15 @@ const AnalyticsStory = () => {
                             <feMergeNode in="SourceGraphic" />
                         </feMerge>
                     </filter>
+                    <filter id="shadow-line" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="rgba(139, 92, 246, 0.4)" />
+                    </filter>
                 </defs>
                 <motion.path
                     fill="url(#waveGradient)"
                     stroke="rgba(139, 92, 246, 0.9)"
                     strokeWidth="2"
-                    filter="url(#glow)"
+                    filter="url(#glow) url(#shadow-line)"
                     initial={{ d: "M0,100 C100,100 200,100 400,100 L400,200 L0,200 Z" }}
                     animate={{
                         d: [
@@ -89,7 +91,7 @@ const AnalyticsStory = () => {
                 />
             </svg>
 
-            {/* Scanning Laser */}
+            {/* Scanning Laser - Purple */}
             <motion.div
                 className="absolute top-0 bottom-0 w-[2px] z-10"
                 style={{
@@ -103,15 +105,15 @@ const AnalyticsStory = () => {
     )
 }
 
-// --- 2. NEURAL ENGINE (Premium Synaptic Core) ---
+// --- 2. NEURAL ENGINE (Purple Synaptic Core) ---
 const NeuralStory = () => {
     return (
         <div className="absolute inset-0 flex items-center justify-center">
-            {/* Orbital Rings with Glowing Nodes */}
+            {/* Orbital Rings - Silver/Purple */}
             {[1, 2, 3].map((i) => (
                 <motion.div
                     key={i}
-                    className="absolute rounded-full border border-purple-500/30"
+                    className="absolute rounded-full border border-purple-500/20"
                     style={{ width: `${i * 28 + 35}%`, height: `${i * 28 + 35}%` }}
                     animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
                     transition={{ duration: 20 + i * 8, repeat: Infinity, ease: "linear" }}
@@ -123,33 +125,33 @@ const NeuralStory = () => {
                             top: '50%',
                             left: 0,
                             transform: 'translate(-50%, -50%)',
-                            boxShadow: '0 0 12px 3px rgba(168, 85, 247, 0.8)'
+                            boxShadow: '0 0 12px 3px rgba(168, 85, 247, 0.6)'
                         }}
                     />
                 </motion.div>
             ))}
 
-            {/* Central Core with Dramatic Pulse */}
+            {/* Central Core */}
             <div className="relative z-10">
                 <motion.div
                     animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0.8, 0.4] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-24 h-24 rounded-full bg-purple-500/40 blur-[40px] absolute -inset-4"
+                    className="w-24 h-24 rounded-full bg-purple-500/30 blur-[40px] absolute -inset-4"
                 />
                 <motion.div
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
-                    <Brain className="w-14 h-14 text-purple-200 stroke-[1.2] relative z-10 drop-shadow-[0_0_20px_rgba(168,85,247,0.7)]" />
+                    <Brain className="w-14 h-14 text-white stroke-[1.2] relative z-10 drop-shadow-[0_0_20px_rgba(168,85,247,0.7)]" />
                 </motion.div>
             </div>
 
-            {/* Synapse Particles with Trails */}
+            {/* Synapse Particles */}
             {[...Array(8)].map((_, i) => (
                 <motion.div
                     key={i}
-                    className="absolute w-1 h-1 bg-purple-400 rounded-full"
-                    style={{ boxShadow: '0 0 6px 2px rgba(168, 85, 247, 0.6)' }}
+                    className="absolute w-1 h-1 bg-purple-300 rounded-full"
+                    style={{ boxShadow: '0 0 6px 2px rgba(168, 85, 247, 0.4)' }}
                     initial={{ x: 0, y: 0, opacity: 0 }}
                     animate={{
                         x: [0, (Math.random() - 0.5) * 150],
@@ -164,7 +166,7 @@ const NeuralStory = () => {
     )
 }
 
-// --- 3. VITALITY (Animated HUD) ---
+// --- 3. VITALITY (Silver to White Gradient Ring) ---
 const VitalityStory = () => {
     const [count, setCount] = useState(0)
 
@@ -178,9 +180,9 @@ const VitalityStory = () => {
     return (
         <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative w-28 h-28">
-                {/* Outer Static Ring with Ticks */}
+                {/* Outer Static Ring */}
                 <svg className="w-full h-full -rotate-90">
-                    <circle cx="56" cy="56" r="52" stroke="rgba(255,255,255,0.04)" strokeWidth="1" fill="none" />
+                    <circle cx="56" cy="56" r="52" stroke="rgba(255,255,255,0.05)" strokeWidth="1" fill="none" />
                     {[...Array(36)].map((_, i) => (
                         <line
                             key={i}
@@ -188,19 +190,19 @@ const VitalityStory = () => {
                             y1="6"
                             x2="56"
                             y2={i % 3 === 0 ? 10 : 8}
-                            stroke={i < 32 ? "rgba(161, 161, 170, 0.4)" : "rgba(255,255,255,0.05)"}
+                            stroke={i < 32 ? "rgba(255, 255, 255, 0.2)" : "rgba(255,255,255,0.05)"}
                             strokeWidth="1"
                             transform={`rotate(${i * 10} 56 56)`}
                         />
                     ))}
                 </svg>
 
-                {/* Inner Progress Arc */}
+                {/* Inner Progress Arc - Silver to White */}
                 <svg className="absolute inset-0 w-full h-full -rotate-90">
                     <defs>
                         <linearGradient id="vitalityGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#a1a1aa" />
-                            <stop offset="100%" stopColor="#8b5cf6" />
+                            <stop offset="0%" stopColor="#71717a" />
+                            <stop offset="100%" stopColor="#ffffff" />
                         </linearGradient>
                     </defs>
                     <motion.circle
@@ -212,21 +214,21 @@ const VitalityStory = () => {
                         whileInView={{ strokeDashoffset: 28 }}
                         viewport={{ once: true }}
                         transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-                        style={{ filter: 'drop-shadow(0 0 6px rgba(139, 92, 246, 0.4))' }}
+                        style={{ filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.3))' }}
                     />
                 </svg>
 
                 {/* Center Content */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-2xl font-bold text-white tracking-tighter font-mono tabular-nums">{count}</span>
-                    <span className="text-[9px] text-zinc-400 font-mono tracking-[0.15em] uppercase mt-0.5">Vitality</span>
+                    <span className="text-[9px] text-zinc-500 font-mono tracking-[0.15em] uppercase mt-0.5">Vitality</span>
                 </div>
             </div>
         </div>
     )
 }
 
-// --- 4. GLOBAL NETWORK (Interactive Constellation) ---
+// --- 4. GLOBAL NETWORK (White Nodes + Zinc Lines) ---
 const ConstellationStory = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const mouseRef = useRef({ x: 0, y: 0 })
@@ -256,15 +258,14 @@ const ConstellationStory = () => {
                 y: Math.random() * canvas.height,
                 dx: (Math.random() - 0.5) * 0.4,
                 dy: (Math.random() - 0.5) * 0.4,
-                size: Math.random() < 0.15 ? 2.5 : 1,
-                isHot: Math.random() < 0.1
+                size: Math.random() < 0.15 ? 2.5 : 1.5,
+                isHot: Math.random() < 0.1 // Some active nodes
             })
         }
 
         const animate = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-            // Update & Draw Particles
             particles.forEach(p => {
                 // Mouse attraction
                 const mdx = mouseRef.current.x - p.x
@@ -277,32 +278,31 @@ const ConstellationStory = () => {
 
                 p.x += p.dx
                 p.y += p.dy
-
-                // Damping
                 p.dx *= 0.99
                 p.dy *= 0.99
 
                 if (p.x < 0 || p.x > canvas.width) p.dx *= -1
                 if (p.y < 0 || p.y > canvas.height) p.dy *= -1
 
-                // Draw glow for hot nodes
+                // Draw Nodes - White
+                ctx.fillStyle = p.isHot ? '#ffffff' : 'rgba(255, 255, 255, 0.7)'
+                ctx.beginPath()
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+                ctx.fill()
+
+                // Hot nodes glow
                 if (p.isHot) {
                     const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 8)
-                    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.4)')
-                    gradient.addColorStop(1, 'rgba(139, 92, 246, 0)')
+                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)')
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
                     ctx.fillStyle = gradient
                     ctx.beginPath()
                     ctx.arc(p.x, p.y, 8, 0, Math.PI * 2)
                     ctx.fill()
                 }
-
-                ctx.fillStyle = p.isHot ? '#8b5cf6' : 'rgba(139, 92, 246, 0.6)'
-                ctx.beginPath()
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-                ctx.fill()
             })
 
-            // Draw Connections
+            // Draw Connections - Zinc-800
             for (let i = 0; i < particles.length; i++) {
                 for (let j = i + 1; j < particles.length; j++) {
                     const dx = particles[i].x - particles[j].x
@@ -311,7 +311,7 @@ const ConstellationStory = () => {
 
                     if (dist < CONNECTION_DISTANCE) {
                         const opacity = 1 - (dist / CONNECTION_DISTANCE)
-                        ctx.strokeStyle = `rgba(139, 92, 246, ${opacity * 0.2})`
+                        ctx.strokeStyle = `rgba(113, 113, 122, ${opacity * 0.3})` // Zinc-500ish at low opacity
                         ctx.lineWidth = 1
                         ctx.beginPath()
                         ctx.moveTo(particles[i].x, particles[i].y)
@@ -342,20 +342,18 @@ const ConstellationStory = () => {
     return (
         <div className="absolute inset-0 bg-[#080812]">
             <canvas ref={canvasRef} className="block w-full h-full cursor-crosshair" />
-            {/* World Map Overlay Hint */}
-            <div className="absolute inset-0 bg-[url('/world-map-dots.svg')] bg-center bg-no-repeat bg-contain opacity-[0.03] pointer-events-none" />
         </div>
     )
 }
 
-// --- 5. MASTERY (Floating Trophy with Particles) ---
+// --- 5. MASTERY (Floating Trophy) ---
 const MasteryStory = () => (
     <div className="absolute inset-0 flex items-center justify-center">
         <div className="relative">
             {/* Glow */}
             <motion.div
-                className="absolute -inset-6 bg-purple-500/15 blur-[50px] rounded-full"
-                animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.7, 0.4] }}
+                className="absolute -inset-6 bg-purple-500/10 blur-[50px] rounded-full"
+                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
                 transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
             />
 
@@ -367,7 +365,7 @@ const MasteryStory = () => (
                     style={{
                         left: '50%',
                         top: '50%',
-                        boxShadow: '0 0 4px 1px rgba(161, 161, 170, 0.6)'
+                        boxShadow: '0 0 4px 1px rgba(255, 255, 255, 0.4)'
                     }}
                     animate={{
                         x: [0, Math.cos(i * 60 * Math.PI / 180) * 50],
@@ -385,7 +383,7 @@ const MasteryStory = () => (
                 whileHover={{ scale: 1.1, rotateZ: 5 }}
                 className="relative z-10 cursor-pointer"
             >
-                <Trophy className="w-16 h-16 text-zinc-200 stroke-[1.2] drop-shadow-[0_0_25px_rgba(139,92,246,0.5)]" />
+                <Trophy className="w-16 h-16 text-white stroke-[1.2] drop-shadow-[0_0_25px_rgba(139,92,246,0.3)]" />
                 <motion.div
                     className="absolute -top-1 -right-1 w-3 h-3 bg-purple-400 rounded-full"
                     animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
@@ -397,14 +395,14 @@ const MasteryStory = () => (
     </div>
 )
 
-// --- 6. TIME TRAVEL (Premium Commit History) ---
+// --- 6. TIME TRAVEL (Silver/White/Purple Syntax) ---
 const CommitHistoryStory = () => {
     const commits = [
-        { message: 'feat: add dark mode support', time: '2m' },
-        { message: 'fix: resolve auth timeout', time: '5m' },
-        { message: 'refactor: optimize queries', time: '12m' },
-        { message: 'docs: update README', time: '1h' },
-        { message: 'style: improve spacing', time: '3h' },
+        { message: 'feat: add dark mode', time: '2m', color: 'text-purple-300' },
+        { message: 'fix: auth timeout', time: '5m', color: 'text-zinc-300' },
+        { message: 'refactor: queries', time: '12m', color: 'text-purple-200' },
+        { message: 'docs: update README', time: '1h', color: 'text-zinc-400' },
+        { message: 'style: spacing', time: '3h', color: 'text-zinc-300' },
     ]
 
     return (
@@ -431,28 +429,27 @@ const CommitHistoryStory = () => {
 
                     {/* Message */}
                     <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-mono text-purple-200/90 truncate">{commit.message}</p>
+                        <p className={cn("text-[11px] font-mono truncate", commit.color)}>{commit.message}</p>
                     </div>
 
                     {/* Timestamp */}
-                    <span className="text-[9px] font-mono text-zinc-500 flex-shrink-0">{commit.time}</span>
+                    <span className="text-[9px] font-mono text-zinc-600 flex-shrink-0">{commit.time}</span>
                 </motion.div>
             ))}
         </div>
     )
 }
 
-
-// --- HELPER: Icon Container with Hover Effect ---
+// --- HELPER: Icon Container ---
 const IconContainer = ({ color, children }: { color: string, children: React.ReactNode }) => (
     <motion.div
         className="w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-300 relative overflow-hidden"
         style={{
             backgroundColor: `${color}0a`,
             borderColor: `${color}20`,
-            boxShadow: `0 0 20px -5px ${color}30`
+            boxShadow: `0 0 20px -5px ${color}10` // Subtle shadow
         }}
-        whileHover={{ scale: 1.1, boxShadow: `0 0 25px 0px ${color}50` }}
+        whileHover={{ scale: 1.1, boxShadow: `0 0 25px 0px ${color}30` }}
         transition={SPRING_BOUNCY}
     >
         <div className="relative z-10 text-white drop-shadow-sm">
@@ -468,30 +465,31 @@ interface BentoCardProps {
     icon: React.ReactNode
     children: React.ReactNode
     className?: string
-    accentColor?: string
+    accentColor?: string // Defaults to purple
     colSpan?: string
 }
 
-const PremiumBentoCard = ({ title, description, icon, children, className = '', accentColor = '#a855f7', colSpan = '' }: BentoCardProps) => {
+const PremiumBentoCard = ({ title, description, icon, children, className = '', accentColor = '#8b5cf6', colSpan = '' }: BentoCardProps) => {
     return (
         <TiltCard
             variants={bentoVariants}
             className={cn(`rounded-3xl bg-[#09090b] border border-zinc-800 group cursor-pointer ${colSpan} ${className}`)}
             glareColor={accentColor}
             style={{
-                boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.04), 0 20px 50px -20px rgba(0,0,0,0.5)'
+                boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.02), 0 10px 30px -10px rgba(0,0,0,0.5)'
             }}
         >
-            {/* Hover Glow Effect */}
+            {/* Hover Glow Effect - Purple/White */}
             <motion.div
                 className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                 style={{
-                    background: `radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), ${accentColor}08, transparent 40%)`
+                    border: '1px solid rgba(139, 92, 246, 0.3)', // Purple border on hover
+                    boxShadow: '0 20px 40px -10px rgba(139, 92, 246, 0.1)'
                 }}
             />
 
             {/* Inner Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50 pointer-events-none rounded-3xl" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80 pointer-events-none rounded-3xl" />
 
             <div className="relative h-full flex flex-col p-6 z-10">
                 {/* Header */}
@@ -506,7 +504,7 @@ const PremiumBentoCard = ({ title, description, icon, children, className = '', 
                 </div>
 
                 {/* Visual */}
-                <div className="relative mt-auto flex-1 h-[160px] w-full rounded-2xl border border-white/[0.04] overflow-hidden bg-black/30 group-hover:border-white/[0.08] transition-all duration-300">
+                <div className="relative mt-auto flex-1 h-[160px] w-full rounded-2xl border border-white/[0.04] overflow-hidden bg-black/40 group-hover:border-white/[0.08] transition-all duration-300">
                     {children}
                 </div>
             </div>
@@ -514,13 +512,12 @@ const PremiumBentoCard = ({ title, description, icon, children, className = '', 
     )
 }
 
-
 // --- EXPORT ---
 export function StorytellingFeatures() {
     return (
-        <section id="features" className="py-32 relative overflow-hidden bg-[#000000]">
-            {/* Gradient fade at top - creates the effect of starfield ending/diffusing into the section */}
-            <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-transparent to-[#000000] pointer-events-none" />
+        <section id="features" className="py-32 relative overflow-hidden bg-black">
+            {/* Gradient fade at top */}
+            <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-transparent to-black pointer-events-none" />
 
             <div className="container mx-auto px-6 relative z-10">
                 <div className="mb-16 max-w-2xl">
@@ -530,7 +527,7 @@ export function StorytellingFeatures() {
                         viewport={{ once: true }}
                         className="flex items-center gap-3 mb-6"
                     >
-                        <div className="h-px w-8 bg-gradient-to-r from-indigo-500/80 to-transparent" />
+                        <div className="h-px w-8 bg-gradient-to-r from-purple-500/80 to-transparent" />
                         <span className="text-zinc-500 text-xs font-mono tracking-[0.2em] uppercase">
                             System Capabilities
                         </span>
@@ -579,7 +576,7 @@ export function StorytellingFeatures() {
                             title="Vitality Score"
                             description="Predictive burnout prevention."
                             icon={<Activity size={18} strokeWidth={1.5} />}
-                            accentColor="#8b5cf6"
+                            accentColor="#ffffff" // Silver/White for Vitality
                         >
                             <VitalityStory />
                         </PremiumBentoCard>

@@ -16,6 +16,7 @@ import { useSession } from 'next-auth/react'
 import { PremiumStatCard, StatCardSkeleton } from '@/components/dashboard/PremiumStatCard'
 import { InsightCard, InsightCardSkeleton } from '@/components/dashboard/InsightCard'
 import { GoalProgress, CircularProgress, GoalProgressSkeleton } from '@/components/dashboard/GoalProgress'
+import { InsightsPanel } from '@/components/dashboard/InsightsPanel'
 
 // Animation variants
 const containerVariants = {
@@ -237,8 +238,8 @@ export default function DashboardPage() {
                                     key={range}
                                     onClick={() => setDateRange(range)}
                                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${dateRange === range
-                                            ? 'bg-[var(--accent-blue)] text-white'
-                                            : 'text-[var(--text-tertiary)] hover:text-white'
+                                        ? 'bg-[var(--accent-blue)] text-white'
+                                        : 'text-[var(--text-tertiary)] hover:text-white'
                                         }`}
                                 >
                                     {range}d
@@ -317,36 +318,7 @@ export default function DashboardPage() {
 
             {/* AI Insights */}
             <motion.div variants={itemVariants}>
-                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Brain size={18} className="text-[var(--accent-purple)]" />
-                    AI Insights
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <InsightCard
-                        type="success"
-                        title="Great momentum!"
-                        description="You've maintained a consistent commit pattern this week. Keep it up!"
-                        details={[
-                            `${weekCommits} commits this week`,
-                            `${stats?.current_streak || 0} day streak`,
-                            'Above your weekly average'
-                        ]}
-                    />
-                    <InsightCard
-                        type="tip"
-                        title="Optimize your flow"
-                        description="Consider batching smaller commits for cleaner git history."
-                        actionLabel="View best practices"
-                        onAction={() => { }}
-                    />
-                    <InsightCard
-                        type="warning"
-                        title="Review pending PRs"
-                        description="You have pull requests that need attention."
-                        actionLabel="View PRs"
-                        onAction={() => { }}
-                    />
-                </div>
+                <InsightsPanel className="premium-card overflow-hidden" />
             </motion.div>
 
             {/* Recent Activity */}

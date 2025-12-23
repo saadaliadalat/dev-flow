@@ -41,12 +41,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {/* Logo */}
                 <div className="p-6 border-b border-[var(--glass-border)]">
                     <Link href="/" className="flex items-center gap-3 group">
-                        <div className="p-2 rounded-xl bg-[var(--accent-blue)]/10 border border-[var(--accent-blue)]/20 group-hover:border-[var(--accent-blue)]/40 transition-all">
+                        <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20 group-hover:border-purple-500/40 transition-all">
                             <DevFlowLogo className="w-6 h-6" />
                         </div>
                         <div>
                             <span className="font-display font-bold text-lg text-white">DevFlow</span>
-                            <div className="flex items-center gap-1 text-[10px] text-[var(--accent-blue)]">
+                            <div className="flex items-center gap-1 text-[10px] text-purple-400">
                                 <Sparkles size={10} />
                                 <span>Pro</span>
                             </div>
@@ -70,7 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 {isActive && (
                                     <motion.div
                                         layoutId="activeIndicator"
-                                        className="w-1.5 h-1.5 rounded-full bg-[var(--accent-blue)]"
+                                        className="w-1.5 h-1.5 rounded-full bg-purple-500"
                                     />
                                 )}
                             </Link>
@@ -107,27 +107,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="p-4 border-t border-[var(--glass-border)]">
                         <Link
                             href="/dashboard/profile"
-                            className="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] transition-all group"
+                            className="flex items-center gap-3 p-3 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-purple-500/30 transition-all group"
                         >
                             <div className="relative">
                                 {session.user.image ? (
                                     <img
                                         src={session.user.image}
                                         alt={session.user.name || 'User'}
-                                        className="w-10 h-10 rounded-full border-2 border-[var(--glass-border)]"
+                                        className="w-10 h-10 rounded-full border-2 border-zinc-800"
                                     />
                                 ) : (
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent-blue)] to-[var(--accent-purple)] flex items-center justify-center text-sm font-bold">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-700 flex items-center justify-center text-sm font-bold border border-zinc-700">
                                         {session.user.name?.[0] || 'U'}
                                     </div>
                                 )}
-                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-[var(--accent-emerald)] rounded-full border-2 border-[var(--bg-deepest)]" />
+                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-purple-500 rounded-full border-2 border-zinc-950" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-white truncate">{session.user.name}</p>
-                                <p className="text-xs text-[var(--text-tertiary)] truncate">{session.user.email}</p>
+                                <p className="text-xs text-zinc-500 truncate">{session.user.email}</p>
                             </div>
-                            <ChevronRight size={16} className="text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors" />
+                            <ChevronRight size={16} className="text-zinc-600 group-hover:text-purple-400 transition-colors" />
                         </Link>
                     </div>
                 )}
@@ -142,7 +142,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <Link
                                 key={link.name}
                                 href={link.href}
-                                className={`flex flex-col items-center gap-1 p-2 min-w-[60px] ${isActive ? 'text-[var(--accent-blue)]' : 'text-[var(--text-tertiary)]'
+                                className={`flex flex-col items-center gap-1 p-2 min-w-[60px] ${isActive ? 'text-purple-400' : 'text-[var(--text-tertiary)]'
                                     }`}
                             >
                                 <link.icon size={20} strokeWidth={1.5} />

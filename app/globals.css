@@ -36,16 +36,16 @@
         /* Violet-600 */
         --accent-purple-glow: rgba(139, 92, 246, 0.5);
 
-        /* Mapped Accents (Forced Consistency) */
+        /* Map ALL legacy accents to Purple/Silver to enforce "No Rainbow" */
         --accent-blue: #8b5cf6;
         /* Map Blue -> Purple */
         --accent-blue-light: #a78bfa;
         /* Map Blue Light -> Purple Light */
-        --accent-emerald: #10B981;
-        /* Keep Emerald for success state only */
-        --accent-emerald-light: #34D399;
-        --accent-amber: #F59E0B;
-        /* Keep Amber for warning state only */
+        --accent-emerald: #d4d4d8;
+        /* Map Emerald -> Zinc-300 (Silver) */
+        --accent-emerald-light: #f4f4f5;
+        --accent-amber: #d4d4d8;
+        /* Map Amber -> Zinc-300 (Silver) */
 
         /* Glass System */
         --glass-bg: rgba(9, 9, 11, 0.8);
@@ -96,11 +96,24 @@
     }
 
     body {
-        @apply antialiased selection:bg-blue-500/30;
+        @apply antialiased selection:bg-purple-500/30;
         background: var(--bg-deep);
         color: var(--text-primary);
         font-family: var(--font-body);
         font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+        position: relative;
+    }
+
+    /* GLOBAL NOISE TEXTURE */
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+        opacity: 0.03;
+        mix-blend-mode: overlay;
     }
 
     /* Premium Scrollbar */
@@ -200,9 +213,9 @@
     }
 
     .sidebar-link.active {
-        background: rgba(59, 130, 246, 0.1);
-        color: var(--accent-blue);
-        border-left: 3px solid var(--accent-blue);
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--accent-purple);
+        border-left: 3px solid var(--accent-purple);
         margin-left: -3px;
     }
 }

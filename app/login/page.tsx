@@ -22,8 +22,8 @@ export default function LoginPage() {
 
             {/* Background Ambience */}
             <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse-glow" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-purple-500/10 rounded-full blur-[120px] animate-pulse-glow delay-1000" />
+                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-purple-500/05 rounded-full blur-[120px] animate-pulse-glow" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-purple-500/05 rounded-full blur-[120px] animate-pulse-glow delay-1000" />
                 <div className="absolute inset-0 bg-gradient-mesh opacity-20" />
             </div>
 
@@ -43,10 +43,10 @@ export default function LoginPage() {
                     </motion.div>
 
                     {/* Login Card */}
-                    <GlassCard className="text-center p-10" glow="cyan">
+                    <GlassCard className="text-center p-10" glow="purple">
                         {/* Logo */}
                         <motion.div variants={itemVariants} className="mb-8 flex justify-center">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-cyan-500/20">
+                            <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-purple-500/10">
                                 D
                             </div>
                         </motion.div>

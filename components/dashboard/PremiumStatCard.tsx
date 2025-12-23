@@ -150,7 +150,7 @@ export function PremiumStatCard({
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -2, boxShadow: 'var(--shadow-lg)' }}
             transition={{ duration: 0.2 }}
-            className="stat-card group cursor-default"
+            className="stat-card group cursor-default hover:border-purple-500/50 transition-colors"
             role="region"
             aria-label={`${label}: ${value}${suffix}`}
         >

@@ -2,6 +2,7 @@ import { Navbar } from '@/components/landing/Navbar'
 import { Hero } from '@/components/landing/Hero'
 import { StorytellingFeatures } from '@/components/landing/StorytellingFeatures'
 import { HowItWorks } from '@/components/landing/HowItWorks'
+import { TrustedBy } from '@/components/landing/TrustedBy'
 
 import { Pricing } from '@/components/landing/Pricing'
 import { FinalCTA } from '@/components/landing/FinalCTA'
@@ -20,6 +21,7 @@ export default function Home() {
             <div className="relative z-10">
                 <Navbar />
                 <Hero />
+                <TrustedBy />
                 <StorytellingFeatures />
                 <HowItWorks />
                 <Pricing />

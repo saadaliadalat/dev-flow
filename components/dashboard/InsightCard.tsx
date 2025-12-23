@@ -100,7 +100,7 @@ export function InsightCard({
                     <>
                         <button
                             onClick={() => setIsExpanded(!isExpanded)}
-                            className="mt-4 flex items-center gap-2 text-xs font-medium text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors focus-ring rounded"
+                            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-purple-500/30 text-xs font-medium text-purple-200 hover:bg-purple-500/10 hover:border-purple-500/50 transition-all group"
                             aria-expanded={isExpanded}
                         >
                             <motion.div
@@ -109,7 +109,7 @@ export function InsightCard({
                             >
                                 <ChevronDown size={14} />
                             </motion.div>
-                            {isExpanded ? 'Hide Details' : 'View Details'}
+                            {isExpanded ? 'Hide Analysis' : 'Analyze'}
                         </button>
 
                         <AnimatePresence>

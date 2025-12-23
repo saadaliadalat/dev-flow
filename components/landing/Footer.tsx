@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Github, Twitter, Linkedin, Heart, Zap } from 'lucide-react'
+import { Github, Twitter, Linkedin, Heart } from 'lucide-react'
 import { DevFlowLogo } from '@/components/ui/DevFlowLogo'
 
 const footerLinks = {
@@ -16,7 +16,6 @@ const footerLinks = {
     company: [
         { name: 'About', href: '/about' },
         { name: 'Blog', href: '/blog' },
-        { name: 'Careers', href: '/careers' },
         { name: 'Contact', href: '/contact' },
     ],
     legal: [
@@ -34,9 +33,9 @@ const socialLinks = [
 
 export function Footer() {
     return (
-        <footer className="relative border-t border-white/[0.06] bg-[#050508]">
-            {/* Gradient Top Border */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+        <footer className="relative border-t border-zinc-900 bg-black">
+            {/* Gradient Top Border - Purple instead of Indigo */}
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-900/50 to-transparent" />
 
             <div className="container mx-auto px-6 pt-16 pb-8">
                 {/* Main Grid */}
@@ -46,10 +45,10 @@ export function Footer() {
                     <div className="col-span-2 md:col-span-4">
                         <Link href="/" className="flex items-center gap-2.5 mb-5 group w-fit">
                             <div className="relative p-1.5 rounded-xl bg-white/5 border border-white/10 group-hover:border-white/20 group-hover:bg-white/10 transition-all duration-300">
-                                <DevFlowLogo className="w-5 h-5" />
-                                <div className="absolute inset-0 bg-white/10 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl" />
+                                <DevFlowLogo className="w-5 h-5 text-white" />
+                                <div className="absolute inset-0 bg-purple-500/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl" />
                             </div>
-                            <span className="font-display font-bold text-lg tracking-tight text-white group-hover:text-purple-100 transition-colors">
+                            <span className="font-display font-bold text-lg tracking-tight text-white group-hover:text-purple-200 transition-colors">
                                 DevFlow
                             </span>
                         </Link>
@@ -87,36 +86,36 @@ export function Footer() {
                         <FooterColumn title="Legal" links={footerLinks.legal} />
                     </div>
 
-                    {/* Status Section */}
+                    {/* Status Section - Converted to Neutral/Purple */}
                     <div className="col-span-2 md:col-span-2 flex flex-col items-start md:items-end">
                         <motion.div
-                            className="flex items-center gap-2.5 px-3.5 py-2 rounded-full bg-emerald-500/[0.08] border border-emerald-500/20"
-                            whileHover={{ scale: 1.02 }}
+                            className="flex items-center gap-2.5 px-3.5 py-2 rounded-full bg-zinc-900/50 border border-zinc-800"
+                            whileHover={{ scale: 1.02, borderColor: "rgba(161, 161, 170, 0.4)" }}
                         >
                             <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20" /> {/* Keep Emerald just for status dot as it's functional */}
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                             </span>
-                            <span className="text-emerald-400 text-xs font-medium tracking-wide">All Systems Operational</span>
+                            <span className="text-zinc-400 text-xs font-medium tracking-wide">Systems Normal</span>
                         </motion.div>
                     </div>
                 </div>
 
                 {/* Divider */}
-                <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent mb-8" />
+                <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent mb-8" />
 
                 {/* Bottom Row */}
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-zinc-600">
-                    <p>© {new Date().getFullYear()} DevFlow Inc. All rights reserved.</p>
+                    <p>© 2025 DevFlow Inc. All rights reserved.</p>
                     <div className="flex items-center gap-1.5">
                         <span>Crafted with</span>
                         <motion.div
                             animate={{ scale: [1, 1.2, 1] }}
                             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                         >
-                            <Heart size={12} className="text-red-500 fill-red-500" />
+                            <Heart size={12} className="text-purple-500 fill-purple-500" />
                         </motion.div>
-                        <span>for developers, by developers.</span>
+                        <span>in San Francisco.</span>
                     </div>
                 </div>
             </div>
@@ -136,7 +135,7 @@ function FooterColumn({ title, links }: { title: string; links: { name: string; 
                             className="text-sm text-zinc-500 hover:text-white transition-colors duration-200 relative group"
                         >
                             <span className="relative z-10">{link.name}</span>
-                            <span className="absolute left-0 bottom-0 w-0 h-px bg-gradient-to-r from-indigo-500 to-purple-500 group-hover:w-full transition-all duration-300" />
+                            <span className="absolute left-0 bottom-0 w-0 h-px bg-gradient-to-r from-purple-500 to-zinc-500 group-hover:w-full transition-all duration-300" />
                         </Link>
                     </li>
                 ))}

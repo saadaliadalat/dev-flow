@@ -13,7 +13,7 @@ export default function ChangelogPage() {
                 <motion.div variants={itemVariants} className="space-y-8">
                     <GlassCard className="p-8">
                         <div className="flex items-center gap-4 mb-4">
-                            <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-400 font-bold text-sm">v1.0.0</span>
+                            <span className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 font-bold text-sm">v1.0.0</span>
                             <span className="text-text-tertiary text-sm">December 18, 2024</span>
                         </div>
                         <h2 className="text-2xl font-bold mb-4">Initial Release</h2>

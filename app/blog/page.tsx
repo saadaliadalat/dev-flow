@@ -19,7 +19,7 @@ const posts = [
         author: "Sarah Team",
         date: "Dec 12, 2024",
         readTime: "5 min read",
-        image: "bg-gradient-to-br from-orange-500/20 to-red-500/20"
+        image: "bg-gradient-to-br from-zinc-800 to-zinc-900"
     },
     {
         id: 2,
@@ -29,7 +29,7 @@ const posts = [
         author: "Alex Code",
         date: "Dec 10, 2024",
         readTime: "8 min read",
-        image: "bg-gradient-to-br from-blue-500/20 to-cyan-500/20"
+        image: "bg-gradient-to-br from-purple-900/20 to-zinc-900"
     },
     {
         id: 3,
@@ -39,7 +39,7 @@ const posts = [
         author: "Tech Lead",
         date: "Dec 08, 2024",
         readTime: "6 min read",
-        image: "bg-gradient-to-br from-purple-500/20 to-pink-500/20"
+        image: "bg-gradient-to-br from-purple-500/20 to-purple-900/20"
     },
     {
         id: 4,
@@ -49,7 +49,7 @@ const posts = [
         author: "Dev Tips",
         date: "Dec 05, 2024",
         readTime: "4 min read",
-        image: "bg-gradient-to-br from-green-500/20 to-emerald-500/20"
+        image: "bg-gradient-to-br from-zinc-800 to-zinc-700"
     }
 ]
 
@@ -79,7 +79,7 @@ export default function BlogPage() {
                         <input
                             type="text"
                             placeholder="Search articles..."
-                            className="w-full bg-white/5 border border-white/10 rounded-full py-3 px-12 text-white placeholder:text-text-tertiary focus:outline-none focus:border-cyan-500/50 transition-colors"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-full py-3 px-12 text-white placeholder:text-zinc-600 focus:outline-none focus:border-purple-500 transition-colors"
                         />
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary" size={20} />
                     </motion.div>
@@ -92,7 +92,7 @@ export default function BlogPage() {
                     transition={{ delay: 0.3 }}
                     className="mb-16"
                 >
-                    <GlassCard className="p-0 overflow-hidden grid md:grid-cols-2 group cursor-pointer" glow="cyan">
+                    <GlassCard className="p-0 overflow-hidden grid md:grid-cols-2 group cursor-pointer" glow="purple">
                         {/* Image Placeholder */}
                         <div className={`h-64 md:h-full min-h-[300px] ${posts[0].image} relative overflow-hidden`}>
                             <div className="absolute inset-0 bg-transparent group-hover:scale-105 transition-transform duration-700" />
@@ -110,7 +110,7 @@ export default function BlogPage() {
                                 <span>•</span>
                                 <span>{posts[0].readTime}</span>
                             </div>
-                            <h2 className="text-3xl font-bold font-display mb-4 group-hover:text-cyan-400 transition-colors">
+                            <h2 className="text-3xl font-bold font-display mb-4 group-hover:text-purple-400 transition-colors">
                                 {posts[0].title}
                             </h2>
                             <p className="text-text-secondary mb-6 leading-relaxed">
@@ -149,7 +149,7 @@ export default function BlogPage() {
                                         <span>•</span>
                                         <span>{post.readTime}</span>
                                     </div>
-                                    <h3 className="text-xl font-bold font-display mb-3 group-hover:text-cyan-400 transition-colors">
+                                    <h3 className="text-xl font-bold font-display mb-3 group-hover:text-purple-400 transition-colors">
                                         {post.title}
                                     </h3>
                                     <p className="text-sm text-text-secondary mb-6 flex-1 line-clamp-3">
@@ -157,7 +157,7 @@ export default function BlogPage() {
                                     </p>
                                     <div className="flex items-center justify-between mt-auto">
                                         <span className="text-xs font-medium text-text-muted">{post.author}</span>
-                                        <span className="p-2 rounded-full bg-white/5 group-hover:bg-cyan-500 group-hover:text-white transition-colors">
+                                        <span className="p-2 rounded-full bg-white/5 group-hover:bg-purple-500 group-hover:text-white transition-colors">
                                             <ArrowRight size={16} />
                                         </span>
                                     </div>
