@@ -36,8 +36,8 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
 
     const { success, error, warning } = useToastActions()
 
-    // Cooldown: 1 hour between generations
-    const GENERATION_COOLDOWN_MS = 60 * 60 * 1000 // 1 hour
+    // Cooldown: 5 minutes between generations
+    const GENERATION_COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
 
     const canGenerateInsights = () => {
         const lastGenerated = localStorage.getItem('devflow_last_insight_gen')
@@ -107,7 +107,7 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
                 success('Analysis Complete', 'New optimization insights generated.')
             } else {
                 if (res.status === 429) {
-                    error('Plan Limit Reached', 'You have used your free AI generations. Upgrade to Pro.')
+                    error('Rate Limit', 'AI analysis is cooling down. Please wait a few minutes.')
                 } else {
                     error('Generation Failed', data.error || 'Something went wrong.')
                 }

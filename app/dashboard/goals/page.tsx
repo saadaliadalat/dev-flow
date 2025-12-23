@@ -1,41 +1,160 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Target, Calendar, CheckCircle2, Clock, MoreHorizontal, LayoutGrid, List } from 'lucide-react'
+import { Plus, Target, Calendar, Clock, MoreHorizontal, LayoutGrid, List, Trash2, Edit2, CheckCircle, X, Loader2 } from 'lucide-react'
 
-// Mock Data
-const initialGoals = [
-    {
-        id: 1,
-        title: 'Master TypeScript Generics',
-        deadline: '2025-01-15',
-        progress: 65,
-        status: 'in-progress',
-        priority: 'high'
-    },
-    {
-        id: 2,
-        title: 'Refactor Auth System',
-        deadline: '2025-02-01',
-        progress: 30,
-        status: 'todo',
-        priority: 'medium'
-    },
-    {
-        id: 3,
-        title: 'Launch MVP v1.0',
-        deadline: '2024-12-31',
-        progress: 90,
-        status: 'in-progress',
-        priority: 'critical'
-    }
-]
+interface Goal {
+    id: string
+    title: string
+    deadline: string | null
+    progress: number
+    status: 'todo' | 'in-progress' | 'completed'
+    priority: 'low' | 'medium' | 'high' | 'critical'
+    created_at: string
+}
 
 export default function GoalsPage() {
-    const [goals, setGoals] = useState(initialGoals)
+    const [goals, setGoals] = useState<Goal[]>([])
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+    const [isSaving, setIsSaving] = useState(false)
+    const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
+
+    // Form state
+    const [formTitle, setFormTitle] = useState('')
+    const [formDeadline, setFormDeadline] = useState('')
+    const [formPriority, setFormPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium')
+
+    // Fetch goals on mount
+    useEffect(() => {
+        fetchGoals()
+    }, [])
+
+    async function fetchGoals() {
+        try {
+            const res = await fetch('/api/goals')
+            const data = await res.json()
+            if (res.ok) {
+                setGoals(data.goals || [])
+            }
+        } catch (error) {
+            console.error('Error fetching goals:', error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    async function createGoal() {
+        if (!formTitle.trim()) return
+
+        setIsSaving(true)
+        try {
+            const res = await fetch('/api/goals', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: formTitle,
+                    deadline: formDeadline || null,
+                    priority: formPriority
+                })
+            })
+
+            const data = await res.json()
+            if (res.ok && data.goal) {
+                setGoals([data.goal, ...goals])
+                closeModal()
+            } else {
+                console.error('Failed to create goal:', data.error)
+            }
+        } catch (error) {
+            console.error('Error creating goal:', error)
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    async function updateGoal(goalId: string, updates: Partial<Goal>) {
+        try {
+            const res = await fetch('/api/goals', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ goalId, ...updates })
+            })
+
+            if (res.ok) {
+                setGoals(goals.map(g => g.id === goalId ? { ...g, ...updates } : g))
+            }
+        } catch (error) {
+            console.error('Error updating goal:', error)
+        }
+    }
+
+    async function deleteGoal(goalId: string) {
+        try {
+            const res = await fetch(`/api/goals?id=${goalId}`, { method: 'DELETE' })
+            if (res.ok) {
+                setGoals(goals.filter(g => g.id !== goalId))
+            }
+        } catch (error) {
+            console.error('Error deleting goal:', error)
+        }
+    }
+
+    function openModal(goal?: Goal) {
+        if (goal) {
+            setEditingGoal(goal)
+            setFormTitle(goal.title)
+            setFormDeadline(goal.deadline || '')
+            setFormPriority(goal.priority)
+        } else {
+            setEditingGoal(null)
+            setFormTitle('')
+            setFormDeadline('')
+            setFormPriority('medium')
+        }
+        setIsModalOpen(true)
+    }
+
+    function closeModal() {
+        setIsModalOpen(false)
+        setEditingGoal(null)
+        setFormTitle('')
+        setFormDeadline('')
+        setFormPriority('medium')
+    }
+
+    async function handleSubmit() {
+        if (editingGoal) {
+            await updateGoal(editingGoal.id, {
+                title: formTitle,
+                deadline: formDeadline || null,
+                priority: formPriority
+            })
+            closeModal()
+        } else {
+            await createGoal()
+        }
+    }
+
+    function cycleStatus(goal: Goal) {
+        const statuses: Goal['status'][] = ['todo', 'in-progress', 'completed']
+        const currentIndex = statuses.indexOf(goal.status)
+        const nextStatus = statuses[(currentIndex + 1) % statuses.length]
+        updateGoal(goal.id, {
+            status: nextStatus,
+            progress: nextStatus === 'completed' ? 100 : nextStatus === 'in-progress' ? 50 : 0
+        })
+    }
+
+    if (isLoading) {
+        return (
+            <div className="min-h-[400px] flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-6">
@@ -61,7 +180,7 @@ export default function GoalsPage() {
                         </button>
                     </div>
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => openModal()}
                         className="btn-primary flex items-center gap-2"
                     >
                         <Plus size={18} />
@@ -80,7 +199,7 @@ export default function GoalsPage() {
                     <p className="text-zinc-500 text-center max-w-sm mb-6">
                         Initialize your first sprint by setting a clear, actionable goal.
                     </p>
-                    <button onClick={() => setIsModalOpen(true)} className="btn-primary">
+                    <button onClick={() => openModal()} className="btn-primary">
                         Initialize Goal
                     </button>
                 </div>
@@ -92,18 +211,30 @@ export default function GoalsPage() {
                             key={goal.id}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="premium-card p-6group relative overflow-hidden group hover:border-purple-500/30 transition-all"
+                            className="premium-card p-6 group relative overflow-hidden hover:border-purple-500/30 transition-all"
                         >
                             <div className="flex justify-between items-start mb-4">
                                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${goal.priority === 'critical' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                        goal.priority === 'high' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                    goal.priority === 'high' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                        goal.priority === 'low' ? 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' :
                                             'bg-blue-500/10 text-blue-400 border-blue-500/20'
                                     }`}>
                                     {goal.priority}
                                 </span>
-                                <button className="text-zinc-600 hover:text-white transition-colors">
-                                    <MoreHorizontal size={16} />
-                                </button>
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onClick={() => openModal(goal)}
+                                        className="p-1.5 text-zinc-600 hover:text-white transition-colors"
+                                    >
+                                        <Edit2 size={14} />
+                                    </button>
+                                    <button
+                                        onClick={() => deleteGoal(goal.id)}
+                                        className="p-1.5 text-zinc-600 hover:text-red-400 transition-colors"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
                             </div>
 
                             <h3 className="text-lg font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">
@@ -111,14 +242,23 @@ export default function GoalsPage() {
                             </h3>
 
                             <div className="flex items-center gap-4 text-xs text-zinc-500 mb-6">
-                                <div className="flex items-center gap-1.5">
-                                    <Calendar size={14} />
-                                    <span>{goal.deadline}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <Clock size={14} />
+                                {goal.deadline && (
+                                    <div className="flex items-center gap-1.5">
+                                        <Calendar size={14} />
+                                        <span>{new Date(goal.deadline).toLocaleDateString()}</span>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={() => cycleStatus(goal)}
+                                    className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer"
+                                >
+                                    {goal.status === 'completed' ? (
+                                        <CheckCircle size={14} className="text-emerald-400" />
+                                    ) : (
+                                        <Clock size={14} />
+                                    )}
                                     <span className="capitalize">{goal.status}</span>
-                                </div>
+                                </button>
                             </div>
 
                             <div className="space-y-2">
@@ -127,9 +267,13 @@ export default function GoalsPage() {
                                     <span className="text-white font-mono">{goal.progress}%</span>
                                 </div>
                                 <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full transition-all duration-1000"
-                                        style={{ width: `${goal.progress}%` }}
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${goal.progress}%` }}
+                                        className={`h-full rounded-full transition-all duration-500 ${goal.status === 'completed'
+                                                ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
+                                                : 'bg-gradient-to-r from-purple-500 to-purple-400'
+                                            }`}
                                     />
                                 </div>
                             </div>
@@ -138,7 +282,7 @@ export default function GoalsPage() {
                 </div>
             )}
 
-            {/* Create Goal Modal (Mock) */}
+            {/* Create/Edit Goal Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                     <motion.div
@@ -146,30 +290,65 @@ export default function GoalsPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl"
                     >
-                        <h2 className="text-xl font-bold text-white mb-6">Create New Goal</h2>
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-bold text-white">
+                                {editingGoal ? 'Edit Goal' : 'Create New Goal'}
+                            </h2>
+                            <button onClick={closeModal} className="p-2 hover:bg-zinc-800 rounded-lg transition-colors">
+                                <X size={18} className="text-zinc-400" />
+                            </button>
+                        </div>
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-zinc-400">Title</label>
-                                <input type="text" placeholder="e.g., Refactor API Layer" className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:border-purple-500 outline-none" />
+                                <input
+                                    type="text"
+                                    value={formTitle}
+                                    onChange={(e) => setFormTitle(e.target.value)}
+                                    placeholder="e.g., Refactor API Layer"
+                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:border-purple-500 outline-none"
+                                />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-xs font-medium text-zinc-400">Deadline</label>
-                                    <input type="date" className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white outline-none" />
+                                    <input
+                                        type="date"
+                                        value={formDeadline}
+                                        onChange={(e) => setFormDeadline(e.target.value)}
+                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white outline-none"
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-medium text-zinc-400">Priority</label>
-                                    <select className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white outline-none">
-                                        <option>Medium</option>
-                                        <option>High</option>
-                                        <option>Critical</option>
+                                    <select
+                                        value={formPriority}
+                                        onChange={(e) => setFormPriority(e.target.value as any)}
+                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white outline-none"
+                                    >
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="critical">Critical</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
                         <div className="flex justify-end gap-3 mt-8">
-                            <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-zinc-400 hover:text-white text-sm font-medium">Cancel</button>
-                            <button onClick={() => setIsModalOpen(false)} className="btn-primary">Create Goal</button>
+                            <button
+                                onClick={closeModal}
+                                className="px-4 py-2 text-zinc-400 hover:text-white text-sm font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={isSaving || !formTitle.trim()}
+                                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                {isSaving && <Loader2 size={16} className="animate-spin" />}
+                                {editingGoal ? 'Save Changes' : 'Create Goal'}
+                            </button>
                         </div>
                     </motion.div>
                 </div>
