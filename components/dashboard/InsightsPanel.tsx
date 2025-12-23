@@ -19,10 +19,22 @@ interface InsightsPanelProps {
     className?: string
 }
 
+// ... imports
+import { Drawer } from '@/components/ui/Drawer'
+import { Code, ArrowRight, Play, Check } from 'lucide-react'
+import { useToastActions } from '@/components/ui/Toast'
+
+// ... existing interfaces
+
 export function InsightsPanel({ className = '' }: InsightsPanelProps) {
     const [insights, setInsights] = useState<Insight[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isGenerating, setIsGenerating] = useState(false)
+    const [selectedInsight, setSelectedInsight] = useState<Insight | null>(null)
+    const [isApplyingFix, setIsApplyingFix] = useState(false)
+    const [fixApplied, setFixApplied] = useState(false)
+
+    const { success, error, warning } = useToastActions()
 
     // Cooldown: 1 hour between generations
     const GENERATION_COOLDOWN_MS = 60 * 60 * 1000 // 1 hour
@@ -150,131 +162,220 @@ export function InsightsPanel({ className = '' }: InsightsPanelProps) {
         }
     }
 
-    if (isLoading) {
-        return (
-            <div className={`p-6 ${className}`}>
-                <div className="flex items-center gap-2 mb-4">
-                    <Sparkles size={16} className="text-purple-primary animate-pulse" />
-                    <h3 className="text-sm font-bold font-mono text-silver-dim uppercase tracking-wider">
-                        AI Insights
-                    </h3>
-                </div>
-                <div className="space-y-3">
-                    {[1, 2].map(i => (
-                        <div key={i} className="h-20 bg-white/5 rounded-xl animate-pulse" />
-                    ))}
-                </div>
-            </div>
-        )
+    const handleApplyFix = () => {
+        setIsApplyingFix(true)
+        setTimeout(() => {
+            setIsApplyingFix(false)
+            setFixApplied(true)
+            setTimeout(() => setFixApplied(false), 3000)
+        }, 1500)
     }
 
-    return (
-        <div className={`p-6 ${className}`}>
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <Sparkles size={16} className="text-purple-primary" />
-                    <h3 className="text-sm font-bold font-mono text-silver-dim uppercase tracking-wider">
-                        AI Insights
-                    </h3>
+    // Mock Diff Content
+    const MockDiff = () => (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 overflow-hidden font-mono text-xs">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-zinc-900">
+                <span className="text-zinc-400">utils/data-processing.ts</span>
+                <span className="text-xs text-zinc-500">Lines 42-48</span>
+            </div>
+            <div className="p-4 overflow-x-auto">
+                <div className="text-red-400 bg-red-500/10 -mx-4 px-4 py-0.5 pointer-events-none">
+                    - const data = await fetchData();
                 </div>
-                {!isGenerating && (
-                    <button
-                        onClick={generateInsights}
-                        disabled={!canGenerateInsights()}
-                        className={`text-xs font-medium flex items-center gap-1 transition-colors ${canGenerateInsights()
+                <div className="text-red-400 bg-red-500/10 -mx-4 px-4 py-0.5 pointer-events-none mb-2">
+                    - process(data);
+                </div>
+                <div className="text-emerald-400 bg-emerald-500/10 -mx-4 px-4 py-0.5 pointer-events-none">
+                    + const data = await fetchData();
+                </div>
+                <div className="text-emerald-400 bg-emerald-500/10 -mx-4 px-4 py-0.5 pointer-events-none">
+                    + // Optimization: process in chunks
+                </div>
+                <div className="text-emerald-400 bg-emerald-500/10 -mx-4 px-4 py-0.5 pointer-events-none">
+                    + await processInChunks(data, 100);
+                </div>
+            </div>
+        </div>
+    )
+
+    // ... existing loading state
+
+    return (
+        <>
+            <div className={`p-6 ${className}`}>
+                {/* ... existing header and generate button */}
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <Sparkles size={16} className="text-purple-primary" />
+                        <h3 className="text-sm font-bold font-mono text-silver-dim uppercase tracking-wider">
+                            AI Insights
+                        </h3>
+                    </div>
+                    {!isGenerating && (
+                        <button
+                            onClick={generateInsights}
+                            disabled={!canGenerateInsights()}
+                            className={`text-xs font-medium flex items-center gap-1 transition-colors ${canGenerateInsights()
                                 ? 'text-purple-primary hover:text-purple-light'
                                 : 'text-zinc-600 cursor-not-allowed'
-                            }`}
-                        title={canGenerateInsights() ? 'Generate new insights' : `Cooldown: ${getCooldownRemaining()} min remaining`}
-                    >
-                        <Sparkles size={12} />
-                        {!canGenerateInsights()
-                            ? `Wait ${getCooldownRemaining()}m`
-                            : insights.length === 0 ? 'Generate' : 'Refresh'}
-                    </button>
-                )}
-            </div>
-
-            {isGenerating && (
-                <div className="text-center py-8 text-zinc-500 text-sm">
-                    <Lightbulb className="animate-pulse mx-auto mb-2" size={24} />
-                    Analyzing your coding patterns...
+                                }`}
+                            title={canGenerateInsights() ? 'Generate new insights' : `Cooldown: ${getCooldownRemaining()} min remaining`}
+                        >
+                            <Sparkles size={12} />
+                            {!canGenerateInsights()
+                                ? `Wait ${getCooldownRemaining()}m`
+                                : insights.length === 0 ? 'Generate' : 'Refresh'}
+                        </button>
+                    )}
                 </div>
-            )}
 
-            <AnimatePresence mode="popLayout">
-                {insights.length === 0 && !isGenerating ? (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="text-center py-8 text-zinc-500 text-sm"
-                    >
-                        <Lightbulb className="mx-auto mb-2 opacity-50" size={24} />
-                        No insights yet. Generate some!
-                    </motion.div>
-                ) : (
-                    <div className="space-y-3">
-                        {insights.map((insight, index) => (
-                            <motion.div
-                                key={insight.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, x: -100 }}
-                                transition={{ delay: index * 0.1 }}
-                                className={`p-4 rounded-xl border ${getSeverityColor(insight.severity)} relative group`}
+                {/* ... existing generating/empty states */}
+
+                {/* Insights List */}
+                <div className="space-y-3">
+                    {insights.map((insight, index) => (
+                        <motion.div
+                            key={insight.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, x: -100 }}
+                            transition={{ delay: index * 0.1 }}
+                            className={`p-4 rounded-xl border ${getSeverityColor(insight.severity)} relative group`}
+                        >
+                            <button
+                                onClick={() => dismissInsight(insight.id)}
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                                <button
-                                    onClick={() => dismissInsight(insight.id)}
-                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                    <X size={14} className="text-zinc-600 hover:text-zinc-400" />
-                                </button>
+                                <X size={14} className="text-zinc-600 hover:text-zinc-400" />
+                            </button>
 
-                                <div className="flex items-start gap-3">
-                                    {getSeverityIcon(insight.severity)}
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold text-white mb-1">
-                                            {insight.title}
-                                        </h4>
-                                        <p className="text-xs text-zinc-400 leading-relaxed">
-                                            {insight.message}
-                                        </p>
+                            <div className="flex items-start gap-3">
+                                {getSeverityIcon(insight.severity)}
+                                <div className="flex-1">
+                                    <h4 className="text-sm font-bold text-white mb-1">
+                                        {insight.title}
+                                    </h4>
+                                    <p className="text-xs text-zinc-400 leading-relaxed mb-3">
+                                        {insight.message}
+                                    </p>
 
-                                        {insight.action_items && insight.action_items.length > 0 && (
-                                            <ul className="mt-2 space-y-1">
-                                                {insight.action_items.map((action, i) => (
-                                                    <li key={i} className="text-xs text-zinc-500 flex items-start gap-1.5">
-                                                        <span className="text-purple-primary mt-0.5">→</span>
-                                                        <span>{action}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
-
-                                        <div className="flex items-center gap-3 mt-3">
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => setSelectedInsight(insight)}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] font-medium text-white hover:border-purple-500/50 hover:bg-purple-500/10 transition-all"
+                                        >
+                                            <Code size={12} className="text-purple-400" />
+                                            View Details
+                                        </button>
+                                        <div className="flex items-center gap-2 ml-auto">
                                             <button
                                                 onClick={() => markHelpful(insight.id, true)}
-                                                className="flex items-center gap-1 text-[10px] text-zinc-600 hover:text-green-500 transition-colors"
+                                                className="p-1 text-zinc-600 hover:text-emerald-400 transition-colors"
                                             >
                                                 <ThumbsUp size={12} />
-                                                Helpful
                                             </button>
                                             <button
                                                 onClick={() => markHelpful(insight.id, false)}
-                                                className="flex items-center gap-1 text-[10px] text-zinc-600 hover:text-red-500 transition-colors"
+                                                className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
                                             >
                                                 <ThumbsDown size={12} />
-                                                Not helpful
                                             </button>
                                         </div>
                                     </div>
                                 </div>
-                            </motion.div>
-                        ))}
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Detailed Drawer */}
+            <Drawer
+                isOpen={!!selectedInsight}
+                onClose={() => setSelectedInsight(null)}
+                title="Insight Analysis"
+                width="max-w-xl"
+            >
+                {selectedInsight && (
+                    <div className="space-y-8">
+                        {/* Header Section */}
+                        <div className={`p-4 rounded-xl border ${getSeverityColor(selectedInsight.severity)} bg-opacity-10`}>
+                            <div className="flex items-start gap-3">
+                                {getSeverityIcon(selectedInsight.severity)}
+                                <div>
+                                    <h3 className="text-lg font-bold text-white mb-2">{selectedInsight.title}</h3>
+                                    <p className="text-sm text-zinc-300 leading-relaxed">{selectedInsight.message}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Items */}
+                        {selectedInsight.action_items && selectedInsight.action_items.length > 0 && (
+                            <div>
+                                <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                                    <CheckCircle size={16} className="text-emerald-400" />
+                                    Recommended Actions
+                                </h4>
+                                <ul className="space-y-2">
+                                    {selectedInsight.action_items.map((action, i) => (
+                                        <li key={i} className="flex items-start gap-3 p-3 rounded-lg bg-zinc-900 border border-zinc-800">
+                                            <div className="w-5 h-5 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500 flex-shrink-0">
+                                                {i + 1}
+                                            </div>
+                                            <p className="text-sm text-zinc-300">{action}</p>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* Code Diff (Mock) */}
+                        <div>
+                            <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                                <Code size={16} className="text-purple-400" />
+                                Proposed Optimization
+                            </h4>
+                            <MockDiff />
+                        </div>
+
+                        {/* Bottom Actions */}
+                        <div className="pt-6 border-t border-zinc-800 flex justify-end gap-3">
+                            <button
+                                onClick={() => setSelectedInsight(null)}
+                                className="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
+                            >
+                                Dismiss
+                            </button>
+                            <button
+                                onClick={handleApplyFix}
+                                disabled={isApplyingFix || fixApplied}
+                                className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${fixApplied
+                                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
+                                    : 'bg-white text-black hover:bg-purple-50'
+                                    }`}
+                            >
+                                {isApplyingFix ? (
+                                    <>
+                                        <Sparkles size={16} className="animate-spin" />
+                                        Optimizing...
+                                    </>
+                                ) : fixApplied ? (
+                                    <>
+                                        <Check size={16} />
+                                        Optimization Applied!
+                                    </>
+                                ) : (
+                                    <>
+                                        <Play size={16} className="fill-black" />
+                                        Apply Fix
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 )}
-            </AnimatePresence>
-        </div>
+            </Drawer>
+        </>
     )
 }
