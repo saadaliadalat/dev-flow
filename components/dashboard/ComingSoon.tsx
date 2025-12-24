@@ -17,7 +17,7 @@ export function ComingSoon({ featureName, description }: ComingSoonProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
         >
-            <GlassCard className="flex flex-col items-center justify-center p-12 text-center min-h-[400px]" border="zinc">
+            <GlassCard className="flex flex-col items-center justify-center p-12 text-center min-h-[400px]">
                 <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/5">
                     <Lock className="text-zinc-500" size={32} />
                 </div>
