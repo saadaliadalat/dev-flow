@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { User, Key, CreditCard, Bell, Copy, Check, Shield, Zap, Sparkles } from 'lucide-react'
+import { useToastActions } from '@/components/ui/Toast'
 
 // Tabs configuration
 const tabs = [
@@ -15,10 +16,12 @@ const tabs = [
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('profile')
     const [copied, setCopied] = useState(false)
+    const { success } = useToastActions()
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text)
         setCopied(true)
+        success('Key Copied', 'API Secret copied to clipboard')
         setTimeout(() => setCopied(false), 2000)
     }
 
@@ -86,7 +89,12 @@ export default function SettingsPage() {
                                             </div>
                                         </div>
                                         <div className="pt-4 flex justify-end">
-                                            <button className="btn-primary">Save Changes</button>
+                                            <button
+                                                onClick={() => success('Profile Updated', 'Your personal information has been saved.')}
+                                                className="btn-primary"
+                                            >
+                                                Save Changes
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

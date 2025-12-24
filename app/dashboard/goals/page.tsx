@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Target, Calendar, Clock, LayoutGrid, List, Trash2, Edit2, CheckCircle, X, Loader2, AlertCircle } from 'lucide-react'
+import { DatePicker } from '@/components/ui/DatePicker'
+import { useToastActions } from '@/components/ui/Toast'
 
 interface Goal {
     id: string
@@ -22,10 +24,11 @@ export default function GoalsPage() {
     const [isSaving, setIsSaving] = useState(false)
     const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
     const [error, setError] = useState<string | null>(null)
+    const { success, error: toastError } = useToastActions()
 
     // Form state
     const [formTitle, setFormTitle] = useState('')
-    const [formDeadline, setFormDeadline] = useState('')
+    const [formDeadline, setFormDeadline] = useState<Date | undefined>(undefined)
     const [formPriority, setFormPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium')
 
     // Fetch goals on mount
@@ -61,7 +64,7 @@ export default function GoalsPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: formTitle,
-                    deadline: formDeadline || null,
+                    deadline: formDeadline ? formDeadline.toISOString() : null,
                     priority: formPriority
                 })
             })
@@ -71,8 +74,10 @@ export default function GoalsPage() {
                 setGoals([data.goal, ...goals])
                 closeModal()
                 setError(null)
+                success('Directive Initialized', `Goal "${data.goal.title}" tracked successfully.`)
             } else {
                 setError(data.error || 'Failed to create goal')
+                toastError('Creation Failed', data.error)
             }
         } catch (err) {
             console.error('Error creating goal:', err)
@@ -113,12 +118,12 @@ export default function GoalsPage() {
         if (goal) {
             setEditingGoal(goal)
             setFormTitle(goal.title)
-            setFormDeadline(goal.deadline || '')
+            setFormDeadline(goal.deadline ? new Date(goal.deadline) : undefined)
             setFormPriority(goal.priority)
         } else {
             setEditingGoal(null)
             setFormTitle('')
-            setFormDeadline('')
+            setFormDeadline(undefined)
             setFormPriority('medium')
         }
         setIsModalOpen(true)
@@ -128,7 +133,7 @@ export default function GoalsPage() {
         setIsModalOpen(false)
         setEditingGoal(null)
         setFormTitle('')
-        setFormDeadline('')
+        setFormDeadline(undefined)
         setFormPriority('medium')
     }
 
@@ -136,9 +141,10 @@ export default function GoalsPage() {
         if (editingGoal) {
             await updateGoal(editingGoal.id, {
                 title: formTitle,
-                deadline: formDeadline || null,
+                deadline: formDeadline ? formDeadline.toISOString() : null,
                 priority: formPriority
             })
+            success('Directive Updated', 'Goal parameters adjusted.')
             closeModal()
         } else {
             await createGoal()
@@ -289,8 +295,8 @@ export default function GoalsPage() {
                                         initial={{ width: 0 }}
                                         animate={{ width: `${goal.progress}%` }}
                                         className={`h-full rounded-full transition-all duration-500 ${goal.status === 'completed'
-                                                ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
-                                                : 'bg-gradient-to-r from-purple-500 to-purple-400'
+                                            ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
+                                            : 'bg-gradient-to-r from-purple-500 to-purple-400'
                                             }`}
                                     />
                                 </div>
@@ -331,12 +337,7 @@ export default function GoalsPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-xs font-medium text-zinc-400">Deadline</label>
-                                    <input
-                                        type="date"
-                                        value={formDeadline}
-                                        onChange={(e) => setFormDeadline(e.target.value)}
-                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white outline-none"
-                                    />
+                                    <DatePicker date={formDeadline} setDate={setFormDeadline} />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-medium text-zinc-400">Priority</label>

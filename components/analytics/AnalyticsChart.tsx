@@ -4,6 +4,7 @@ import React from 'react'
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
+import { CustomChartTooltip } from '@/components/ui/CustomChartTooltip'
 
 interface AnalyticsChartProps {
     data: any[]
@@ -57,14 +58,7 @@ export function AnalyticsChart({
                         hide={!showAxis}
                     />
                     <Tooltip
-                        contentStyle={{
-                            backgroundColor: 'var(--bg-card)',
-                            border: '1px solid var(--glass-border)',
-                            borderRadius: 'var(--radius-md)',
-                            boxShadow: 'var(--shadow-lg)',
-                        }}
-                        labelStyle={{ color: 'var(--text-secondary)', marginBottom: 4 }}
-                        itemStyle={{ color: 'white' }}
+                        content={<CustomChartTooltip />}
                         cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: '4 4' }}
                     />
                     <Area
