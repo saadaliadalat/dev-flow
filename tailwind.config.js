@@ -92,9 +92,8 @@ module.exports = {
                 'planet': 'var(--planet-gradient)',
             },
             fontFamily: {
-                display: ['var(--font-display)', 'system-ui', 'sans-serif'],
-                body: ['var(--font-body)', 'system-ui', 'sans-serif'],
-                mono: ['var(--font-mono)', 'monospace'],
+                sans: ['var(--font-geist-sans)'],
+                mono: ['var(--font-geist-mono)'],
             },
             animation: {
                 'fade-in': 'fadeIn 0.5s ease-out forwards',

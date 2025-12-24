@@ -6,15 +6,17 @@ import { User, Key, CreditCard, Bell, Copy, Check, Shield, Zap, Sparkles } from 
 import { useToastActions } from '@/components/ui/Toast'
 
 // Tabs configuration
+// Tabs configuration
 const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
-    { id: 'api-keys', label: 'API Keys', icon: Key },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
+    { id: 'tokens', label: 'Access Tokens', icon: Key },
+    { id: 'usage', label: 'Usage', icon: Sparkles },
+    { id: 'preferences', label: 'Preferences', icon: Zap },
     { id: 'notifications', label: 'Notifications', icon: Bell },
 ]
 
 export default function SettingsPage() {
-    const [activeTab, setActiveTab] = useState('profile')
+    const [activeTab, setActiveTab] = useState<string>('profile')
     const [copied, setCopied] = useState(false)
     const { success } = useToastActions()
 
@@ -97,21 +99,38 @@ export default function SettingsPage() {
                                             </button>
                                         </div>
                                     </div>
+
+                                    {/* Danger Zone */}
+                                    <div className="premium-card p-6 border-red-500/20 bg-red-500/5">
+                                        <h2 className="text-lg font-semibold text-red-500 mb-4">Danger Zone</h2>
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-white font-medium">Delete Personal Data</p>
+                                                <p className="text-sm text-red-400/60 mt-1">Permanently remove all your data in accordance with GDPR.</p>
+                                            </div>
+                                            <button
+                                                className="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/50 hover:bg-red-500/20 transition-colors text-sm font-medium"
+                                                onClick={() => success('Request Sent', 'Data deletion request has been submitted.')}
+                                            >
+                                                Delete Data
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
-                            {/* API Keys Tab */}
-                            {activeTab === 'api-keys' && (
+                            {/* Access Tokens Tab */}
+                            {activeTab === 'tokens' && (
                                 <div className="space-y-6 max-w-3xl">
                                     <div className="premium-card p-6">
                                         <div className="flex items-center justify-between mb-6">
                                             <div>
-                                                <h2 className="text-lg font-semibold text-white">API Keys</h2>
-                                                <p className="text-sm text-zinc-400">Manage your secret keys for external access.</p>
+                                                <h2 className="text-lg font-semibold text-white">Personal Access Tokens</h2>
+                                                <p className="text-sm text-zinc-400">Manage tokens for CLI access and external integrations.</p>
                                             </div>
                                             <button className="btn-primary">
                                                 <Shield size={16} className="mr-2" />
-                                                Generate Secret Key
+                                                Generate Token
                                             </button>
                                         </div>
 
@@ -121,16 +140,16 @@ export default function SettingsPage() {
                                                     <Key size={20} className="text-purple-400" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-medium text-white">Default S/K</p>
-                                                    <p className="text-xs text-zinc-500 font-mono mt-0.5">sk_live_...8f92m</p>
+                                                    <p className="text-sm font-medium text-white">CLI Access Token</p>
+                                                    <p className="text-xs text-zinc-500 font-mono mt-0.5">df_live_...8f92m</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20">Active</span>
                                                 <button
-                                                    onClick={() => copyToClipboard('sk_live_51M3T...x8f92m')}
+                                                    onClick={() => copyToClipboard('df_live_51M3T...x8f92m')}
                                                     className="p-2 text-zinc-400 hover:text-white transition-colors"
-                                                    title="Copy Key"
+                                                    title="Copy Token"
                                                 >
                                                     {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                                                 </button>
@@ -140,50 +159,79 @@ export default function SettingsPage() {
                                 </div>
                             )}
 
-                            {/* Billing Tab */}
-                            {activeTab === 'billing' && (
+                            {/* Usage Tab (Resource Consumption) */}
+                            {activeTab === 'usage' && (
                                 <div className="space-y-6 max-w-3xl">
-                                    <div className="premium-card p-6 border-purple-500/30 relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/10 blur-[50px] rounded-full pointer-events-none" />
-
+                                    <div className="premium-card p-6 border-zinc-800 relative overflow-hidden bg-zinc-900/50">
                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-zinc-800 text-zinc-400 border border-zinc-700">Free Plan</span>
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-purple-500/10 text-purple-400 border border-purple-500/20">Public Beta</span>
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                                 </div>
-                                                <h2 className="text-2xl font-bold text-white mb-1">Passanger Tier</h2>
-                                                <p className="text-sm text-zinc-400">Basic access to DevFlow features.</p>
+                                                <h2 className="text-2xl font-bold text-white mb-1">Unlimited Access</h2>
+                                                <p className="text-sm text-zinc-400">You are currently on the Public Beta plan.</p>
                                             </div>
-                                            <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-black font-semibold hover:opacity-90 transition-opacity shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-                                                <Zap size={16} className="fill-black" />
-                                                Upgrade to Pro
-                                            </button>
                                         </div>
                                     </div>
 
-                                    <div className="premium-card p-6">
-                                        <h3 className="text-sm font-semibold text-white mb-4">Plan Usage</h3>
-                                        <div className="space-y-4">
-                                            {/* AI Insights Usage */}
-                                            <div>
-                                                <div className="flex justify-between text-xs mb-1.5">
-                                                    <span className="text-zinc-400">AI Insights</span>
-                                                    <span className="text-white">3 / 5 per hour</span>
+                                    <div className="premium-card p-6 space-y-8">
+                                        <h3 className="text-sm font-semibold text-white mb-4">Resource Consumption</h3>
+
+                                        {/* AI Insights Bar */}
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-zinc-400">AI Insights Generated</span>
+                                                <span className="text-white font-mono">12 / 500</span>
+                                            </div>
+                                            <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+                                                <div className="h-full bg-gradient-to-r from-purple-600 to-purple-400 w-[2.4%]" />
+                                            </div>
+                                        </div>
+
+                                        {/* Data Points Bar */}
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-zinc-400">Data Points Analyzed</span>
+                                                <span className="text-white font-mono">45,231</span>
+                                            </div>
+                                            <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+                                                <div className="h-full bg-zinc-200 w-[75%]" />
+                                            </div>
+                                        </div>
+
+                                        {/* API Health */}
+                                        <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-950 border border-zinc-900">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 rounded-md bg-emerald-500/10">
+                                                    <Zap size={16} className="text-emerald-500" />
                                                 </div>
-                                                <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-purple-500 w-[60%]" />
+                                                <div>
+                                                    <p className="text-sm font-medium text-white">API Rate Limit</p>
+                                                    <p className="text-xs text-zinc-500">10,000 req/hour</p>
                                                 </div>
                                             </div>
-                                            {/* API Calls Usage */}
-                                            <div>
-                                                <div className="flex justify-between text-xs mb-1.5">
-                                                    <span className="text-zinc-400">API Calls</span>
-                                                    <span className="text-white">842 / 1,000</span>
-                                                </div>
-                                                <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-emerald-500 w-[84%]" />
-                                                </div>
+                                            <span className="text-sm font-medium text-emerald-400">Healthy</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Preferences Tab */}
+                            {activeTab === 'preferences' && (
+                                <div className="space-y-6 max-w-2xl">
+                                    <div className="premium-card p-6">
+                                        <h2 className="text-lg font-semibold text-white mb-6">Editor Preferences</h2>
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Code Theme</label>
+                                                <select className="w-full px-4 py-2.5 rounded-lg bg-zinc-950 border border-zinc-800 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-colors appearance-none">
+                                                    <option>Vercel Dark</option>
+                                                    <option>Dracula</option>
+                                                    <option>Monokai</option>
+                                                    <option>GitHub Dark</option>
+                                                </select>
+                                                <p className="text-xs text-zinc-500">This theme will apply to all code snippets in the dashboard.</p>
                                             </div>
                                         </div>
                                     </div>
