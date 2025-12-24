@@ -20,25 +20,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'userId is required' }, { status: 400 })
         }
 
-        // 1. Rate Limiting Check (5 requests per hour)
-        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-        const { count, error: countError } = await supabase
-            .from('insights')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', userId)
-            .gte('created_at', oneHourAgo)
-
-        if (countError) {
-            console.error('Rate limit check failed:', countError)
-        }
-
-        if (count && count >= 5) {
-            return NextResponse.json({
-                error: 'Rate limit exceeded',
-                message: 'Neural Engine Overload: You have reached the limit of 5 insights per hour. Upgrade to Pro for unlimited analysis.',
-                upgrade: true
-            }, { status: 429 })
-        }
+        // Note: Frontend has 5-minute cooldown, no server-side rate limit needed
 
         // Fetch user's recent stats (last 30 days)
         const thirtyDaysAgo = new Date()
