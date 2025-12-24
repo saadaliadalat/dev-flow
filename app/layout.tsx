@@ -24,6 +24,7 @@ export const metadata: Metadata = {
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { CommandMenu } from "@/components/ui/CommandMenu";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function RootLayout({
     children,
@@ -53,10 +54,12 @@ export default function RootLayout({
                 </a>
                 <AuthProvider>
                     <ToastProvider>
-                        <CommandMenu />
-                        <main id="main-content">
-                            {children}
-                        </main>
+                        <ErrorBoundary>
+                            <CommandMenu />
+                            <main id="main-content">
+                                {children}
+                            </main>
+                        </ErrorBoundary>
                     </ToastProvider>
                 </AuthProvider>
             </body>

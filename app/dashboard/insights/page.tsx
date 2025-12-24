@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Sparkles, ArrowRight, AlertCircle, CheckCircle, Info, RefreshCw, Loader2, Brain } from 'lucide-react'
 import { useToastActions } from '@/components/ui/Toast'
+import { InsightsSkeleton } from '@/components/ui/Skeleton'
 
 // Types
 interface Insight {
@@ -136,19 +137,23 @@ export default function InsightsPage() {
             {/* Timeline */}
             <div className="relative border-l border-zinc-800 ml-3 md:ml-6 space-y-6 pb-12">
                 {isLoading ? (
-                    // Skeletons
-                    [1, 2, 3].map(i => (
-                        <div key={i} className="pl-8 relative">
-                            <div className="absolute -left-[5px] top-4 w-2.5 h-2.5 rounded-full bg-zinc-800 ring-4 ring-[var(--bg-deep)]" />
-                            <div className="h-32 w-full rounded-xl bg-zinc-900/50 animate-pulse" />
-                        </div>
-                    ))
+                    <InsightsSkeleton />
                 ) : insights.length === 0 ? (
-                    <div className="pl-8 py-12 text-center">
-                        <Sparkles size={48} className="mx-auto text-zinc-700 mb-4" />
-                        <p className="text-zinc-500 mb-4">No insights yet. Click "Regenerate" to analyze your coding patterns.</p>
-                        <button onClick={regenerateInsights} className="btn-primary">
-                            Generate First Insights
+                    <div className="min-h-[400px] flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/50">
+                        <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mb-4 border border-purple-500/20">
+                            <Sparkles size={32} className="text-purple-400" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-2">No insights yet</h3>
+                        <p className="text-zinc-500 text-center max-w-sm mb-6">
+                            Our neural engine needs data to analyze your productivity patterns.
+                            Click below to generate your first report.
+                        </p>
+                        <button
+                            onClick={regenerateInsights}
+                            className="btn-primary flex items-center gap-2"
+                        >
+                            <RefreshCw size={16} />
+                            Generate Analysis
                         </button>
                     </div>
                 ) : (

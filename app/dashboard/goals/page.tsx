@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Plus, Target, Calendar, Clock, LayoutGrid, List, Trash2, Edit2, CheckCircle, X, Loader2, AlertCircle } from 'lucide-react'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { useToastActions } from '@/components/ui/Toast'
+import { GoalCardSkeleton } from '@/components/ui/Skeleton'
 
 interface Goal {
     id: string
@@ -163,8 +164,19 @@ export default function GoalsPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-[400px] flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+            <div className="space-y-6 animate-in fade-in duration-500">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <div className="h-8 w-48 bg-zinc-800/50 rounded-lg animate-pulse mb-2" />
+                        <div className="h-4 w-64 bg-zinc-800/50 rounded-lg animate-pulse" />
+                    </div>
+                    <div className="h-10 w-32 bg-zinc-800/50 rounded-lg animate-pulse" />
+                </div>
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <GoalCardSkeleton key={i} />
+                    ))}
+                </div>
             </div>
         )
     }

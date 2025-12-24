@@ -157,27 +157,49 @@ export function DashboardSkeleton() {
 /**
  * Skeleton for insights panel
  */
+/**
+ * Skeleton for goal card
+ */
+export function GoalCardSkeleton() {
+    return (
+        <div className="p-6 rounded-2xl bg-gradient-to-br from-zinc-900/50 to-black/50 border border-white/10">
+            <div className="flex justify-between items-start mb-4">
+                <Skeleton className="w-16 h-5 rounded-full" />
+                <div className="flex gap-1">
+                    <Skeleton className="w-6 h-6 rounded-md" />
+                    <Skeleton className="w-6 h-6 rounded-md" />
+                </div>
+            </div>
+            <Skeleton className="w-3/4 h-6 mb-8" />
+            <div className="flex justify-between items-center mb-2">
+                <Skeleton className="w-24 h-4" />
+                <Skeleton className="w-16 h-4" />
+            </div>
+            <Skeleton className="w-full h-2 rounded-full" />
+        </div>
+    )
+}
+
+/**
+ * Skeleton for insights panel
+ */
 export function InsightsSkeleton() {
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                <Skeleton className="w-32 h-5" />
-                <Skeleton className="w-24 h-8 rounded-lg" />
-            </div>
-            <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/5">
-                        <div className="flex items-start gap-3">
-                            <Skeleton className="w-8 h-8 rounded-lg flex-shrink-0" />
-                            <div className="flex-1">
-                                <Skeleton className="w-full h-4 mb-2" />
-                                <Skeleton className="w-3/4 h-4 mb-2" />
-                                <Skeleton className="w-20 h-3" />
-                            </div>
+        <div className="space-y-6 pb-12">
+            {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="pl-6 md:pl-10 relative">
+                    <div className="absolute -left-[5px] top-5 w-2.5 h-2.5 rounded-full bg-zinc-800 ring-4 ring-black" />
+                    <div className="p-6 rounded-2xl bg-gradient-to-br from-zinc-900/50 to-black/50 border border-white/10">
+                        <div className="flex items-center gap-3 mb-4">
+                            <Skeleton className="w-4 h-4 rounded-full" />
+                            <Skeleton className="w-24 h-3" />
                         </div>
+                        <Skeleton className="w-1/2 h-5 mb-3" />
+                        <Skeleton className="w-full h-4 mb-2" />
+                        <Skeleton className="w-3/4 h-4" />
                     </div>
-                ))}
-            </div>
+                </div>
+            ))}
         </div>
     )
 }
