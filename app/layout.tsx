@@ -1,24 +1,7 @@
 import type { Metadata } from "next";
-import { Inter, Outfit, Fira_Code } from "next/font/google";
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 import "./globals.css";
-
-const inter = Inter({
-    subsets: ["latin"],
-    variable: "--font-body",
-    display: "swap",
-});
-
-const outfit = Outfit({
-    subsets: ["latin"],
-    variable: "--font-display",
-    display: "swap",
-});
-
-const firaCode = Fira_Code({
-    subsets: ["latin"],
-    variable: "--font-mono",
-    display: "swap",
-});
 
 export const metadata: Metadata = {
     title: {
@@ -40,6 +23,7 @@ export const metadata: Metadata = {
 
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { ToastProvider } from "@/components/ui/Toast";
+import { CommandMenu } from "@/components/ui/CommandMenu";
 
 export default function RootLayout({
     children,
@@ -47,9 +31,9 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" className={`${inter.variable} ${outfit.variable} ${firaCode.variable}`}>
+        <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
             <body
-                className="antialiased bg-deep-space text-foreground overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-100"
+                className="antialiased bg-deep-space text-foreground overflow-x-hidden"
                 style={{ fontFeatureSettings: '"cv11", "ss01"' }}
             >
                 {/* Global Noise Overlay */}
@@ -69,6 +53,7 @@ export default function RootLayout({
                 </a>
                 <AuthProvider>
                     <ToastProvider>
+                        <CommandMenu />
                         <main id="main-content">
                             {children}
                         </main>
