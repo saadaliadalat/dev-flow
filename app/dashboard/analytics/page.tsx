@@ -60,8 +60,8 @@ export default function AnalyticsPage() {
     async function fetchAnalyticsData() {
         setIsLoading(true)
         try {
-            // Fetch user data with daily stats
-            const res = await fetch(`/api/user/me?days=${dateRange}`)
+            // Fetch 365 days of data for Heatmap, but filter for charts
+            const res = await fetch(`/api/user/me?days=365`)
             const data = await res.json()
 
             if (res.ok && data.user) {
