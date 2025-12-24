@@ -175,7 +175,7 @@ export function PremiumStatCard({
 
             {/* Value */}
             <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-white tabular-nums tracking-tight">
+                <span className="text-3xl font-bold font-mono text-white tabular-nums tracking-tight">
                     {prefix}{count.toLocaleString()}{suffix}
                 </span>
 
