@@ -116,7 +116,7 @@ export function ActivityFeed({ items, loading = false, maxItems = 5 }: ActivityF
                         </div>
 
                         <div className="mt-1.5 p-2 bg-white/5 rounded-lg border border-white/5 text-xs text-zinc-400 font-mono">
-                            {item.details}
+                            {typeof item.details === 'object' ? JSON.stringify(item.details) : item.details}
                         </div>
                     </motion.div>
                 )
