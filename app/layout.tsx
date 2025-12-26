@@ -19,6 +19,9 @@ export const metadata: Metadata = {
         title: "DevFlow - Spotify Wrapped for Developers",
         description: "Track your coding productivity, unlock achievements, and share your developer journey.",
     },
+    icons: {
+        icon: "/icon.svg",
+    },
 };
 
 import { AuthProvider } from "@/components/providers/AuthProvider";
