@@ -32,7 +32,7 @@ export function Pricing() {
                         className="relative p-1 rounded-3xl bg-gradient-to-b from-white/10 to-white/5"
                     >
                         <div className="bg-[#0c0c0c] rounded-[20px] p-8 md:p-12 overflow-hidden relative">
-                            <div className="absolute top-0 right-0 p-8">
+                            <div className="mb-6 lg:mb-0 lg:absolute lg:top-0 lg:right-0 lg:p-12">
                                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold uppercase tracking-wider">
                                     <span className="relative flex h-2 w-2">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
