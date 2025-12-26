@@ -6,6 +6,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { GradientButton } from '@/components/ui/GradientButton'
 import { containerVariants, itemVariants } from '@/lib/animations'
 import { User, Settings, Shield, LogOut } from 'lucide-react'
+import { DevFlowLogo } from '@/components/ui/DevFlowLogo'
 
 export default function ProfilePage() {
     return (
@@ -26,8 +27,8 @@ export default function ProfilePage() {
                         <div className="flex flex-col md:flex-row items-start gap-8">
                             <div className="relative">
                                 <div className="w-24 h-24 rounded-full bg-gradient-primary p-1">
-                                    <div className="w-full h-full rounded-full bg-bg-deep flex items-center justify-center text-4xl font-bold">
-                                        D
+                                    <div className="w-full h-full rounded-full bg-bg-deep flex items-center justify-center">
+                                        <DevFlowLogo className="w-16 h-16" />
                                     </div>
                                 </div>
                                 <button className="absolute bottom-0 right-0 p-2 bg-bg-elevated rounded-full border border-glass-border hover:text-cyan-400 transition-colors">

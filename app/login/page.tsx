@@ -8,6 +8,7 @@ import { Github, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { containerVariants, itemVariants } from '@/lib/animations'
+import { DevFlowLogo } from '@/components/ui/DevFlowLogo'
 
 export default function LoginPage() {
     const [isLoading, setIsLoading] = React.useState(false)
@@ -46,8 +47,8 @@ export default function LoginPage() {
                     <GlassCard className="text-center p-10" glow="purple">
                         {/* Logo */}
                         <motion.div variants={itemVariants} className="mb-8 flex justify-center">
-                            <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-purple-500/10">
-                                D
+                            <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shadow-lg shadow-purple-500/10">
+                                <DevFlowLogo className="w-8 h-8" />
                             </div>
                         </motion.div>
 
