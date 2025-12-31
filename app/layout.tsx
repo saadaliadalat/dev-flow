@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import "./globals.css";
 
 export const metadata: Metadata = {
+    metadataBase: new URL('https://dev-flow-ashen.vercel.app'),
     title: {
         default: 'DevFlow | Engineering Intelligence',
         template: '%s | DevFlow'
@@ -13,11 +14,20 @@ export const metadata: Metadata = {
     authors: [{ name: "DevFlow Team" }],
     openGraph: {
         siteName: "DevFlow",
+        images: [
+            {
+                url: '/og.png',
+                width: 1200,
+                height: 630,
+                alt: 'DevFlow - Engineering Intelligence for High-Velocity Teams',
+            }
+        ]
     },
     twitter: {
         card: "summary_large_image",
         title: "DevFlow - Spotify Wrapped for Developers",
         description: "Track your coding productivity, unlock achievements, and share your developer journey.",
+        images: ['/og.png'],
     },
     icons: {
         icon: "/icon.svg",
