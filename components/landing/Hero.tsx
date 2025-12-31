@@ -1,11 +1,17 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import dynamic from 'next/dynamic'
 import { ArrowRight, Terminal, Activity, GitBranch, Zap, ChevronRight, Github } from 'lucide-react'
 import { GlassButton } from '@/components/ui/GlassButton'
-import { DashboardPreview } from './DashboardPreview'
 import { useSession, signIn } from 'next-auth/react'
 import Link from 'next/link'
+
+// Dynamic import - DashboardPreview is below the fold
+const DashboardPreview = dynamic(
+    () => import('./DashboardPreview').then(m => m.DashboardPreview),
+    { loading: () => <div className="w-full h-[400px] bg-zinc-900/50 rounded-xl animate-pulse" /> }
+)
 
 // --- Text Reveal Animation ---
 const textContainer = {
