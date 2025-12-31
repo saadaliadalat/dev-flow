@@ -66,7 +66,7 @@ export default function ContactPage() {
                                 <h3 className="font-bold mb-1">HQ</h3>
                                 <p className="text-text-tertiary text-sm">
                                     123 Innovation Dr.<br />
-                                    San Francisco, CA 94103
+                                    SK
                                 </p>
                             </div>
                         </GlassCard>

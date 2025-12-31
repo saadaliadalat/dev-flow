@@ -115,7 +115,7 @@ export function Footer() {
                         >
                             <Heart size={12} className="text-purple-500 fill-purple-500" />
                         </motion.div>
-                        <span>in San Francisco.</span>
+                        <span>in SK.</span>
                     </div>
                 </div>
             </div>
