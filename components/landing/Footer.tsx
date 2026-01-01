@@ -106,7 +106,7 @@ export function Footer() {
 
                 {/* Bottom Row */}
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-zinc-600">
-                    <p>© 2025 DevFlow Inc. All rights reserved.</p>
+                    <p>© 2026 DevFlow Inc. All rights reserved.</p>
                     <div className="flex items-center gap-1.5">
                         <span>Crafted with</span>
                         <motion.div
