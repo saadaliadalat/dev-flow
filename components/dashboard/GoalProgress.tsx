@@ -162,7 +162,7 @@ export function CircularProgress({
                 </svg>
                 {/* Center text */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-lg font-bold text-white tabular-nums">{percentage}%</span>
+                    <span className="text-lg font-bold text-white tabular-nums">{Math.round(percentage)}%</span>
                 </div>
             </div>
             {label && (
