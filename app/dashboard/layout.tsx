@@ -9,6 +9,7 @@ import {
     LayoutDashboard,
     BarChart3,
     Trophy,
+    Crown,
     Target,
     Brain,
     Settings,
@@ -22,6 +23,7 @@ const sidebarLinks = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
     { name: 'Achievements', href: '/dashboard/achievements', icon: Trophy },
+    { name: 'Leaderboard', href: '/dashboard/leaderboard', icon: Crown },
     { name: 'Goals', href: '/dashboard/goals', icon: Target },
     { name: 'AI Insights', href: '/dashboard/insights', icon: Brain },
 ]

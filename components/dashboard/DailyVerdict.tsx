@@ -201,7 +201,7 @@ export function DailyVerdict({ className = '', onShare, variant = 'full' }: Dail
                         <span className="text-lg font-bold text-white font-mono">
                             {verdict.dev_flow_score}
                         </span>
-                        {verdict.score_change !== null && verdict.score_change !== 0 && (
+                        {verdict.score_change !== undefined && verdict.score_change !== null && verdict.score_change !== 0 && (
                             <span className={`text-xs font-mono ${verdict.score_change > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                                 {verdict.score_change > 0 ? '+' : ''}{verdict.score_change}
                             </span>

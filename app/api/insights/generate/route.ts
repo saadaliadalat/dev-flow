@@ -12,21 +12,6 @@ const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY!
 })
 
-
-// app/api/insights/generate/route.ts
-import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import Groq from 'groq-sdk'
-
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY!
-})
-
 export async function POST(req: Request) {
     try {
         const { userId } = await req.json()
