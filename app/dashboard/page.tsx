@@ -3,186 +3,82 @@
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-    RefreshCw, Share2, TrendingUp, TrendingDown, AlertTriangle,
-    Target, Flame, Crown, ChevronRight, ExternalLink
+    GitCommit, GitPullRequest, Flame, Zap, Trophy, TrendingUp,
+    Activity, RefreshCw, Calendar, ArrowUpRight, Brain, Target,
+    Clock, CheckCircle2
 } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import {
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts'
+import { VitalityRing } from '@/components/dashboard/VitalityRing'
 import { useConfetti } from '@/hooks/useConfetti'
+import { useSession } from 'next-auth/react'
+
+// Premium Components
+import { PremiumStatCard, StatCardSkeleton } from '@/components/dashboard/PremiumStatCard'
+import { InsightCard, InsightCardSkeleton } from '@/components/dashboard/InsightCard'
+import { GoalProgress, CircularProgress, GoalProgressSkeleton } from '@/components/dashboard/GoalProgress'
+import { InsightsPanel } from '@/components/dashboard/InsightsPanel'
 
 // Animation variants
 const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
         opacity: 1,
-        transition: { staggerChildren: 0.1, delayChildren: 0.05 }
+        transition: { staggerChildren: 0.05, delayChildren: 0.1 }
     }
 }
 
 const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 20 },
     visible: {
         opacity: 1,
         y: 0,
-        transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+        transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
     }
-}
-
-// Types
-interface Verdict {
-    verdict_text: string
-    verdict_subtext?: string
-    severity: 'praise' | 'warning' | 'neutral' | 'critical'
-    emoji?: string
-    dev_flow_score?: number
-    score_change?: number
-}
-
-interface ScoreData {
-    total_score: number
-    score_change: number
-    comparisons: {
-        percentile: number
-        global_avg: number
-    }
-}
-
-interface Archetype {
-    archetype_name: string
-    archetype: string
-}
-
-interface Blocker {
-    id: string
-    title: string
-    consequence: string
-    action: string
-    severity: 'high' | 'medium' | 'low'
 }
 
 export default function DashboardPage() {
     const { data: session } = useSession()
     const { triggerPremiumConfetti } = useConfetti()
-
-    // State
-    const [verdict, setVerdict] = useState<Verdict | null>(null)
-    const [scoreData, setScoreData] = useState<ScoreData | null>(null)
-    const [archetype, setArchetype] = useState<Archetype | null>(null)
     const [stats, setStats] = useState<any>(null)
-    const [blockers, setBlockers] = useState<Blocker[]>([])
+    const [activityData, setActivityData] = useState<any[]>([])
+    const [recentCommits, setRecentCommits] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isSyncing, setIsSyncing] = useState(false)
-    const [globalRank, setGlobalRank] = useState<number | null>(null)
-    const [totalUsers, setTotalUsers] = useState<number>(0)
-    const [weeklyChange, setWeeklyChange] = useState<number>(0)
+    const [dateRange, setDateRange] = useState<'7' | '30' | '90'>('30')
+    const [weekTrend, setWeekTrend] = useState(0)
+    const [todayCommits, setTodayCommits] = useState(0)
+    const [weekCommits, setWeekCommits] = useState(0)
 
-    // Fetch all data on mount
+    // Trigger Streak Update on Mount
     useEffect(() => {
         if (session?.user) {
-            fetchAllData()
+            updateStreak()
         }
     }, [session])
 
-    async function fetchAllData() {
-        setIsLoading(true)
+    async function updateStreak() {
         try {
-            // Fetch in parallel
-            const [verdictRes, scoreRes, archetypeRes, userRes] = await Promise.all([
-                fetch('/api/verdict'),
-                fetch('/api/score'),
-                fetch('/api/archetype'),
-                fetch('/api/user/me?days=14')
-            ])
-
-            const [verdictData, scoreDataRes, archetypeData, userData] = await Promise.all([
-                verdictRes.json(),
-                scoreRes.json(),
-                archetypeRes.json(),
-                userRes.json()
-            ])
-
-            if (verdictData.verdict) setVerdict(verdictData.verdict)
-            if (scoreDataRes.score) {
-                setScoreData(scoreDataRes.score)
-                // Calculate global rank from percentile
-                const percentile = scoreDataRes.score.comparisons?.percentile || 50
-                const estimatedTotalUsers = 98201 // Mock for now, would come from API
-                setTotalUsers(estimatedTotalUsers)
-                setGlobalRank(Math.round(estimatedTotalUsers * (1 - percentile / 100)))
+            const res = await fetch('/api/user/update-streak', { method: 'POST' })
+            const data = await res.json()
+            if (data.streaked) {
+                triggerPremiumConfetti()
+                // Refresh stats to show new streak
+                setStats((prev: any) => prev ? ({ ...prev, current_streak: data.streak }) : prev)
             }
-            if (archetypeData.archetype) setArchetype(archetypeData.archetype)
-            if (userData.user) {
-                setStats(userData.user)
-                // Calculate weekly rank change (mock)
-                setWeeklyChange(userData.user.current_streak > 3 ? 7 : -3)
-            }
-
-            // Generate blockers from data analysis
-            generateBlockers(userData.user, scoreDataRes.score)
-
-        } catch (error) {
-            console.error('Failed to fetch data:', error)
-        } finally {
-            setIsLoading(false)
+        } catch (e) {
+            console.error('Streak update failed', e)
         }
     }
 
-    function generateBlockers(user: any, score: any) {
-        const detectedBlockers: Blocker[] = []
-
-        // Check for tutorial loop
-        if (score?.components?.building_ratio < 40) {
-            detectedBlockers.push({
-                id: 'tutorial_loop',
-                title: 'Tutorial Loop',
-                consequence: 'You learned 6h and built 0h.',
-                action: 'Ship something ugly today.',
-                severity: 'high'
-            })
-        }
-
-        // Check for inconsistency
-        if (score?.components?.consistency < 50) {
-            detectedBlockers.push({
-                id: 'inconsistency',
-                title: 'Inconsistent Patterns',
-                consequence: 'You code in bursts, then disappear.',
-                action: 'Commit once per day for 5 days.',
-                severity: 'medium'
-            })
-        }
-
-        // Check for burnout risk
-        if (score?.components?.recovery < 30) {
-            detectedBlockers.push({
-                id: 'burnout_risk',
-                title: 'Burnout Imminent',
-                consequence: 'No rest days detected this week.',
-                action: 'Take tomorrow off. Seriously.',
-                severity: 'high'
-            })
-        }
-
-        // Check for shipping problem
-        if (score?.components?.shipping < 40) {
-            detectedBlockers.push({
-                id: 'not_shipping',
-                title: 'Ideas Trapped in Branches',
-                consequence: '0 PRs merged this week.',
-                action: 'Merge one PR today, any size.',
-                severity: 'medium'
-            })
-        }
-
-        setBlockers(detectedBlockers.slice(0, 3)) // Max 3 blockers
-    }
-
+    // Sync function
     const syncGitHubData = async () => {
         setIsSyncing(true)
         try {
             const res = await fetch('/api/github/sync', { method: 'POST' })
             const data = await res.json()
             if (data.success) {
-                triggerPremiumConfetti()
                 setTimeout(() => window.location.reload(), 1500)
             }
         } catch (error) {
@@ -192,274 +88,320 @@ export default function DashboardPage() {
         }
     }
 
-    const getVerdictStyles = (severity: string) => {
-        switch (severity) {
-            case 'praise':
-                return {
-                    bg: 'from-emerald-950 to-emerald-900/50',
-                    border: 'border-emerald-500/40',
-                    text: 'text-emerald-300',
-                    indicator: 'bg-emerald-500'
+    // Fetch data
+    useEffect(() => {
+        async function fetchData() {
+            if (!session) return
+            try {
+                const res = await fetch('/api/user/me?days=90')
+                const data = await res.json()
+
+                if (res.ok && data.user) {
+                    setStats(data.user)
+
+                    if (data.dailyStats?.length > 0) {
+                        const days = parseInt(dateRange)
+                        const startDate = new Date()
+                        startDate.setDate(startDate.getDate() - days)
+                        const startDateStr = startDate.toISOString().split('T')[0]
+
+                        const filtered = data.dailyStats.filter((d: any) => d.date >= startDateStr)
+                        const dataMap = new Map(filtered.map((d: any) => [d.date, d.total_commits]))
+
+                        const chartData = []
+                        for (let i = days - 1; i >= 0; i--) {
+                            const date = new Date()
+                            date.setDate(date.getDate() - i)
+                            const dateStr = date.toISOString().split('T')[0]
+                            chartData.push({
+                                name: days <= 7
+                                    ? date.toLocaleDateString('en-US', { weekday: 'short' })
+                                    : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                                commits: dataMap.get(dateStr) || 0
+                            })
+                        }
+                        setActivityData(chartData)
+
+                        // Calculate trends
+                        const today = new Date().toISOString().split('T')[0]
+                        const todayData = data.dailyStats.find((d: any) => d.date === today)
+                        setTodayCommits(todayData?.total_commits || 0)
+
+                        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                        const weekTotal = data.dailyStats
+                            .filter((d: any) => d.date >= weekAgo)
+                            .reduce((sum: number, d: any) => sum + d.total_commits, 0)
+                        setWeekCommits(weekTotal)
+
+                        // Week-over-week trend
+                        const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                        const lastWeek = data.dailyStats
+                            .filter((d: any) => d.date >= twoWeeksAgo && d.date < weekAgo)
+                            .reduce((sum: number, d: any) => sum + d.total_commits, 0)
+                        if (lastWeek > 0) {
+                            setWeekTrend(Math.round(((weekTotal - lastWeek) / lastWeek) * 100))
+                        }
+                    }
                 }
-            case 'warning':
-                return {
-                    bg: 'from-amber-950 to-amber-900/50',
-                    border: 'border-amber-500/40',
-                    text: 'text-amber-300',
-                    indicator: 'bg-amber-500'
+
+                // Fetch activity
+                const activityRes = await fetch('/api/github/activity')
+                if (activityRes.ok) {
+                    const activityJson = await activityRes.json()
+                    setRecentCommits(activityJson.events || [])
                 }
-            case 'critical':
-                return {
-                    bg: 'from-red-950 to-red-900/50',
-                    border: 'border-red-500/40',
-                    text: 'text-red-300',
-                    indicator: 'bg-red-500'
-                }
-            default:
-                return {
-                    bg: 'from-zinc-900 to-zinc-800/50',
-                    border: 'border-zinc-600/40',
-                    text: 'text-zinc-300',
-                    indicator: 'bg-zinc-500'
-                }
+            } catch (error) {
+                console.error('Error fetching data:', error)
+            } finally {
+                setIsLoading(false)
+            }
         }
-    }
+        fetchData()
+    }, [session, dateRange])
 
-    const getScoreColor = (score: number) => {
-        if (score >= 80) return 'text-purple-400'
-        if (score >= 60) return 'text-emerald-400'
-        if (score >= 40) return 'text-amber-400'
-        return 'text-red-400'
-    }
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                    <p className="text-zinc-500 text-sm font-mono">Analyzing your patterns...</p>
-                </div>
-            </div>
-        )
-    }
-
-    const verdictStyles = verdict ? getVerdictStyles(verdict.severity) : getVerdictStyles('neutral')
+    const totalContributions = (stats?.total_commits || 0) + (stats?.total_prs || 0)
+    const sparklineData = activityData.map(d => d.commits)
 
     return (
         <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="max-w-4xl mx-auto space-y-6"
+            className="space-y-8"
         >
-            {/* ═══════════════════════════════════════════════════════════
-                ZONE 1: THE VERDICT (Dominant, Emotional Anchor)
-               ═══════════════════════════════════════════════════════════ */}
-            <motion.section variants={itemVariants}>
-                <div className={`relative rounded-2xl border ${verdictStyles.border} bg-gradient-to-br ${verdictStyles.bg} p-8 overflow-hidden`}>
-                    {/* Severity Indicator Bar */}
-                    <div className={`absolute top-0 left-0 right-0 h-1 ${verdictStyles.indicator}`} />
-
-                    {/* Sync Button */}
-                    <div className="absolute top-4 right-4 flex items-center gap-2">
-                        <button
-                            onClick={syncGitHubData}
-                            disabled={isSyncing}
-                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all disabled:opacity-50"
-                        >
-                            <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
-                        </button>
-                        <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all">
-                            <Share2 size={16} />
-                        </button>
-                    </div>
-
-                    {/* Verdict Content */}
-                    <div className="relative z-10">
-                        <span className="text-xs font-mono uppercase tracking-widest text-zinc-500 mb-3 block">
-                            Today's Verdict
+            {/* Header */}
+            <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2.5 py-1 rounded-full bg-[var(--accent-blue)]/10 border border-[var(--accent-blue)]/20 text-[var(--accent-blue)] text-xs font-medium">
+                            Dashboard
                         </span>
-                        <h1 className={`text-2xl md:text-3xl lg:text-4xl font-bold ${verdictStyles.text} leading-tight mb-3`}>
-                            {verdict?.verdict_text || 'Loading your verdict...'}
-                        </h1>
-                        {verdict?.verdict_subtext && (
-                            <p className="text-base text-zinc-400 max-w-2xl">
-                                {verdict.verdict_subtext}
-                            </p>
+                        {stats?.last_synced && (
+                            <span className="px-2.5 py-1 rounded-full bg-[var(--accent-emerald)]/10 text-[var(--accent-emerald)] text-xs font-mono">
+                                Synced {new Date(stats.last_synced).toLocaleDateString()}
+                            </span>
                         )}
                     </div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                        Welcome back, <span className="text-gradient-blue">{session?.user?.name?.split(' ')[0] || 'Developer'}</span>
+                    </h1>
+                    <p className="text-[var(--text-tertiary)] mt-1">
+                        Here's your coding activity for {new Date().getFullYear()}
+                    </p>
                 </div>
-            </motion.section>
 
-            {/* ═══════════════════════════════════════════════════════════
-                ZONE 2: SCORE & RANK (Ego Triggers, Screenshot-Worthy)
-               ═══════════════════════════════════════════════════════════ */}
-            <motion.section variants={itemVariants}>
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                        {/* Dev Flow Score - Large & Dominant */}
-                        <div className="text-center md:text-left">
-                            <span className="text-xs font-mono uppercase tracking-widest text-zinc-500 mb-2 block">
-                                Dev Flow Score
-                            </span>
-                            <div className="flex items-baseline gap-2 justify-center md:justify-start">
-                                <span className={`text-6xl md:text-7xl font-black font-mono ${getScoreColor(scoreData?.total_score || 50)}`}>
-                                    {scoreData?.total_score || 50}
-                                </span>
-                                {scoreData?.score_change !== undefined && scoreData.score_change !== 0 && (
-                                    <span className={`text-lg font-mono flex items-center ${scoreData.score_change > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                        {scoreData.score_change > 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                                        {scoreData.score_change > 0 ? '+' : ''}{scoreData.score_change}
-                                    </span>
-                                )}
+                <button
+                    onClick={syncGitHubData}
+                    disabled={isSyncing}
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Sync GitHub data"
+                >
+                    <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
+                    {isSyncing ? 'Syncing...' : 'Sync GitHub'}
+                </button>
+            </motion.div>
+
+            {/* Stats Grid */}
+            <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {isLoading ? (
+                    <>
+                        <StatCardSkeleton />
+                        <StatCardSkeleton />
+                        <StatCardSkeleton />
+                        <StatCardSkeleton />
+                    </>
+                ) : (
+                    <>
+                        <PremiumStatCard
+                            label="Total Contributions"
+                            value={totalContributions}
+                            change={weekTrend}
+                            changeLabel="vs last week"
+                            icon={<Activity size={18} />}
+                            accentColor="blue"
+                            sparklineData={sparklineData}
+                        />
+                        <PremiumStatCard
+                            label="Commits"
+                            value={stats?.total_commits || 0}
+                            icon={<GitCommit size={18} />}
+                            accentColor="purple"
+                        />
+                        <PremiumStatCard
+                            label="Pull Requests"
+                            value={stats?.total_prs || 0}
+                            icon={<GitPullRequest size={18} />}
+                            accentColor="emerald"
+                        />
+
+                        {/* Vitality/Streak Card */}
+                        <div className="premium-card p-4 relative overflow-hidden group hover:border-[var(--accent-amber)]/30 transition-colors">
+                            <div className="flex justify-between items-start mb-2">
+                                <span className="text-xs text-[var(--text-secondary)] font-medium">Vitality Score</span>
+                                <Flame size={18} className="text-[var(--accent-amber)]" />
                             </div>
-                        </div>
-
-                        {/* Global Rank */}
-                        <div className="text-center border-l border-r border-zinc-800 py-2">
-                            <span className="text-xs font-mono uppercase tracking-widest text-zinc-500 mb-2 block">
-                                Global Rank
-                            </span>
-                            <div className="flex items-center justify-center gap-2">
-                                <Crown size={20} className="text-amber-400" />
-                                <span className="text-3xl font-bold text-white font-mono">
-                                    #{globalRank?.toLocaleString() || '—'}
-                                </span>
-                            </div>
-                            <span className="text-xs text-zinc-500 font-mono">
-                                of {totalUsers.toLocaleString()}
-                            </span>
-                        </div>
-
-                        {/* Weekly Change + Archetype */}
-                        <div className="text-center md:text-right">
-                            <div className="flex flex-col items-center md:items-end gap-3">
-                                {/* Weekly Change */}
+                            <div className="flex items-center justify-between">
                                 <div>
-                                    <span className="text-xs font-mono uppercase tracking-widest text-zinc-500 mb-1 block">
-                                        This Week
+                                    <span className="text-2xl font-bold text-white font-mono block">
+                                        {stats?.current_streak || 0}
+                                        <span className="text-sm font-sans font-normal text-[var(--text-tertiary)] ml-1">days</span>
                                     </span>
-                                    <span className={`text-2xl font-bold font-mono ${weeklyChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                        {weeklyChange >= 0 ? '↑' : '↓'}{Math.abs(weeklyChange)} ranks
-                                    </span>
+                                    <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
+                                        Max: {stats?.longest_streak || 0} days
+                                    </p>
                                 </div>
-                                {/* Archetype Badge */}
-                                {archetype && (
-                                    <div className="px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30">
-                                        <span className="text-xs font-semibold text-purple-300">
-                                            {archetype.archetype_name}
-                                        </span>
-                                    </div>
-                                )}
+                                <div className="scale-75 origin-right">
+                                    <VitalityRing streak={stats?.current_streak || 0} />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </motion.section>
+                    </>
+                )}
+            </motion.div>
 
-            {/* ═══════════════════════════════════════════════════════════
-                ZONE 3: ACTION ZONE (What's Blocking You)
-               ═══════════════════════════════════════════════════════════ */}
-            <motion.section variants={itemVariants}>
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6">
-                    <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        <AlertTriangle size={18} className="text-amber-400" />
-                        What's Blocking You
-                    </h2>
-
-                    {blockers.length > 0 ? (
-                        <div className="space-y-4">
-                            {blockers.map((blocker, index) => (
-                                <motion.div
-                                    key={blocker.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    className={`p-4 rounded-xl border ${blocker.severity === 'high'
-                                            ? 'border-red-500/30 bg-red-500/5'
-                                            : 'border-amber-500/30 bg-amber-500/5'
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Activity Chart */}
+                <motion.div variants={itemVariants} className="lg:col-span-2 premium-card p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <TrendingUp size={18} className="text-[var(--accent-purple)]" />
+                                Activity Frequency
+                            </h2>
+                            <p className="text-sm text-[var(--text-tertiary)]">Your coding velocity over time</p>
+                        </div>
+                        <div className="flex gap-1 p-1 rounded-lg bg-[var(--bg-elevated)]">
+                            {(['7', '30', '90'] as const).map((range) => (
+                                <button
+                                    key={range}
+                                    onClick={() => setDateRange(range)}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${dateRange === range
+                                        ? 'bg-[var(--accent-blue)] text-white'
+                                        : 'text-[var(--text-tertiary)] hover:text-white'
                                         }`}
                                 >
-                                    <div className="flex items-start gap-3">
-                                        <span className="text-xl">❌</span>
-                                        <div className="flex-1">
-                                            <h3 className={`font-bold ${blocker.severity === 'high' ? 'text-red-400' : 'text-amber-400'}`}>
-                                                {blocker.title}
-                                            </h3>
-                                            <p className="text-sm text-zinc-400 mt-1">
-                                                {blocker.consequence}
-                                            </p>
-                                            <div className="mt-3 flex items-center gap-2">
-                                                <Target size={14} className="text-emerald-400" />
-                                                <span className="text-sm font-medium text-emerald-400">
-                                                    Fix: {blocker.action}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </motion.div>
+                                    {range}d
+                                </button>
                             ))}
                         </div>
+                    </div>
+
+                    <div className="h-[280px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={activityData}>
+                                <defs>
+                                    <linearGradient id="colorCommits" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.4} />
+                                        <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                <XAxis
+                                    dataKey="name"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                                    dy={10}
+                                />
+                                <YAxis
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                                    width={30}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: 'var(--bg-card)',
+                                        border: '1px solid var(--glass-border)',
+                                        borderRadius: 'var(--radius-md)',
+                                        boxShadow: 'var(--shadow-lg)',
+                                    }}
+                                    labelStyle={{ color: 'var(--text-secondary)', marginBottom: 4 }}
+                                    itemStyle={{ color: 'white' }}
+                                    cursor={{ stroke: 'var(--accent-purple)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="commits"
+                                    stroke="#8B5CF6"
+                                    strokeWidth={2}
+                                    fill="url(#colorCommits)"
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </motion.div>
+
+                {/* Goals & Progress */}
+                <motion.div variants={itemVariants} className="premium-card p-6 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                            <Target size={18} className="text-[var(--accent-emerald)]" />
+                            Daily Goals
+                        </h2>
+                    </div>
+
+                    <div className="flex justify-center gap-4">
+                        <CircularProgress percentage={Math.min((todayCommits / 5) * 100, 100)} color="blue" label="Today" />
+                        <CircularProgress percentage={Math.min((weekCommits / 30) * 100, 100)} color="emerald" label="Week" />
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-[var(--glass-border)]">
+                        <GoalProgress label="Daily Commits" current={todayCommits} target={5} color="blue" />
+                        <GoalProgress label="Weekly Commits" current={weekCommits} target={30} color="emerald" />
+                        <GoalProgress label="Streak Days" current={stats?.current_streak || 0} target={14} color="amber" />
+                    </div>
+                </motion.div>
+            </div>
+
+            {/* AI Insights */}
+            <motion.div variants={itemVariants}>
+                <InsightsPanel className="premium-card overflow-hidden" />
+            </motion.div>
+
+            {/* Recent Activity */}
+            <motion.div variants={itemVariants} className="premium-card p-6">
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Clock size={18} className="text-[var(--accent-blue)]" />
+                    Recent Activity
+                </h2>
+                <div className="space-y-1 max-h-[300px] overflow-y-auto">
+                    {recentCommits.length > 0 ? (
+                        recentCommits.slice(0, 10).map((event: any, i: number) => (
+                            <motion.div
+                                key={event.id || i}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.05 }}
+                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer group"
+                            >
+                                <div className="w-2 h-2 rounded-full bg-[var(--accent-blue)] group-hover:scale-125 transition-transform" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm text-white truncate group-hover:text-[var(--accent-blue)] transition-colors">
+                                        {event.title}
+                                    </p>
+                                    <p className="text-xs text-[var(--text-muted)] font-mono">
+                                        {new Date(event.created_at).toLocaleString([], {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </p>
+                                </div>
+                                <ArrowUpRight size={14} className="text-[var(--text-muted)] group-hover:text-[var(--accent-blue)] transition-colors" />
+                            </motion.div>
+                        ))
                     ) : (
-                        <div className="text-center py-8">
-                            <span className="text-4xl mb-2 block">✨</span>
-                            <p className="text-emerald-400 font-medium">No blockers detected.</p>
-                            <p className="text-zinc-500 text-sm">You're on track. Keep building.</p>
+                        <div className="text-center py-8 text-[var(--text-tertiary)]">
+                            <Activity size={32} className="mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">No recent activity</p>
+                            <p className="text-xs">Push some code to see it here!</p>
                         </div>
                     )}
                 </div>
-            </motion.section>
-
-            {/* ═══════════════════════════════════════════════════════════
-                ZONE 4: PROOF ZONE (Minimal Data That Matters)
-               ═══════════════════════════════════════════════════════════ */}
-            <motion.section variants={itemVariants}>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Streak */}
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5 text-center">
-                        <Flame size={24} className={`mx-auto mb-2 ${(stats?.current_streak || 0) > 0 ? 'text-orange-400' : 'text-zinc-600'}`} />
-                        <span className="text-3xl font-bold text-white font-mono block">
-                            {stats?.current_streak || 0}
-                        </span>
-                        <span className="text-xs text-zinc-500 font-mono uppercase">
-                            Day Streak
-                        </span>
-                    </div>
-
-                    {/* This Week's Output */}
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5 text-center">
-                        <TrendingUp size={24} className="mx-auto mb-2 text-purple-400" />
-                        <span className="text-3xl font-bold text-white font-mono block">
-                            {stats?.total_commits > 0 ? `+${Math.min(stats.total_commits, 99)}` : '0'}
-                        </span>
-                        <span className="text-xs text-zinc-500 font-mono uppercase">
-                            Commits This Week
-                        </span>
-                    </div>
-
-                    {/* Comparison */}
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5 text-center">
-                        <Crown size={24} className="mx-auto mb-2 text-amber-400" />
-                        <span className="text-3xl font-bold text-white font-mono block">
-                            Top {100 - (scoreData?.comparisons?.percentile || 50)}%
-                        </span>
-                        <span className="text-xs text-zinc-500 font-mono uppercase">
-                            Of All Developers
-                        </span>
-                    </div>
-                </div>
-
-                {/* View Details Link */}
-                <div className="text-center mt-4">
-                    <a
-                        href="/dashboard/analytics"
-                        className="inline-flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-                    >
-                        View detailed analytics
-                        <ChevronRight size={14} />
-                    </a>
-                </div>
-            </motion.section>
+            </motion.div>
         </motion.div>
     )
 }
