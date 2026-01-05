@@ -388,3 +388,262 @@ export interface AchievementCardData {
     achievement: Achievement
     unlockedAt: string
 }
+
+// ============================================
+// DEV FLOW V2: BEHAVIOR-CHANGING SYSTEM
+// ============================================
+
+// Dev Flow Score (0-100)
+export interface DevFlowScore {
+    id: string
+    user_id: string
+    date: string
+
+    // Component Scores (0-100 each)
+    building_ratio_score: number   // 30% weight
+    consistency_score: number      // 25% weight
+    shipping_score: number         // 20% weight
+    focus_score: number            // 15% weight
+    recovery_score: number         // 10% weight
+
+    // Final Score
+    total_score: number
+    score_change: number           // vs yesterday
+
+    // Anti-Gaming
+    gaming_detected: boolean
+    gaming_penalty: number
+    gaming_reason?: string | null
+
+    // Comparisons
+    weekly_avg?: number | null
+    global_avg?: number | null
+    percentile?: number | null
+
+    computed_at: string
+}
+
+// Verdict Severity
+export type VerdictSeverity = 'praise' | 'warning' | 'neutral' | 'critical'
+
+// Daily Verdict
+export interface DailyVerdict {
+    id: string
+    user_id: string
+    date: string
+
+    verdict_key: string
+    verdict_text: string
+    verdict_subtext?: string | null
+    severity: VerdictSeverity
+
+    dev_flow_score?: number | null
+    score_change?: number | null
+    primary_factor?: string | null
+
+    share_url?: string | null
+    shared_count: number
+
+    computed_at: string
+}
+
+// Developer Archetypes
+export type ArchetypeKey =
+    | 'tutorial_addict'
+    | 'chaos_coder'
+    | 'burnout_sprinter'
+    | 'silent_builder'
+    | 'momentum_machine'
+    | 'consistent_operator'
+    | 'overnight_architect'
+    | 'weekend_warrior'
+
+export interface Archetype {
+    id: string
+    user_id: string
+
+    archetype: ArchetypeKey
+    archetype_name: string
+    strengths: string[]
+    weaknesses: string[]
+    description: string
+
+    trigger_metrics: Record<string, number>
+    confidence_score: number
+
+    assigned_at: string
+    valid_until?: string | null
+    superseded_by?: string | null
+
+    share_url?: string | null
+    shared_count: number
+}
+
+// Archetype Definitions (static data)
+export interface ArchetypeDefinition {
+    key: ArchetypeKey
+    name: string
+    emoji: string
+    description: string
+    strengths: string[]
+    weaknesses: string[]
+    color: string
+    triggerConditions: string
+}
+
+// Level/Title System
+export type LevelTitle =
+    | 'Apprentice'
+    | 'Contributor'
+    | 'Builder'
+    | 'Operator'
+    | 'Architect'
+    | 'Machine'
+
+export interface UserLevel {
+    level: number
+    title: LevelTitle
+    xp: number
+    xp_to_next: number
+    progress_percent: number
+}
+
+export interface LevelUpEvent {
+    id: string
+    user_id: string
+    level: number
+    title: LevelTitle
+    xp_earned: number
+    xp_required: number
+    leveled_up_at: string
+    trigger_action?: string | null
+    share_url?: string | null
+    shared_count: number
+}
+
+// Challenges
+export type ChallengeDifficulty = 'easy' | 'medium' | 'hard'
+export type ChallengeStatus = 'active' | 'completed' | 'failed' | 'abandoned'
+
+export interface Challenge {
+    id: string
+    challenge_key: string
+    title: string
+    description: string
+    difficulty: ChallengeDifficulty
+
+    duration_days: number
+    target_metric: string
+    target_value: number
+
+    badge_name: string
+    badge_icon: string
+    xp_reward: number
+
+    is_active: boolean
+}
+
+export interface UserChallenge {
+    id: string
+    user_id: string
+    challenge_id: string
+    challenge?: Challenge
+
+    status: ChallengeStatus
+    current_progress: number
+    started_at: string
+    ends_at: string
+    completed_at?: string | null
+
+    badge_earned: boolean
+    xp_awarded: number
+
+    share_url?: string | null
+    shared_count: number
+}
+
+// Enhanced Leaderboard
+export type LeaderboardType =
+    | 'global'
+    | 'weekly'
+    | 'friends'
+    | 'archetype'
+    | 'climbers'
+
+export interface LeaderboardEntry {
+    rank: number
+    rank_change: number       // +12, -4, or 0 for new
+    is_new: boolean
+
+    user: {
+        id: string
+        username: string
+        name?: string | null
+        avatar_url?: string | null
+        archetype?: ArchetypeKey | null
+        level: number
+        title: LevelTitle
+    }
+
+    dev_flow_score: number
+    weekly_change: number
+    streak: number
+
+    // For climbers leaderboard
+    positions_climbed?: number
+}
+
+export interface WeeklyLeaderboard {
+    id: string
+    week_start: string
+    week_end: string
+    leaderboard_type: LeaderboardType
+    rankings: LeaderboardEntry[]
+    total_participants: number
+    avg_score?: number | null
+    computed_at: string
+}
+
+// Streak Types
+export type StreakType =
+    | 'shipping'
+    | 'deep_work'
+    | 'no_tutorial'
+    | 'consistency'
+
+export interface StreakData {
+    type: StreakType
+    current: number
+    longest: number
+    last_active_date: string
+    is_at_risk: boolean    // Will break tomorrow if no activity
+}
+
+// Share Card Types
+export type ShareCardType =
+    | 'verdict'
+    | 'archetype'
+    | 'rank_up'
+    | 'leaderboard'
+    | 'challenge'
+    | 'streak_milestone'
+
+export interface ShareCardData {
+    type: ShareCardType
+    title: string
+    subtitle?: string
+    value?: string | number
+    change?: number
+    username: string
+    generated_at: string
+}
+
+// Extended User with V2 fields
+export interface UserV2 extends User {
+    archetype?: ArchetypeKey | null
+    archetype_assigned_at?: string | null
+    level: number
+    xp: number
+    title: LevelTitle
+    dev_flow_score: number
+}
