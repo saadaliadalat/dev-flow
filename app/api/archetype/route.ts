@@ -47,8 +47,11 @@ export async function GET(request: NextRequest) {
             can_reveal: hasEnoughData,
             days_until_reveal: hasEnoughData ? 0 : 5 - (count || 0)
         })
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error fetching archetype:', error)
+        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+            return NextResponse.json({ archetype: null, definition: null, can_reveal: false })
+        }
         return NextResponse.json({ error: 'Failed to fetch archetype' }, { status: 500 })
     }
 }

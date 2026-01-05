@@ -8,9 +8,10 @@ import { DailyVerdict as VerdictType, VerdictSeverity } from '@/types'
 interface DailyVerdictProps {
     className?: string
     onShare?: () => void
+    variant?: 'full' | 'minimal'
 }
 
-export function DailyVerdict({ className = '', onShare }: DailyVerdictProps) {
+export function DailyVerdict({ className = '', onShare, variant = 'full' }: DailyVerdictProps) {
     const [verdict, setVerdict] = useState<VerdictType & { emoji?: string } | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isRefreshing, setIsRefreshing] = useState(false)
@@ -82,7 +83,12 @@ export function DailyVerdict({ className = '', onShare }: DailyVerdictProps) {
     }
 
     if (isLoading) {
-        return (
+        return variant === 'minimal' ? (
+            <div className={`animate-pulse ${className}`}>
+                <div className="h-8 w-64 bg-zinc-800 rounded mb-2" />
+                <div className="h-4 w-48 bg-zinc-800 rounded" />
+            </div>
+        ) : (
             <div className={`rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 animate-pulse ${className}`}>
                 <div className="h-6 w-16 bg-zinc-800 rounded mb-4" />
                 <div className="h-8 w-3/4 bg-zinc-800 rounded mb-2" />
@@ -92,7 +98,11 @@ export function DailyVerdict({ className = '', onShare }: DailyVerdictProps) {
     }
 
     if (!verdict) {
-        return (
+        return variant === 'minimal' ? (
+            <div className={`animate-pulse ${className}`}>
+                <div className="h-8 w-48 bg-zinc-800 rounded" />
+            </div>
+        ) : (
             <div className={`rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 ${className}`}>
                 <div className="text-center py-4">
                     <Sparkles size={32} className="mx-auto mb-2 text-purple-500 opacity-50" />
@@ -103,6 +113,29 @@ export function DailyVerdict({ className = '', onShare }: DailyVerdictProps) {
     }
 
     const styles = getSeverityStyles(verdict.severity)
+
+    if (variant === 'minimal') {
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`${className}`}
+            >
+                <div className="flex items-center gap-3 mb-2">
+                    <span className="text-3xl">{verdict.emoji || '👋'}</span>
+                    <h1 className={`text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r ${styles.text.replace('text-', 'from-').replace('-400', '-400')
+                        } to-white`}>
+                        {verdict.verdict_text}
+                    </h1>
+                </div>
+                {verdict.verdict_subtext && (
+                    <p className="text-zinc-400 max-w-2xl text-lg">
+                        {verdict.verdict_subtext}
+                    </p>
+                )}
+            </motion.div>
+        )
+    }
 
     return (
         <motion.div

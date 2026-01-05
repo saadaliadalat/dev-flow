@@ -14,11 +14,12 @@ import { VitalityRing } from '@/components/dashboard/VitalityRing'
 import { useConfetti } from '@/hooks/useConfetti'
 import { useSession } from 'next-auth/react'
 
-// Premium Components
 import { PremiumStatCard, StatCardSkeleton } from '@/components/dashboard/PremiumStatCard'
 import { InsightCard, InsightCardSkeleton } from '@/components/dashboard/InsightCard'
 import { GoalProgress, CircularProgress, GoalProgressSkeleton } from '@/components/dashboard/GoalProgress'
 import { InsightsPanel } from '@/components/dashboard/InsightsPanel'
+import { DailyVerdict } from '@/components/dashboard/DailyVerdict'
+import { DevFlowScore } from '@/components/dashboard/DevFlowScore'
 
 // Animation variants
 const containerVariants = {
@@ -170,30 +171,13 @@ export default function DashboardPage() {
             className="space-y-8"
         >
             {/* Header */}
-            <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2.5 py-1 rounded-full bg-[var(--accent-blue)]/10 border border-[var(--accent-blue)]/20 text-[var(--accent-blue)] text-xs font-medium">
-                            Dashboard
-                        </span>
-                        {stats?.last_synced && (
-                            <span className="px-2.5 py-1 rounded-full bg-[var(--accent-emerald)]/10 text-[var(--accent-emerald)] text-xs font-mono">
-                                Synced {new Date(stats.last_synced).toLocaleDateString()}
-                            </span>
-                        )}
-                    </div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                        Welcome back, <span className="text-gradient-blue">{session?.user?.name?.split(' ')[0] || 'Developer'}</span>
-                    </h1>
-                    <p className="text-[var(--text-tertiary)] mt-1">
-                        Here's your coding activity for {new Date().getFullYear()}
-                    </p>
-                </div>
+            <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <DailyVerdict variant="minimal" className="md:max-w-3xl" />
 
                 <button
                     onClick={syncGitHubData}
                     disabled={isSyncing}
-                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed hidden md:flex"
                     aria-label="Sync GitHub data"
                 >
                     <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
@@ -333,26 +317,32 @@ export default function DashboardPage() {
                     </div>
                 </motion.div>
 
-                {/* Goals & Progress */}
-                <motion.div variants={itemVariants} className="premium-card p-6 space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                            <Target size={18} className="text-[var(--accent-emerald)]" />
-                            Daily Goals
-                        </h2>
-                    </div>
+                {/* Right Column (Score + Goals) */}
+                <div className="space-y-6">
+                    {/* Dev Flow Score */}
+                    <DevFlowScore />
 
-                    <div className="flex justify-center gap-4">
-                        <CircularProgress percentage={Math.min((todayCommits / 5) * 100, 100)} color="blue" label="Today" />
-                        <CircularProgress percentage={Math.min((weekCommits / 30) * 100, 100)} color="emerald" label="Week" />
-                    </div>
+                    {/* Goals & Progress */}
+                    <motion.div variants={itemVariants} className="premium-card p-6 space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <Target size={18} className="text-[var(--accent-emerald)]" />
+                                Daily Goals
+                            </h2>
+                        </div>
 
-                    <div className="space-y-4 pt-4 border-t border-[var(--glass-border)]">
-                        <GoalProgress label="Daily Commits" current={todayCommits} target={5} color="blue" />
-                        <GoalProgress label="Weekly Commits" current={weekCommits} target={30} color="emerald" />
-                        <GoalProgress label="Streak Days" current={stats?.current_streak || 0} target={14} color="amber" />
-                    </div>
-                </motion.div>
+                        <div className="flex justify-center gap-4">
+                            <CircularProgress percentage={Math.min((todayCommits / 5) * 100, 100)} color="blue" label="Today" />
+                            <CircularProgress percentage={Math.min((weekCommits / 30) * 100, 100)} color="emerald" label="Week" />
+                        </div>
+
+                        <div className="space-y-4 pt-4 border-t border-[var(--glass-border)]">
+                            <GoalProgress label="Daily Commits" current={todayCommits} target={5} color="blue" />
+                            <GoalProgress label="Weekly Commits" current={weekCommits} target={30} color="emerald" />
+                            <GoalProgress label="Streak Days" current={stats?.current_streak || 0} target={14} color="amber" />
+                        </div>
+                    </motion.div>
+                </div>
             </div>
 
             {/* AI Insights */}

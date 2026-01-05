@@ -38,8 +38,20 @@ export async function GET(request: NextRequest) {
             verdict: { ...verdict, emoji: template?.emoji || '📊' },
             fresh: false
         })
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error fetching verdict:', error)
+        // Fallback for missing tables or initial setup
+        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+            return NextResponse.json({
+                verdict: {
+                    verdict_text: "Welcome to Dev Flow",
+                    verdict_subtext: "Complete your setup to unlock daily verdicts.",
+                    severity: "neutral",
+                    emoji: "👋"
+                },
+                fresh: true
+            })
+        }
         return NextResponse.json({ error: 'Failed to fetch verdict' }, { status: 500 })
     }
 }
