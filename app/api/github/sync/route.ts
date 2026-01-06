@@ -8,8 +8,8 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Rate limit: 1 sync per 5 minutes
-const SYNC_COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
+// Rate limit reduced for debugging (1 minute)
+const SYNC_COOLDOWN_MS = 1 * 60 * 1000
 
 export async function POST(req: Request) {
     try {
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
             auth: userData.github_access_token
         })
 
-        console.log('=== STARTING ACCURATE GITHUB SYNC ===')
+        console.log('=== STARTING ACCURATE GITHUB SYNC (ALL TIME) ===')
 
         // STEP 1: Fetch user profile and emails
         const { data: profile } = await octokit.users.getAuthenticated()
@@ -106,19 +106,23 @@ export async function POST(req: Request) {
             github_pushed_at: repo.pushed_at
         }))
 
-        await supabase.from('repositories').upsert(repoInserts, {
-            onConflict: 'github_repo_id',
-            ignoreDuplicates: false
-        })
+        // Batch repos upsert just in case
+        for (let i = 0; i < repoInserts.length; i += 100) {
+            const batch = repoInserts.slice(i, i + 100)
+            await supabase.from('repositories').upsert(batch, {
+                onConflict: 'github_repo_id',
+                ignoreDuplicates: false
+            })
+        }
 
         // STEP 3: Use SEARCH API to get ALL commits (most accurate method)
-        // This finds commits across ALL repos, including ones where PRs were merged
-        const yearStart = new Date(new Date().getFullYear(), 0, 1)
+        // We use 2015 as a safe "All Time" starting point to capture full history
+        const yearStart = new Date('2015-01-01')
         const yearStartStr = yearStart.toISOString().split('T')[0]
 
-        console.log('=== USING SEARCH API FOR ACCURATE COMMIT COUNT ===')
+        console.log('=== USING SEARCH API FOR ACCURATE COMMIT COUNT (2015+) ===')
 
-        let totalCommitsThisYear = 0
+        let totalCommits = 0
         const commitsByDay = new Map<string, any>()
         const reposWithCommits = new Set<string>()
 
@@ -126,7 +130,8 @@ export async function POST(req: Request) {
         let searchPage = 1
         let hasMoreCommits = true
 
-        while (hasMoreCommits && searchPage <= 20) { // Increased to 2000 commits max
+        // Increased limit to 50 pages (5000 commits detailed stats max)
+        while (hasMoreCommits && searchPage <= 50) {
             try {
                 // GitHub Search API for commits - finds ALL commits by this user
                 const { data: searchResult } = await octokit.search.commits({
@@ -138,9 +143,9 @@ export async function POST(req: Request) {
                 })
 
                 if (searchPage === 1) {
-                    console.log(`Search API found ${searchResult.total_count} total commits this year`)
-                    // Use the total_count from search API - this is the accurate number!
-                    totalCommitsThisYear = searchResult.total_count
+                    console.log(`Search API found ${searchResult.total_count} total commits since 2015`)
+                    // Use the total_count from search API - this is the accurate All Time number!
+                    totalCommits = searchResult.total_count
                 }
 
                 // Process commits for daily stats
@@ -193,7 +198,7 @@ export async function POST(req: Request) {
         }
 
         console.log(`Processed commits across ${reposWithCommits.size} repositories`)
-        console.log(`Total commits this year (from Search API): ${totalCommitsThisYear}`)
+        console.log(`Total commits (All Time): ${totalCommits}`)
 
         // STEP 4: Get PRs, Issues, Reviews using Search API (most accurate)
         let totalPRs = 0
@@ -207,7 +212,7 @@ export async function POST(req: Request) {
                 per_page: 1
             })
             totalPRs = prSearch.total_count
-            console.log(`PRs this year: ${totalPRs}`)
+            console.log(`PRs: ${totalPRs}`)
 
             // Count Issues
             const { data: issueSearch } = await octokit.search.issuesAndPullRequests({
@@ -215,7 +220,7 @@ export async function POST(req: Request) {
                 per_page: 1
             })
             totalIssues = issueSearch.total_count
-            console.log(`Issues this year: ${totalIssues}`)
+            console.log(`Issues: ${totalIssues}`)
 
             // Count Reviews (search for reviewed PRs)
             const { data: reviewSearch } = await octokit.search.issuesAndPullRequests({
@@ -223,7 +228,7 @@ export async function POST(req: Request) {
                 per_page: 1
             })
             totalReviews = reviewSearch.total_count
-            console.log(`PR Reviews this year: ${totalReviews}`)
+            console.log(`PR Reviews: ${totalReviews}`)
 
         } catch (searchError: any) {
             console.error('Search error:', searchError.message)
@@ -248,21 +253,26 @@ export async function POST(req: Request) {
                 lines_deleted: 0,
                 net_lines: 0,
                 files_changed: 0,
-                productivity_score: Math.min(day.total_commits * 10, 100),
+                productivity_score: day.total_commits * 10, // Uncapped score based on volume
                 is_weekend: new Date(day.date).getDay() % 6 === 0
             }
         })
 
         if (dailyStatsInserts.length > 0) {
-            const { error: statsError } = await supabase
-                .from('daily_stats')
-                .upsert(dailyStatsInserts, {
-                    onConflict: 'user_id,date',
-                    ignoreDuplicates: false
-                })
+            // Batch upserts to avoid payload limits
+            const batchSize = 100
+            for (let i = 0; i < dailyStatsInserts.length; i += batchSize) {
+                const batch = dailyStatsInserts.slice(i, i + batchSize)
+                const { error: statsError } = await supabase
+                    .from('daily_stats')
+                    .upsert(batch, {
+                        onConflict: 'user_id,date',
+                        ignoreDuplicates: false
+                    })
 
-            if (statsError) {
-                console.error('Stats upsert error:', statsError)
+                if (statsError) {
+                    console.error('Stats upsert error:', statsError)
+                }
             }
         }
 
@@ -270,19 +280,18 @@ export async function POST(req: Request) {
         await calculateStreaks(userData.id)
 
         // STEP 7: Calculate total contributions (GitHub-style)
-        const totalContributions = totalCommitsThisYear + totalPRs + totalIssues + totalReviews
+        const totalContributions = totalCommits + totalPRs + totalIssues + totalReviews
 
-        // STEP 8: Calculate productivity score
+        // STEP 8: Calculate productivity score (Uncapped)
         // Formula: commits * 10 + PRs * 25 + issues * 15 + reviews * 20
-        const rawScore = (totalCommitsThisYear * 10) + (totalPRs * 25) + (totalIssues * 15) + (totalReviews * 20)
-        const productivityScore = Math.min(Math.round((rawScore / 1500) * 100), 100)
+        const productivityScore = (totalCommits * 10) + (totalPRs * 25) + (totalIssues * 15) + (totalReviews * 20)
 
         // STEP 9: Update user with accurate stats
         await supabase
             .from('users')
             .update({
                 last_synced: new Date().toISOString(),
-                total_commits: totalCommitsThisYear,
+                total_commits: totalCommits, // Shows All Time
                 total_contributions: totalContributions,
                 total_prs: totalPRs,
                 total_issues: totalIssues,
@@ -294,16 +303,14 @@ export async function POST(req: Request) {
                 name: profile.name,
                 avatar_url: profile.avatar_url,
                 bio: profile.bio,
-                productivity_score: productivityScore
+                productivity_score: productivityScore // Uncapped
             })
             .eq('id', userData.id)
 
         console.log('=== SYNC COMPLETE ===')
-        console.log(`Commits: ${totalCommitsThisYear}`)
-        console.log(`PRs: ${totalPRs}`)
-        console.log(`Issues: ${totalIssues}`)
-        console.log(`Reviews: ${totalReviews}`)
+        console.log(`Commits: ${totalCommits}`)
         console.log(`Total Contributions: ${totalContributions}`)
+        console.log(`Score: ${productivityScore}`)
 
         // STEP 10: Background tasks
         checkAndUnlockAchievements(userData.id).catch(console.error)
@@ -312,7 +319,7 @@ export async function POST(req: Request) {
         return NextResponse.json({
             success: true,
             stats: {
-                total_commits: totalCommitsThisYear,
+                total_commits: totalCommits,
                 total_contributions: totalContributions,
                 total_prs: totalPRs,
                 total_issues: totalIssues,
