@@ -1,8 +1,8 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Loader2 } from 'lucide-react'
 import { AliveCard } from '@/components/ui/AliveCard'
 import { EternalFlame } from '@/components/lore/EternalFlame'
 import { ShadowSelf } from '@/components/lore/ShadowSelf'
@@ -24,6 +24,34 @@ const itemVariants = {
         y: 0,
         transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
     }
+}
+
+// Soul Velocity wrapper that fetches real data
+function SoulVelocityWithData() {
+    const [data, setData] = useState<{ depth: number; learning: number; risk: number } | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+
+    useEffect(() => {
+        fetch('/api/user/soul-velocity')
+            .then(res => res.ok ? res.json() : null)
+            .then(json => {
+                if (json) setData({ depth: json.depth, learning: json.learning, risk: json.risk })
+            })
+            .catch(() => { })
+            .finally(() => setIsLoading(false))
+    }, [])
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-6 h-6 text-violet-500 animate-spin" />
+            </div>
+        )
+    }
+
+    // Fallback to neutral values if no data
+    const metrics = data || { depth: 50, learning: 50, risk: 50 }
+    return <SoulVelocityGauge depth={metrics.depth} learning={metrics.learning} risk={metrics.risk} />
 }
 
 export default function LoreProfilePage() {
@@ -51,18 +79,15 @@ export default function LoreProfilePage() {
 
                 {/* Left Column - Eternal Flame + Soul Velocity */}
                 <motion.div variants={itemVariants} className="space-y-6">
-                    <AliveCard className="p-6" glass>
-                        <h2 className="font-heading font-semibold text-white mb-4">
-                            Eternal Flame
-                        </h2>
+                    <AliveCard className="p-6 flex flex-col items-center justify-center min-h-[280px]" glass>
                         <EternalFlame />
                     </AliveCard>
 
                     <AliveCard className="p-6" glass>
-                        <h2 className="font-heading font-semibold text-white mb-4">
+                        <h2 className="font-heading font-semibold text-white mb-4 text-center">
                             Soul Velocity
                         </h2>
-                        <SoulVelocityGauge depth={65} learning={78} risk={42} />
+                        <SoulVelocityWithData />
                     </AliveCard>
                 </motion.div>
 
@@ -72,7 +97,7 @@ export default function LoreProfilePage() {
                 </motion.div>
 
                 {/* Right Column - Whispers */}
-                <motion.div variants={itemVariants} className="space-y-6">
+                <motion.div variants={itemVariants} className="space-y-4">
                     <h2 className="font-heading font-semibold text-zinc-400 text-sm uppercase tracking-wider">
                         Whispers from the Network
                     </h2>
@@ -96,3 +121,4 @@ export default function LoreProfilePage() {
         </motion.div>
     )
 }
+

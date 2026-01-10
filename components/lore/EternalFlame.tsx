@@ -22,6 +22,7 @@ interface FlameData {
 export function EternalFlame({ className, compact = false }: EternalFlameProps) {
     const [data, setData] = useState<FlameData | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState(false)
 
     useEffect(() => {
         async function fetchFlame() {
@@ -30,9 +31,12 @@ export function EternalFlame({ className, compact = false }: EternalFlameProps) 
                 if (res.ok) {
                     const json = await res.json()
                     setData(json)
+                } else {
+                    setError(true)
                 }
             } catch (err) {
                 console.error('Eternal flame fetch failed:', err)
+                setError(true)
             } finally {
                 setIsLoading(false)
             }
@@ -40,10 +44,28 @@ export function EternalFlame({ className, compact = false }: EternalFlameProps) 
         fetchFlame()
     }, [])
 
-    if (isLoading || !data) {
+    // Loading state - show a pulsing flame
+    if (isLoading) {
         return (
-            <div className={`animate-pulse ${className}`}>
-                <div className="h-8 w-24 bg-white/5 rounded-lg" />
+            <div className={`flex flex-col items-center justify-center ${className}`}>
+                <motion.div
+                    animate={{ opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                    <Flame size={48} className="text-amber-500/30" />
+                </motion.div>
+                <div className="mt-4 h-8 w-20 bg-white/5 rounded-lg animate-pulse" />
+            </div>
+        )
+    }
+
+    // Error/fallback state - show a dim ember with encouraging message
+    if (error || !data) {
+        return (
+            <div className={`flex flex-col items-center ${className}`}>
+                <Flame size={48} className="text-zinc-600" />
+                <p className="text-2xl font-mono font-bold text-zinc-500 mt-4">—</p>
+                <p className="text-xs text-zinc-600 mt-2">Your flame awaits ignition</p>
             </div>
         )
     }
