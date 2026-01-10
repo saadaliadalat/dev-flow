@@ -13,7 +13,8 @@ import {
     Brain,
     Settings,
     LogOut,
-    Sparkles
+    Sparkles,
+    Flame
 } from 'lucide-react'
 import { DevFlowLogo } from '@/components/ui/DevFlowLogo'
 import { cn } from '@/lib/utils'
