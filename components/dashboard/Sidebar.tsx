@@ -29,6 +29,7 @@ const sidebarLinks = [
     { name: 'Goals', href: '/dashboard/goals', icon: Target },
     { name: 'AI Insights', href: '/dashboard/insights', icon: Brain },
     { name: 'Constellation', href: '/dashboard/constellation', icon: Sparkles },
+    { name: 'Your LORE', href: '/dashboard/lore', icon: Sparkles },
 ]
 
 // 🧲 MAGNETIC LINK COMPONENT
