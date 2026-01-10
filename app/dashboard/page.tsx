@@ -20,7 +20,9 @@ import { GoalProgress, CircularProgress, GoalProgressSkeleton } from '@/componen
 import { InsightsPanel } from '@/components/dashboard/InsightsPanel'
 import { DailyVerdict } from '@/components/dashboard/DailyVerdict'
 import { DevFlowScore } from '@/components/dashboard/DevFlowScore'
-import { AliveCard } from '@/components/ui/AliveCard' // 🔦 New Component
+import { AliveCard } from '@/components/ui/AliveCard'
+import { SoulVelocityCompact } from '@/components/lore/SoulVelocity'
+import { BurnoutOracle } from '@/components/lore/BurnoutOracle'
 
 // Animation variants
 const containerVariants = {

@@ -28,6 +28,7 @@ const sidebarLinks = [
     { name: 'Achievements', href: '/dashboard/achievements', icon: Trophy },
     { name: 'Goals', href: '/dashboard/goals', icon: Target },
     { name: 'AI Insights', href: '/dashboard/insights', icon: Brain },
+    { name: 'Constellation', href: '/dashboard/constellation', icon: Sparkles },
 ]
 
 // 🧲 MAGNETIC LINK COMPONENT
