@@ -20,6 +20,7 @@ import { GoalProgress, CircularProgress, GoalProgressSkeleton } from '@/componen
 import { InsightsPanel } from '@/components/dashboard/InsightsPanel'
 import { DailyVerdict } from '@/components/dashboard/DailyVerdict'
 import { DevFlowScore } from '@/components/dashboard/DevFlowScore'
+import { AliveCard } from '@/components/ui/AliveCard' // 🔦 New Component
 
 // Animation variants
 const containerVariants = {
@@ -246,151 +247,162 @@ export default function DashboardPage() {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Activity Chart */}
-                <motion.div variants={itemVariants} className="lg:col-span-2 premium-card p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                                <TrendingUp size={18} className="text-[var(--accent-purple)]" />
-                                Activity Frequency
-                            </h2>
-                            <p className="text-sm text-[var(--text-tertiary)]">Your coding velocity over time</p>
+                <motion.div variants={itemVariants} className="lg:col-span-2">
+                    <AliveCard className="p-6 h-full" glass>
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 className="text-lg font-heading font-semibold text-white flex items-center gap-2">
+                                    <TrendingUp size={18} className="text-violet-500" />
+                                    Activity Frequency
+                                </h2>
+                                <p className="text-sm text-zinc-500">Your coding velocity over time</p>
+                            </div>
+                            <div className="flex gap-1 p-1 rounded-xl bg-white/5 border border-white/5">
+                                {(['7', '30', '90'] as const).map((range) => (
+                                    <button
+                                        key={range}
+                                        onClick={() => setDateRange(range)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${dateRange === range
+                                            ? 'bg-violet-500 text-white shadow-[0_0_10px_rgba(124,58,237,0.3)]'
+                                            : 'text-zinc-500 hover:text-zinc-300'
+                                            }`}
+                                    >
+                                        {range}d
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                        <div className="flex gap-1 p-1 rounded-lg bg-[var(--bg-elevated)]">
-                            {(['7', '30', '90'] as const).map((range) => (
-                                <button
-                                    key={range}
-                                    onClick={() => setDateRange(range)}
-                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${dateRange === range
-                                        ? 'bg-[var(--accent-blue)] text-white'
-                                        : 'text-[var(--text-tertiary)] hover:text-white'
-                                        }`}
-                                >
-                                    {range}d
-                                </button>
-                            ))}
-                        </div>
-                    </div>
 
-                    <div className="h-[280px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={activityData}>
-                                <defs>
-                                    <linearGradient id="colorCommits" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.4} />
-                                        <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                <XAxis
-                                    dataKey="name"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
-                                    width={30}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: 'var(--bg-card)',
-                                        border: '1px solid var(--glass-border)',
-                                        borderRadius: 'var(--radius-md)',
-                                        boxShadow: 'var(--shadow-lg)',
-                                    }}
-                                    labelStyle={{ color: 'var(--text-secondary)', marginBottom: 4 }}
-                                    itemStyle={{ color: 'white' }}
-                                    cursor={{ stroke: 'var(--accent-purple)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="commits"
-                                    stroke="#8B5CF6"
-                                    strokeWidth={2}
-                                    fill="url(#colorCommits)"
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
+                        <div className="h-[280px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={activityData}>
+                                    <defs>
+                                        <linearGradient id="colorCommits" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.4} />
+                                            <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#71717a', fontSize: 11 }}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#71717a', fontSize: 11 }}
+                                        width={30}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: 'var(--bg-card)',
+                                            border: '1px solid var(--glass-border)',
+                                            borderRadius: '12px',
+                                            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                                        }}
+                                        labelStyle={{ color: '#a1a1aa', marginBottom: 4 }}
+                                        itemStyle={{ color: 'white' }}
+                                        cursor={{ stroke: '#8B5CF6', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="commits"
+                                        stroke="#8B5CF6"
+                                        strokeWidth={2}
+                                        fill="url(#colorCommits)"
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </AliveCard>
                 </motion.div>
 
                 {/* Right Column (Score + Goals) */}
                 <div className="space-y-6">
                     {/* Dev Flow Score */}
-                    <DevFlowScore />
+                    {/* Note: DevFlowScore internal might need update, but wrapper is okay for now */}
+                    <AliveCard className="p-1" glass>
+                        <DevFlowScore />
+                    </AliveCard>
 
                     {/* Goals & Progress */}
-                    <motion.div variants={itemVariants} className="premium-card p-6 space-y-6">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                                <Target size={18} className="text-[var(--accent-emerald)]" />
-                                Daily Goals
-                            </h2>
-                        </div>
+                    <motion.div variants={itemVariants}>
+                        <AliveCard className="p-6 space-y-6" glass>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-lg font-heading font-semibold text-white flex items-center gap-2">
+                                    <Target size={18} className="text-emerald-500" />
+                                    Daily Goals
+                                </h2>
+                            </div>
 
-                        <div className="flex justify-center gap-4">
-                            <CircularProgress percentage={Math.min((todayCommits / 5) * 100, 100)} color="blue" label="Today" />
-                            <CircularProgress percentage={Math.min((weekCommits / 30) * 100, 100)} color="emerald" label="Week" />
-                        </div>
+                            <div className="flex justify-center gap-4">
+                                <CircularProgress percentage={Math.min((todayCommits / 5) * 100, 100)} color="blue" label="Today" />
+                                <CircularProgress percentage={Math.min((weekCommits / 30) * 100, 100)} color="emerald" label="Week" />
+                            </div>
 
-                        <div className="space-y-4 pt-4 border-t border-[var(--glass-border)]">
-                            <GoalProgress label="Daily Commits" current={todayCommits} target={5} color="blue" />
-                            <GoalProgress label="Weekly Commits" current={weekCommits} target={30} color="emerald" />
-                            <GoalProgress label="Streak Days" current={stats?.current_streak || 0} target={14} color="amber" />
-                        </div>
+                            <div className="space-y-4 pt-4 border-t border-white/5">
+                                <GoalProgress label="Daily Commits" current={todayCommits} target={5} color="blue" />
+                                <GoalProgress label="Weekly Commits" current={weekCommits} target={30} color="emerald" />
+                                <GoalProgress label="Streak Days" current={stats?.current_streak || 0} target={14} color="amber" />
+                            </div>
+                        </AliveCard>
                     </motion.div>
                 </div>
             </div>
 
-            {/* AI Insights */}
+            {/* AI Insights - Wrapped */}
             <motion.div variants={itemVariants}>
-                <InsightsPanel className="premium-card overflow-hidden" />
+                <AliveCard className="overflow-hidden" glass>
+                    <InsightsPanel />
+                </AliveCard>
             </motion.div>
 
             {/* Recent Activity */}
-            <motion.div variants={itemVariants} className="premium-card p-6">
-                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Clock size={18} className="text-[var(--accent-blue)]" />
-                    Recent Activity
-                </h2>
-                <div className="space-y-1 max-h-[300px] overflow-y-auto">
-                    {recentCommits.length > 0 ? (
-                        recentCommits.slice(0, 10).map((event: any, i: number) => (
-                            <motion.div
-                                key={event.id || i}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: i * 0.05 }}
-                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer group"
-                            >
-                                <div className="w-2 h-2 rounded-full bg-[var(--accent-blue)] group-hover:scale-125 transition-transform" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm text-white truncate group-hover:text-[var(--accent-blue)] transition-colors">
-                                        {event.title}
-                                    </p>
-                                    <p className="text-xs text-[var(--text-muted)] font-mono">
-                                        {new Date(event.created_at).toLocaleString([], {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        })}
-                                    </p>
-                                </div>
-                                <ArrowUpRight size={14} className="text-[var(--text-muted)] group-hover:text-[var(--accent-blue)] transition-colors" />
-                            </motion.div>
-                        ))
-                    ) : (
-                        <div className="text-center py-8 text-[var(--text-tertiary)]">
-                            <Activity size={32} className="mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">No recent activity</p>
-                            <p className="text-xs">Push some code to see it here!</p>
-                        </div>
-                    )}
-                </div>
+            <motion.div variants={itemVariants}>
+                <AliveCard className="p-6" glass>
+                    <h2 className="text-lg font-heading font-semibold text-white mb-4 flex items-center gap-2">
+                        <Clock size={18} className="text-blue-500" />
+                        Recent Activity
+                    </h2>
+                    <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                        {recentCommits.length > 0 ? (
+                            recentCommits.slice(0, 10).map((event: any, i: number) => (
+                                <motion.div
+                                    key={event.id || i}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.05 }}
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group"
+                                >
+                                    <div className="w-2 h-2 rounded-full bg-blue-500 group-hover:scale-125 transition-transform" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-white truncate group-hover:text-blue-400 transition-colors font-medium">
+                                            {event.title}
+                                        </p>
+                                        <p className="text-xs text-zinc-500 font-mono">
+                                            {new Date(event.created_at).toLocaleString([], {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </p>
+                                    </div>
+                                    <ArrowUpRight size={14} className="text-zinc-600 group-hover:text-blue-400 transition-colors" />
+                                </motion.div>
+                            ))
+                        ) : (
+                            <div className="text-center py-8 text-zinc-500">
+                                <Activity size={32} className="mx-auto mb-2 opacity-50" />
+                                <p className="text-sm">No recent activity</p>
+                                <p className="text-xs">Push some code to see it here!</p>
+                            </div>
+                        )}
+                    </div>
+                </AliveCard>
             </motion.div>
         </motion.div>
     )

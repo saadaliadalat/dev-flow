@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
+import { Inter, JetBrains_Mono } from 'next/font/google'
 // import { Analytics } from '@vercel/analytics/next' // TODO: npm install @vercel/analytics
 import "./globals.css";
+
+// 🔳 FONT STACK (2026)
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains' })
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://dev-flow-ashen.vercel.app'),
@@ -46,9 +49,19 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+        <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
+            <head>
+                {/* 🎨 SATOSHI (Heading Font) from Fontshare CDN */}
+                <link href="https://api.fontshare.com/v2/css?f[]=satoshi@700,500,400&display=swap" rel="stylesheet" />
+                <style dangerouslySetInnerHTML={{
+                    __html: `
+                    :root {
+                        --font-satoshi: 'Satoshi', sans-serif;
+                    }
+                 `}} />
+            </head>
             <body
-                className="antialiased bg-deep-space text-foreground overflow-x-hidden"
+                className="antialiased bg-void text-white overflow-x-hidden selection:bg-violet-500/30"
                 style={{ fontFeatureSettings: '"cv11", "ss01"' }}
             >
                 {/* Skip to content link for keyboard accessibility */}
