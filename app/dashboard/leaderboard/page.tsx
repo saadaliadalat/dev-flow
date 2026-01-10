@@ -152,9 +152,9 @@ function StickyHeader({ scrollY, period, setPeriod }: { scrollY: any, period: Ti
     return (
         <motion.header
             style={{ backgroundColor: headerBg, backdropFilter: backdropBlur, borderColor: `rgba(39, 39, 42, ${borderOpacity.get()})` as any }}
-            className="fixed top-0 inset-x-0 z-50 h-16 border-b border-transparent transition-colors duration-300"
+            className="sticky top-0 z-40 w-full border-b border-transparent transition-colors duration-300"
         >
-            <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
+            <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/20">
                         <Trophy className="w-4 h-4 text-white" />
@@ -343,12 +343,12 @@ function EnhancedPodium({ users }: { users: LeaderboardUser[] }) {
 
                         {/* The Pedestal */}
                         <div className={`w-32 md:w-40 rounded-t-2xl relative overflow-hidden backdrop-blur-md border-t border-x border-white/10 ${height}
-                            ${isFirst ? 'bg-gradient-to-b from-amber-500/10 to-transparent' :
-                                rank === 2 ? 'bg-gradient-to-b from-zinc-500/10 to-transparent' :
-                                    'bg-gradient-to-b from-orange-500/10 to-transparent'}
+                            ${isFirst ? 'bg-gradient-to-b from-amber-500/20 to-transparent shadow-[0_-10px_40px_rgba(245,158,11,0.1)]' :
+                                rank === 2 ? 'bg-gradient-to-b from-zinc-500/20 to-transparent' :
+                                    'bg-gradient-to-b from-orange-500/20 to-transparent'}
                          `}>
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                            <div className={`text-6xl font-black absolute bottom-4 w-full text-center opacity-30 ${isFirst ? 'text-amber-500' : rank === 2 ? 'text-zinc-500' : 'text-orange-500'}`}>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                            <div className={`text-6xl font-black absolute bottom-4 w-full text-center ${isFirst ? 'text-amber-500 opacity-80' : rank === 2 ? 'text-zinc-500 opacity-60' : 'text-orange-500 opacity-60'}`}>
                                 {rank}
                             </div>
                         </div>
@@ -507,7 +507,9 @@ export default function LeaderboardPage() {
                 </motion.div>
 
                 {/* Podium Section */}
-                {users.length > 0 && <EnhancedPodium users={users} />}
+                <div className="py-8">
+                    {users.length > 0 && <EnhancedPodium users={users} />}
+                </div>
 
                 {/* The List */}
                 <div className="space-y-4 relative">
