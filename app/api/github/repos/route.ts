@@ -13,12 +13,16 @@ interface RepoCommitCache {
     cached_at: string
 }
 
-// Fetch real commit count for a single repo
+// Fetch real commit count for a single repo with timeout
 async function fetchRepoCommitCount(
     owner: string,
     repo: string,
     token: string
 ): Promise<number> {
+    // Add 3-second timeout per repo to prevent slow responses
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 3000)
+
     try {
         // Use contributor statistics - gives total commits per contributor
         const statsRes = await fetch(
@@ -28,28 +32,15 @@ async function fetchRepoCommitCount(
                     Authorization: `Bearer ${token}`,
                     Accept: 'application/vnd.github.v3+json',
                 },
+                signal: controller.signal,
             }
         )
 
-        // GitHub returns 202 if stats are being computed - retry once
+        clearTimeout(timeout)
+
+        // GitHub returns 202 if stats are being computed - don't wait, just return 0
         if (statsRes.status === 202) {
-            await new Promise(resolve => setTimeout(resolve, 1000))
-            const retryRes = await fetch(
-                `https://api.github.com/repos/${owner}/${repo}/stats/contributors`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        Accept: 'application/vnd.github.v3+json',
-                    },
-                }
-            )
-            if (retryRes.ok) {
-                const data = await retryRes.json()
-                if (Array.isArray(data)) {
-                    return data.reduce((sum: number, contributor: any) => sum + (contributor.total || 0), 0)
-                }
-            }
-            return 0
+            return 0 // Stats not ready, skip instead of blocking
         }
 
         if (statsRes.ok) {
@@ -60,8 +51,12 @@ async function fetchRepoCommitCount(
         }
 
         return 0
-    } catch (error) {
-        console.error(`Failed to fetch commits for ${owner}/${repo}:`, error)
+    } catch (error: any) {
+        clearTimeout(timeout)
+        // Silently handle timeouts and network errors - just return 0
+        if (error.name === 'AbortError') {
+            console.log(`Commit fetch timeout for ${owner}/${repo}`)
+        }
         return 0
     }
 }
@@ -106,8 +101,20 @@ export async function GET() {
         })
 
         if (!reposRes.ok) {
-            console.error('GitHub repos fetch failed:', await reposRes.text())
-            return NextResponse.json({ error: 'GitHub API error' }, { status: 502 })
+            const errorText = await reposRes.text().catch(() => 'Unknown error')
+            console.error('GitHub repos fetch failed:', reposRes.status, errorText)
+
+            // Token expired or invalid
+            if (reposRes.status === 401) {
+                return NextResponse.json({ error: 'GitHub token expired - please sign out and sign back in' }, { status: 401 })
+            }
+
+            // Rate limited
+            if (reposRes.status === 403) {
+                return NextResponse.json({ error: 'GitHub rate limit exceeded - try again in a few minutes' }, { status: 429 })
+            }
+
+            return NextResponse.json({ error: 'GitHub API error - try again later' }, { status: 502 })
         }
 
         const repos = await reposRes.json()
