@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, useSpring, useTransform } from 'framer-motion'
-import { Sparkles, ExternalLink, Loader2, RefreshCw, AlertCircle } from 'lucide-react'
+import { Sparkles, ExternalLink, Loader2, RefreshCw, AlertCircle, LogOut } from 'lucide-react'
+import { signOut } from 'next-auth/react'
 import { Constellation } from '@/components/lore/Constellation'
 import { AliveCard } from '@/components/ui/AliveCard'
 import { Star } from '@/lib/constellation'
@@ -57,33 +58,38 @@ export default function ConstellationPage() {
             })
 
             if (!res.ok) {
-                // If API fails, try to get basic repos from session
-                console.warn('Repos API returned', res.status, '- trying fallback')
+                const errorData = await res.json().catch(() => ({}))
+                console.warn('Repos API returned', res.status, errorData)
 
-                // Try the user profile endpoint as fallback
+                // Handle specific error cases
+                if (res.status === 401) {
+                    setError('Session expired. Please sign out and sign back in to reconnect GitHub.')
+                    setStars([])
+                    return
+                }
+
+                if (res.status === 400 && errorData.error?.includes('token')) {
+                    setError('GitHub connection lost. Please sign out and sign back in to reconnect.')
+                    setStars([])
+                    return
+                }
+
+                // Try the user profile endpoint to check if user has repos
                 const profileRes = await fetch('/api/user/me', {
                     credentials: 'include',
                 })
 
                 if (profileRes.ok) {
                     const profile = await profileRes.json()
-                    // Create minimal star data from profile
-                    if (profile.repos && profile.repos.length > 0) {
-                        const starsData: Star[] = profile.repos.map((repo: any) => ({
-                            id: repo.id?.toString() || repo.name,
-                            name: repo.name,
-                            fullName: repo.full_name || repo.fullName,
-                            language: repo.language,
-                            commits: repo.commits || 0,
-                            lastCommitAt: repo.pushed_at || repo.updated_at,
-                            url: repo.html_url || `https://github.com/${repo.full_name}`,
-                        }))
-                        setStars(starsData)
+                    // /api/user/me returns {user, dailyStats} - check if user has repos to sync
+                    if (profile?.user?.total_repos > 0) {
+                        setError(`You have ${profile.user.total_repos} repositories. Try syncing your GitHub data from Settings.`)
+                        setStars([])
                         return
                     }
                 }
 
-                // If both fail, show empty constellation (not error)
+                // No repos found
                 setStars([])
                 return
             }
@@ -104,7 +110,7 @@ export default function ConstellationPage() {
             setStars(starsData)
         } catch (err) {
             console.error('Constellation fetch error:', err)
-            // Show empty constellation instead of error
+            setError('Failed to connect. Check your internet connection and try again.')
             setStars([])
         } finally {
             setIsLoading(false)
@@ -199,17 +205,31 @@ export default function ConstellationPage() {
                         </div>
                     ) : error ? (
                         <div className="w-full h-full flex flex-col items-center justify-center gap-4">
-                            <AlertCircle className="w-12 h-12 text-red-500/60" />
-                            <p className="text-sm text-zinc-400 text-center max-w-xs">{error}</p>
-                            <motion.button
-                                onClick={handleRefresh}
-                                className="px-4 py-2 rounded-lg bg-violet-500/20 text-violet-400 text-sm font-medium hover:bg-violet-500/30 transition-colors flex items-center gap-2"
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                <RefreshCw size={14} />
-                                Try Again
-                            </motion.button>
+                            <AlertCircle className="w-12 h-12 text-amber-500/60" />
+                            <p className="text-sm text-zinc-400 text-center max-w-sm">{error}</p>
+                            <div className="flex items-center gap-3">
+                                {error.toLowerCase().includes('sign') ? (
+                                    <motion.button
+                                        onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+                                        className="px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 text-sm font-medium hover:bg-amber-500/30 transition-colors flex items-center gap-2"
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        <LogOut size={14} />
+                                        Sign Out & Reconnect
+                                    </motion.button>
+                                ) : (
+                                    <motion.button
+                                        onClick={handleRefresh}
+                                        className="px-4 py-2 rounded-lg bg-violet-500/20 text-violet-400 text-sm font-medium hover:bg-violet-500/30 transition-colors flex items-center gap-2"
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        <RefreshCw size={14} />
+                                        Try Again
+                                    </motion.button>
+                                )}
+                            </div>
                         </div>
                     ) : stars.length === 0 ? (
                         <div className="w-full h-full flex flex-col items-center justify-center gap-4">
