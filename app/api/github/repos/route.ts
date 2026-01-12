@@ -70,18 +70,30 @@ export async function GET() {
     try {
         const session = await auth()
         if (!session?.user) {
+            console.error('GitHub repos: No session found')
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         // Get user's GitHub access token
         const githubId = (session.user as any).githubId
-        const { data: user } = await supabaseAdmin
+        if (!githubId) {
+            console.error('GitHub repos: No githubId in session', { user: session.user })
+            return NextResponse.json({ error: 'No GitHub ID in session' }, { status: 400 })
+        }
+
+        const { data: user, error: userError } = await supabaseAdmin
             .from('users')
             .select('github_access_token, github_username')
             .eq('github_id', githubId)
             .single()
 
+        if (userError) {
+            console.error('GitHub repos: Supabase user query failed', userError)
+            return NextResponse.json({ error: 'Database error' }, { status: 500 })
+        }
+
         if (!user?.github_access_token) {
+            console.error('GitHub repos: No GitHub token found for user', { githubId })
             return NextResponse.json({ error: 'No GitHub token' }, { status: 400 })
         }
 
