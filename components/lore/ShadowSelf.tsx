@@ -25,7 +25,9 @@ export function ShadowSelf({ className }: ShadowSelfProps) {
     useEffect(() => {
         async function fetchShadow() {
             try {
-                const res = await fetch('/api/user/shadow-self')
+                const res = await fetch('/api/user/shadow-self', {
+                    credentials: 'include',
+                })
                 if (res.ok) {
                     const json = await res.json()
                     setData(json)

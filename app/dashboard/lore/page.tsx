@@ -32,7 +32,7 @@ function SoulVelocityWithData() {
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        fetch('/api/user/soul-velocity')
+        fetch('/api/user/soul-velocity', { credentials: 'include' })
             .then(res => res.ok ? res.json() : null)
             .then(json => {
                 if (json) setData({ depth: json.depth, learning: json.learning, risk: json.risk })

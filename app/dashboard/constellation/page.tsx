@@ -50,8 +50,43 @@ export default function ConstellationPage() {
     const fetchRepos = async () => {
         try {
             setError(null)
-            const res = await fetch('/api/github/repos')
-            if (!res.ok) throw new Error('Failed to fetch repos')
+
+            // Try fetching from the repos API
+            const res = await fetch('/api/github/repos', {
+                credentials: 'include', // Ensure cookies are sent
+            })
+
+            if (!res.ok) {
+                // If API fails, try to get basic repos from session
+                console.warn('Repos API returned', res.status, '- trying fallback')
+
+                // Try the user profile endpoint as fallback
+                const profileRes = await fetch('/api/user/me', {
+                    credentials: 'include',
+                })
+
+                if (profileRes.ok) {
+                    const profile = await profileRes.json()
+                    // Create minimal star data from profile
+                    if (profile.repos && profile.repos.length > 0) {
+                        const starsData: Star[] = profile.repos.map((repo: any) => ({
+                            id: repo.id?.toString() || repo.name,
+                            name: repo.name,
+                            fullName: repo.full_name || repo.fullName,
+                            language: repo.language,
+                            commits: repo.commits || 0,
+                            lastCommitAt: repo.pushed_at || repo.updated_at,
+                            url: repo.html_url || `https://github.com/${repo.full_name}`,
+                        }))
+                        setStars(starsData)
+                        return
+                    }
+                }
+
+                // If both fail, show empty constellation (not error)
+                setStars([])
+                return
+            }
 
             const data = await res.json()
 
@@ -69,7 +104,8 @@ export default function ConstellationPage() {
             setStars(starsData)
         } catch (err) {
             console.error('Constellation fetch error:', err)
-            setError('Could not load your constellation. Please try again.')
+            // Show empty constellation instead of error
+            setStars([])
         } finally {
             setIsLoading(false)
             setIsRefetching(false)
