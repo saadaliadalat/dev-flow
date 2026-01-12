@@ -116,6 +116,10 @@ export const authConfig: NextAuthConfig = {
         strategy: 'jwt',
         maxAge: 30 * 24 * 60 * 60, // 30 days
     },
+
+    // Required for NextAuth v5 to work in API routes
+    trustHost: true,
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
 }
 
 const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
