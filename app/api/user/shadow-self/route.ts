@@ -35,9 +35,23 @@ export async function GET() {
         }
 
         // Calculate "shadow" metrics (potential that wasn't realized)
+        // Get earliest activity date to properly calculate "Shadow" potential
+        // If user imported history, their activity might predate their account creation
+        const { data: firstStat } = await supabaseAdmin
+            .from('daily_stats')
+            .select('date')
+            .eq('user_id', user.id)
+            .order('date', { ascending: true })
+            .limit(1)
+            .single()
+
+        const createdAt = new Date(user.created_at).getTime()
+        const firstActivity = firstStat ? new Date(firstStat.date).getTime() : createdAt
+        const startTime = Math.min(createdAt, firstActivity)
+
         // Shadow = theoretical max based on time vs actual output
         const daysSinceJoin = Math.floor(
-            (Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24)
+            (Date.now() - startTime) / (1000 * 60 * 60 * 24)
         )
 
         // Theoretical: 2 commits/day, 1 PR/week, 1 review every 2 days
