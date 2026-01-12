@@ -16,6 +16,13 @@ export const LANGUAGE_COLORS: Record<string, string> = {
     PHP: '#6366F1',         // Indigo
     Swift: '#F59E0B',       // Amber
     Kotlin: '#A855F7',      // Purple
+    Dart: '#00B4AB',        // Teal (Flutter)
+    C: '#555555',           // Gray
+    'C#': '#68217A',        // Purple
+    Shell: '#89E051',       // Green
+    HTML: '#E34C26',        // Orange-Red
+    CSS: '#563D7C',         // Purple
+    Vue: '#41B883',         // Green
     default: '#71717A',     // Zinc (fallback)
 }
 
