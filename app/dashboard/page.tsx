@@ -18,11 +18,10 @@ import { PremiumStatCard, StatCardSkeleton } from '@/components/dashboard/Premiu
 import { InsightCard, InsightCardSkeleton } from '@/components/dashboard/InsightCard'
 import { GoalProgress, CircularProgress, GoalProgressSkeleton } from '@/components/dashboard/GoalProgress'
 import { InsightsPanel } from '@/components/dashboard/InsightsPanel'
-import { DailyVerdict } from '@/components/dashboard/DailyVerdict'
 import { DevFlowScore } from '@/components/dashboard/DevFlowScore'
 import { AliveCard } from '@/components/ui/AliveCard'
-import { SoulVelocityCompact } from '@/components/lore/SoulVelocity'
-import { BurnoutOracle } from '@/components/lore/BurnoutOracle'
+import { TodaysDirective } from '@/components/dashboard/TodaysDirective'
+import { DailyMissions } from '@/components/dashboard/DailyMissions'
 
 // Animation variants
 const containerVariants = {
@@ -173,14 +172,18 @@ export default function DashboardPage() {
             animate="visible"
             className="space-y-8"
         >
-            {/* Header */}
-            <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <DailyVerdict variant="minimal" className="md:max-w-3xl" />
+            {/* TODAY'S DIRECTIVE - Top Priority */}
+            <motion.div variants={itemVariants} className="mb-8">
+                <TodaysDirective className="w-full" />
+            </motion.div>
 
+            {/* Header with Sync */}
+            <motion.div variants={itemVariants} className="flex items-center justify-between gap-4 mb-4">
+                <h2 className="text-lg font-heading font-semibold text-white">Performance Overview</h2>
                 <button
                     onClick={syncGitHubData}
                     disabled={isSyncing}
-                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed hidden md:flex"
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Sync GitHub data"
                 >
                     <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
@@ -325,31 +328,14 @@ export default function DashboardPage() {
                 {/* Right Column (Score + Goals) */}
                 <div className="space-y-6">
                     {/* Dev Flow Score */}
-                    {/* Note: DevFlowScore internal might need update, but wrapper is okay for now */}
                     <AliveCard className="p-1" glass>
                         <DevFlowScore />
                     </AliveCard>
 
-                    {/* Goals & Progress */}
+                    {/* Daily Missions */}
                     <motion.div variants={itemVariants}>
-                        <AliveCard className="p-6 space-y-6" glass>
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-heading font-semibold text-white flex items-center gap-2">
-                                    <Target size={18} className="text-emerald-500" />
-                                    Daily Goals
-                                </h2>
-                            </div>
-
-                            <div className="flex justify-center gap-4">
-                                <CircularProgress percentage={Math.min((todayCommits / 5) * 100, 100)} color="blue" label="Today" />
-                                <CircularProgress percentage={Math.min((weekCommits / 30) * 100, 100)} color="emerald" label="Week" />
-                            </div>
-
-                            <div className="space-y-4 pt-4 border-t border-white/5">
-                                <GoalProgress label="Daily Commits" current={todayCommits} target={5} color="blue" />
-                                <GoalProgress label="Weekly Commits" current={weekCommits} target={30} color="emerald" />
-                                <GoalProgress label="Streak Days" current={stats?.current_streak || 0} target={14} color="amber" />
-                            </div>
+                        <AliveCard className="p-6" glass>
+                            <DailyMissions />
                         </AliveCard>
                     </motion.div>
                 </div>
