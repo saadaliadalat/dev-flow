@@ -14,7 +14,8 @@ import {
     Settings,
     LogOut,
     Sparkles,
-    Flame
+    Flame,
+    Bot
 } from 'lucide-react'
 import { DevFlowLogo } from '@/components/ui/DevFlowLogo'
 import { cn } from '@/lib/utils'
@@ -29,6 +30,8 @@ const sidebarLinks = [
     { name: 'Achievements', href: '/dashboard/achievements', icon: Trophy },
     { name: 'Goals', href: '/dashboard/goals', icon: Target },
     { name: 'AI Insights', href: '/dashboard/insights', icon: Brain },
+    { name: 'AI Coach', href: '/dashboard/coach', icon: Bot },
+    { name: 'Constellation', href: '/dashboard/constellation', icon: Sparkles },
     { name: 'Your LORE', href: '/dashboard/lore', icon: Flame },
 ]
 
