@@ -205,9 +205,9 @@ function StatBadge({
 }
 
 function InsightCard({ insight, index }: { insight: CoachInsight; index: number }) {
-    const Icon = CATEGORY_ICONS[insight.category]
-    const colors = CATEGORY_COLORS[insight.category]
-    const impact = IMPACT_BADGES[insight.impact]
+    const Icon = CATEGORY_ICONS[insight.category] || Zap
+    const colors = CATEGORY_COLORS[insight.category] || CATEGORY_COLORS.quality
+    const impact = IMPACT_BADGES[insight.impact] || IMPACT_BADGES.medium
 
     return (
         <motion.div
