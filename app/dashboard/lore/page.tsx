@@ -8,6 +8,7 @@ import { EternalFlame } from '@/components/lore/EternalFlame'
 import { ShadowSelf } from '@/components/lore/ShadowSelf'
 import { WhisperCard } from '@/components/lore/WhisperCard'
 import { SoulVelocityGauge } from '@/components/lore/SoulVelocity'
+import { JourneyNarrative } from '@/components/lore/JourneyNarrative'
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -72,6 +73,11 @@ export default function LoreProfilePage() {
                     The story your code tells about who you're becoming.
                     Not just metrics — mythology.
                 </p>
+            </motion.div>
+
+            {/* Journey Narrative - LLM Generated */}
+            <motion.div variants={itemVariants}>
+                <JourneyNarrative />
             </motion.div>
 
             {/* Main Grid */}

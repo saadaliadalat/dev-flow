@@ -6,7 +6,7 @@ import { Sparkles, ExternalLink, Loader2, RefreshCw, AlertCircle, LogOut } from 
 import { signOut } from 'next-auth/react'
 import { Constellation } from '@/components/lore/Constellation'
 import { AliveCard } from '@/components/ui/AliveCard'
-import { Star } from '@/lib/constellation'
+import { Star, getRecencyScore } from '@/lib/constellation'
 
 // Animated counter component
 function AnimatedNumber({ value, duration = 1.5 }: { value: number; duration?: number }) {
@@ -133,11 +133,12 @@ export default function ConstellationPage() {
         }
     }
 
-    // Calculate stats
-    const activeStars = stars.filter(s => s.lastCommitAt && new Date(s.lastCommitAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length
+    // Calculate stats using recency formula: e^{-days/30}
+    // Active = recency > 0.5 (~21 days), Dim = recency < 0.1 (~69 days)
+    const activeStars = stars.filter(s => getRecencyScore(s.lastCommitAt) > 0.5).length
     const totalCommits = stars.reduce((sum, s) => sum + s.commits, 0)
     const languages = new Set(stars.map(s => s.language).filter(Boolean)).size
-    const dimEmbers = stars.filter(s => !s.lastCommitAt || new Date(s.lastCommitAt) < new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)).length
+    const dimEmbers = stars.filter(s => getRecencyScore(s.lastCommitAt) < 0.1).length
 
     return (
         <div className="space-y-6">

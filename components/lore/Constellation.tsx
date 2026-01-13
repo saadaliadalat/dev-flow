@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Star as StarIcon, GitCommit, Clock, ExternalLink } from 'lucide-react'
-import { Star, getStarSize, getStarBrightness, getLanguageColor, getSpiralPosition } from '@/lib/constellation'
+import { Star, getStarSize, getStarBrightness, getLanguageColor, forceDirectedLayout, getLanguageEdges } from '@/lib/constellation'
 import { SPRINGS } from '@/lib/motion'
 
 interface ConstellationProps {
@@ -28,6 +28,7 @@ export function Constellation({ stars, onStarClick }: ConstellationProps) {
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
     const animationRef = useRef<number>()
     const starsWithPositions = useRef<Star[]>([])
+    const languageEdges = useRef<Array<[Star, Star, string]>>([])
     const particlesRef = useRef<Particle[]>([])
 
     // Initialize nebula particles
@@ -45,25 +46,25 @@ export function Constellation({ stars, onStarClick }: ConstellationProps) {
         }))
     }, [])
 
-    // Calculate star positions on mount/resize
+    // Calculate star positions using force-directed layout
     useEffect(() => {
         if (!containerRef.current) return
 
         const { width, height } = containerRef.current.getBoundingClientRect()
-        const centerX = width / 2
-        const centerY = height / 2
 
-        starsWithPositions.current = stars.map((star, i) => {
-            const pos = getSpiralPosition(i, centerX, centerY, 60)
-            return {
-                ...star,
-                x: pos.x,
-                y: pos.y,
-                size: getStarSize(star.commits),
-                color: getLanguageColor(star.language),
-                brightness: getStarBrightness(star.lastCommitAt),
-            }
-        })
+        // Prepare stars with computed properties
+        const preparedStars = stars.map((star) => ({
+            ...star,
+            size: getStarSize(star.commits),
+            color: getLanguageColor(star.language),
+            brightness: getStarBrightness(star.lastCommitAt),
+        }))
+
+        // Apply force-directed layout (clusters by language)
+        starsWithPositions.current = forceDirectedLayout(preparedStars, width, height, 50)
+
+        // Compute language-based constellation edges
+        languageEdges.current = getLanguageEdges(starsWithPositions.current)
     }, [stars])
 
     // Canvas rendering loop - WORLD CLASS DESIGN
@@ -146,37 +147,40 @@ export function Constellation({ stars, onStarClick }: ConstellationProps) {
             })
 
             // ═══════════════════════════════════════════════════════════
-            // LAYER 3: Constellation lines with gradient & energy pulse
+            // LAYER 3: Language-based constellation lines with energy pulse
             // ═══════════════════════════════════════════════════════════
-            starsWithPositions.current.forEach((star, i) => {
-                if (i > 0 && star.x && star.y) {
-                    const prev = starsWithPositions.current[i - 1]
-                    if (prev.x && prev.y) {
-                        // Energy pulse position along line
-                        const pulsePos = (time * 0.5 + i * 0.1) % 1
-                        const pulseX = prev.x + (star.x - prev.x) * pulsePos
-                        const pulseY = prev.y + (star.y - prev.y) * pulsePos
+            languageEdges.current.forEach(([star1, star2, lang], i) => {
+                if (!star1.x || !star1.y || !star2.x || !star2.y) return
 
-                        // Gradient line
-                        const lineGradient = ctx.createLinearGradient(prev.x, prev.y, star.x, star.y)
-                        lineGradient.addColorStop(0, `${prev.color || '#8B5CF6'}15`)
-                        lineGradient.addColorStop(0.5, 'rgba(139, 92, 246, 0.12)')
-                        lineGradient.addColorStop(1, `${star.color || '#8B5CF6'}15`)
+                const color = star1.color || '#8B5CF6'
 
-                        ctx.beginPath()
-                        ctx.moveTo(prev.x, prev.y)
-                        ctx.lineTo(star.x, star.y)
-                        ctx.strokeStyle = lineGradient
-                        ctx.lineWidth = 1.5
-                        ctx.stroke()
+                // Energy pulse position along line
+                const pulsePos = (time * 0.3 + i * 0.15) % 1
+                const pulseX = star1.x + (star2.x - star1.x) * pulsePos
+                const pulseY = star1.y + (star2.y - star1.y) * pulsePos
 
-                        // Energy pulse dot
-                        ctx.beginPath()
-                        ctx.arc(pulseX, pulseY, 2, 0, Math.PI * 2)
-                        ctx.fillStyle = 'rgba(139, 92, 246, 0.6)'
-                        ctx.fill()
-                    }
-                }
+                // Gradient line matching language color
+                const lineGradient = ctx.createLinearGradient(star1.x, star1.y, star2.x, star2.y)
+                lineGradient.addColorStop(0, `${color}25`)
+                lineGradient.addColorStop(0.5, `${color}18`)
+                lineGradient.addColorStop(1, `${color}25`)
+
+                ctx.beginPath()
+                ctx.moveTo(star1.x, star1.y)
+                ctx.lineTo(star2.x, star2.y)
+                ctx.strokeStyle = lineGradient
+                ctx.lineWidth = 1.5
+                ctx.stroke()
+
+                // Energy pulse dot (language-colored)
+                const pulseGlow = ctx.createRadialGradient(pulseX, pulseY, 0, pulseX, pulseY, 6)
+                pulseGlow.addColorStop(0, `${color}90`)
+                pulseGlow.addColorStop(0.5, `${color}40`)
+                pulseGlow.addColorStop(1, 'transparent')
+                ctx.beginPath()
+                ctx.arc(pulseX, pulseY, 6, 0, Math.PI * 2)
+                ctx.fillStyle = pulseGlow
+                ctx.fill()
             })
 
             // ═══════════════════════════════════════════════════════════
