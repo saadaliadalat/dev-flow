@@ -14,18 +14,19 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const userId = session.user.id
-
-        // Fetch current user data
+        // Get user by github_id (not session.user.id which is NextAuth ID)
+        const githubId = (session.user as any).githubId
         const { data: user, error: fetchError } = await supabase
             .from('users')
-            .select('streak_count, last_activity, current_streak, created_at') // Handle both legacy and new column names
-            .eq('id', userId)
+            .select('id, streak_count, last_activity, current_streak, created_at')
+            .eq('github_id', githubId)
             .single()
 
         if (fetchError || !user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
+
+        const userId = user.id // Use Supabase UUID
 
         const now = new Date()
         const lastActivity = new Date(user.last_activity || user.created_at || now) // Fallback

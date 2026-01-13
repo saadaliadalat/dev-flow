@@ -30,10 +30,11 @@ export async function GET() {
             .toISOString()
             .split('T')[0]
 
+        // IMPORTANT: Use dbUser.id (Supabase UUID), NOT session.user.id (NextAuth ID)
         const { data: dailyStats } = await supabaseAdmin
             .from('daily_stats')
             .select('*')
-            .eq('user_id', session.user.id)
+            .eq('user_id', dbUser.id)
             .gte('date', thirtyDaysAgo)
             .order('date', { ascending: false })
 

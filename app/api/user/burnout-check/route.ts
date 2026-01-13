@@ -60,7 +60,7 @@ export async function GET() {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        // Get recent daily stats
+        // Get recent daily stats - use dbUser.id (Supabase UUID)
         const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split('T')[0]
@@ -68,7 +68,7 @@ export async function GET() {
         const { data: dailyStats } = await supabaseAdmin
             .from('daily_stats')
             .select('*')
-            .eq('user_id', session.user.id)
+            .eq('user_id', dbUser.id)
             .gte('date', fourteenDaysAgo)
             .order('date', { ascending: false })
 
