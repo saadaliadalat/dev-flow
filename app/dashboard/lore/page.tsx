@@ -29,14 +29,23 @@ const itemVariants = {
 
 // Soul Velocity wrapper that fetches real data
 function SoulVelocityWithData() {
-    const [data, setData] = useState<{ depth: number; learning: number; risk: number } | null>(null)
+    const [data, setData] = useState<{
+        depth: number
+        learning: number
+        risk: number
+        combined?: number
+        history?: number[]
+        streak?: number
+        recencyWeight?: number
+        message?: string
+    } | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         fetch('/api/user/soul-velocity', { credentials: 'include' })
             .then(res => res.ok ? res.json() : null)
             .then(json => {
-                if (json) setData({ depth: json.depth, learning: json.learning, risk: json.risk })
+                if (json) setData(json)
             })
             .catch(() => { })
             .finally(() => setIsLoading(false))
@@ -52,7 +61,17 @@ function SoulVelocityWithData() {
 
     // Fallback to neutral values if no data
     const metrics = data || { depth: 50, learning: 50, risk: 50 }
-    return <SoulVelocityGauge depth={metrics.depth} learning={metrics.learning} risk={metrics.risk} />
+    return (
+        <SoulVelocityGauge
+            depth={metrics.depth}
+            learning={metrics.learning}
+            risk={metrics.risk}
+            combined={metrics.combined}
+            history={metrics.history}
+            streak={metrics.streak}
+            recencyWeight={metrics.recencyWeight}
+        />
+    )
 }
 
 export default function LoreProfilePage() {

@@ -70,13 +70,38 @@ export async function GET() {
         learning = Math.max(0, Math.min(100, learning))
         risk = Math.max(0, Math.min(100, risk))
 
-        const combined = Math.round(depth * 0.3 + learning * 0.4 + risk * 0.3)
+        // Calculate streak multiplier (up to 30% bonus for 15+ day streak)
+        const streak = dailyStats?.filter((d: any) => (d.total_commits || 0) > 0).length || 0
+        const streakMultiplier = Math.min(1 + streak * 0.02, 1.3)
+
+        // Recency weight (higher if active recently)
+        const mostRecentActivity = dailyStats?.[0]?.date
+        let recencyWeight = 1
+        if (mostRecentActivity) {
+            const daysSince = (Date.now() - new Date(mostRecentActivity).getTime()) / (1000 * 60 * 60 * 24)
+            recencyWeight = Math.max(0.5, 1 - daysSince * 0.03) // Decay 3% per day inactive
+        }
+
+        // New formula: (0.4×Depth + 0.4×Learning + 0.2×Risk) × recency × streak
+        const baseScore = depth * 0.4 + learning * 0.4 + risk * 0.2
+        const combined = Math.round(Math.min(100, baseScore * recencyWeight * streakMultiplier))
+
+        // Build history array (last 14 days of estimated velocity)
+        const history = dailyStats?.slice(0, 14).map((d: any) => {
+            const commits = d.total_commits || 0
+            const prs = d.total_prs || 0
+            // Simple daily score estimate
+            return Math.min(100, Math.round(30 + commits * 5 + prs * 10))
+        }) || []
 
         return NextResponse.json({
             depth,
             learning,
             risk,
             combined,
+            history,
+            streak,
+            recencyWeight: Math.round(recencyWeight * 100) / 100,
             message: getSoulMessage(combined),
         })
     } catch (error) {
