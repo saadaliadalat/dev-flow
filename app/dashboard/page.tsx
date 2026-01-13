@@ -11,6 +11,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
 import { VitalityRing } from '@/components/dashboard/VitalityRing'
+import { EternalFlame } from '@/components/lore/EternalFlame'
 import { useConfetti } from '@/hooks/useConfetti'
 import { useSession } from 'next-auth/react'
 
@@ -20,6 +21,7 @@ import { AliveCard } from '@/components/ui/AliveCard'
 import { TodaysDirective } from '@/components/dashboard/TodaysDirective'
 import { DailyMissionsEnhanced } from '@/components/dashboard/DailyMissionsEnhanced'
 import { StreakDangerBanner } from '@/components/dashboard/StreakDangerBanner'
+import { FreezeDayBanner } from '@/components/dashboard/FreezeDayBanner'
 import { DevScoreRing } from '@/components/dashboard/DevScoreRing'
 
 // Animation variants
@@ -188,6 +190,12 @@ export default function DashboardPage() {
                 todayCommits={todayCommits}
             />
 
+            {/* FREEZE DAY BANNER - Streak Insurance */}
+            <FreezeDayBanner
+                currentStreak={stats?.current_streak || 0}
+                todayCommits={todayCommits}
+            />
+
             {/* TODAY'S DIRECTIVE - Top Priority */}
             <motion.div variants={itemVariants}>
                 <TodaysDirective className="w-full" />
@@ -240,10 +248,10 @@ export default function DashboardPage() {
                             accentColor="emerald"
                         />
 
-                        {/* Vitality/Streak Card */}
+                        {/* Vitality/Streak Card - Enhanced with EternalFlame */}
                         <div className="premium-card p-4 relative overflow-hidden group hover:border-[var(--accent-amber)]/30 transition-colors">
                             <div className="flex justify-between items-start mb-2">
-                                <span className="text-xs text-[var(--text-secondary)] font-medium">Vitality Score</span>
+                                <span className="text-xs text-[var(--text-secondary)] font-medium">Eternal Flame</span>
                                 <Flame size={18} className="text-[var(--accent-amber)]" />
                             </div>
                             <div className="flex items-center justify-between">
@@ -256,8 +264,8 @@ export default function DashboardPage() {
                                         Max: {stats?.longest_streak || 0} days
                                     </p>
                                 </div>
-                                <div className="scale-75 origin-right">
-                                    <VitalityRing streak={stats?.current_streak || 0} />
+                                <div className="scale-50 origin-right">
+                                    <EternalFlame compact />
                                 </div>
                             </div>
                         </div>

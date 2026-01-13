@@ -6,7 +6,7 @@ import { Sparkles, Loader2 } from 'lucide-react'
 import { AliveCard } from '@/components/ui/AliveCard'
 import { EternalFlame } from '@/components/lore/EternalFlame'
 import { ShadowSelf } from '@/components/lore/ShadowSelf'
-import { WhisperCard } from '@/components/lore/WhisperCard'
+import { BurnoutOracle } from '@/components/lore/BurnoutOracle'
 import { SoulVelocityGauge } from '@/components/lore/SoulVelocity'
 import { JourneyNarrative } from '@/components/lore/JourneyNarrative'
 
@@ -121,14 +121,12 @@ export default function LoreProfilePage() {
                     <ShadowSelf className="h-full" />
                 </motion.div>
 
-                {/* Right Column - Whispers */}
+                {/* Right Column - Burnout Oracle */}
                 <motion.div variants={itemVariants} className="space-y-4">
                     <h2 className="font-heading font-semibold text-zinc-400 text-sm uppercase tracking-wider">
-                        Whispers from the Network
+                        Burnout Oracle
                     </h2>
-                    <WhisperCard />
-                    <WhisperCard />
-                    <WhisperCard />
+                    <BurnoutOracle />
                 </motion.div>
             </div>
 

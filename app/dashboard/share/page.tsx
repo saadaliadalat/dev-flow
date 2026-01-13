@@ -61,8 +61,6 @@ export default function SharePage() {
 
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://devflow.app'
     const cardUrl = `${baseUrl}/api/share/card?user=${stats.username}&score=${stats.score}&streak=${stats.streak}&velocity=${stats.velocity}&commits=${stats.commits}&title=${encodeURIComponent(stats.title)}`
-    const badgeStreakUrl = `${baseUrl}/api/share/badge?type=streak&value=${stats.streak}`
-    const badgeScoreUrl = `${baseUrl}/api/share/badge?type=score&value=${stats.score}`
     const profileUrl = `${baseUrl}/u/${stats.username}`
 
     const twitterText = `I'm a ${stats.title} with a ${stats.streak}-day streak and ${stats.score} DEV Score on @DevFlowApp 🔥\n\nTrack your coding journey: ${profileUrl}`
@@ -157,54 +155,131 @@ export default function SharePage() {
                 </AliveCard>
             </div>
 
-            {/* README Badges */}
+            {/* README Badges - DYNAMIC */}
             <AliveCard className="p-6" glass>
                 <h3 className="font-heading font-semibold text-white mb-4 flex items-center gap-2">
                     <Code size={18} className="text-emerald-400" />
                     GitHub README Badges
                 </h3>
-                <p className="text-sm text-zinc-500 mb-4">
-                    Add these badges to your GitHub profile or project READMEs
+                <p className="text-sm text-zinc-500 mb-2">
+                    Add these badges to your GitHub profile or project READMEs.
+                    <span className="text-violet-400 ml-1">Updates automatically!</span>
+                </p>
+                <p className="text-xs text-zinc-600 mb-4 font-mono bg-zinc-900/50 p-2 rounded">
+                    Tip: These badges fetch your real-time stats from DevFlow
                 </p>
 
-                <div className="space-y-4">
-                    {/* Streak Badge */}
+                <div className="grid md:grid-cols-2 gap-4">
+                    {/* Score Badge */}
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-zinc-400">Streak Badge</span>
-                            <img src={badgeStreakUrl} alt="Streak" className="h-5" />
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium text-white">DEV Score</span>
+                            <img
+                                src={`${baseUrl}/api/badge/${stats.username}?type=score`}
+                                alt="Score"
+                                className="h-5"
+                            />
                         </div>
                         <div className="flex gap-2">
-                            <code className="flex-1 text-xs bg-zinc-900 p-2 rounded text-violet-400 overflow-x-auto">
-                                ![DevFlow Streak]({badgeStreakUrl})
+                            <code className="flex-1 text-[10px] bg-zinc-900 p-2 rounded text-violet-400 overflow-x-auto whitespace-nowrap">
+                                ![DevFlow Score]({baseUrl}/api/badge/{stats.username}?type=score)
                             </code>
                             <button
-                                onClick={() => copyToClipboard(`![DevFlow Streak](${badgeStreakUrl})`, 'streak-badge')}
-                                className="p-2 rounded bg-white/5 hover:bg-white/10 text-zinc-400"
+                                onClick={() => copyToClipboard(`![DevFlow Score](${baseUrl}/api/badge/${stats.username}?type=score)`, 'score-badge')}
+                                className="p-2 rounded bg-white/5 hover:bg-white/10 text-zinc-400 shrink-0"
+                            >
+                                {copiedId === 'score-badge' ? <Check size={14} /> : <Copy size={14} />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Streak Badge */}
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium text-white">Streak</span>
+                            <img
+                                src={`${baseUrl}/api/badge/${stats.username}?type=streak`}
+                                alt="Streak"
+                                className="h-5"
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <code className="flex-1 text-[10px] bg-zinc-900 p-2 rounded text-violet-400 overflow-x-auto whitespace-nowrap">
+                                ![DevFlow Streak]({baseUrl}/api/badge/{stats.username}?type=streak)
+                            </code>
+                            <button
+                                onClick={() => copyToClipboard(`![DevFlow Streak](${baseUrl}/api/badge/${stats.username}?type=streak)`, 'streak-badge')}
+                                className="p-2 rounded bg-white/5 hover:bg-white/10 text-zinc-400 shrink-0"
                             >
                                 {copiedId === 'streak-badge' ? <Check size={14} /> : <Copy size={14} />}
                             </button>
                         </div>
                     </div>
 
-                    {/* Score Badge */}
+                    {/* Commits Badge */}
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-zinc-400">DEV Score Badge</span>
-                            <img src={badgeScoreUrl} alt="Score" className="h-5" />
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium text-white">Total Commits</span>
+                            <img
+                                src={`${baseUrl}/api/badge/${stats.username}?type=commits`}
+                                alt="Commits"
+                                className="h-5"
+                            />
                         </div>
                         <div className="flex gap-2">
-                            <code className="flex-1 text-xs bg-zinc-900 p-2 rounded text-violet-400 overflow-x-auto">
-                                ![DevFlow Score]({badgeScoreUrl})
+                            <code className="flex-1 text-[10px] bg-zinc-900 p-2 rounded text-violet-400 overflow-x-auto whitespace-nowrap">
+                                ![DevFlow Commits]({baseUrl}/api/badge/{stats.username}?type=commits)
                             </code>
                             <button
-                                onClick={() => copyToClipboard(`![DevFlow Score](${badgeScoreUrl})`, 'score-badge')}
-                                className="p-2 rounded bg-white/5 hover:bg-white/10 text-zinc-400"
+                                onClick={() => copyToClipboard(`![DevFlow Commits](${baseUrl}/api/badge/${stats.username}?type=commits)`, 'commits-badge')}
+                                className="p-2 rounded bg-white/5 hover:bg-white/10 text-zinc-400 shrink-0"
                             >
-                                {copiedId === 'score-badge' ? <Check size={14} /> : <Copy size={14} />}
+                                {copiedId === 'commits-badge' ? <Check size={14} /> : <Copy size={14} />}
                             </button>
                         </div>
                     </div>
+
+                    {/* Rank Badge */}
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium text-white">Rank</span>
+                            <img
+                                src={`${baseUrl}/api/badge/${stats.username}?type=rank`}
+                                alt="Rank"
+                                className="h-5"
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <code className="flex-1 text-[10px] bg-zinc-900 p-2 rounded text-violet-400 overflow-x-auto whitespace-nowrap">
+                                ![DevFlow Rank]({baseUrl}/api/badge/{stats.username}?type=rank)
+                            </code>
+                            <button
+                                onClick={() => copyToClipboard(`![DevFlow Rank](${baseUrl}/api/badge/${stats.username}?type=rank)`, 'rank-badge')}
+                                className="p-2 rounded bg-white/5 hover:bg-white/10 text-zinc-400 shrink-0"
+                            >
+                                {copiedId === 'rank-badge' ? <Check size={14} /> : <Copy size={14} />}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* All badges combined snippet */}
+                <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-violet-500/5 to-purple-500/5 border border-violet-500/20">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-violet-400">📋 Copy All Badges</span>
+                        <button
+                            onClick={() => copyToClipboard(
+                                `[![DevFlow Score](${baseUrl}/api/badge/${stats.username}?type=score)](${baseUrl}/u/${stats.username})\n[![DevFlow Streak](${baseUrl}/api/badge/${stats.username}?type=streak)](${baseUrl}/u/${stats.username})\n[![DevFlow Commits](${baseUrl}/api/badge/${stats.username}?type=commits)](${baseUrl}/u/${stats.username})`,
+                                'all-badges'
+                            )}
+                            className="btn-secondary text-xs"
+                        >
+                            {copiedId === 'all-badges' ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy All</>}
+                        </button>
+                    </div>
+                    <p className="text-xs text-zinc-500">
+                        Paste this in your README to show all badges with links back to your profile
+                    </p>
                 </div>
             </AliveCard>
 
