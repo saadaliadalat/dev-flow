@@ -148,9 +148,14 @@ export function PremiumStatCard({
             ref={ref}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ y: -2, boxShadow: 'var(--shadow-lg)' }}
-            transition={{ duration: 0.2 }}
-            className="stat-card group cursor-default hover:border-purple-500/50 transition-colors"
+            whileHover={{
+                y: -4,
+                boxShadow: `0 20px 40px ${colors.glow}`,
+                borderColor: colors.border.replace('0.2', '0.5')
+            }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className="stat-card group cursor-default transition-colors"
+            style={{ borderColor: colors.border }}
             role="region"
             aria-label={`${label}: ${value}${suffix}`}
         >

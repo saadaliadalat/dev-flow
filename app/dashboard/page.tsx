@@ -15,13 +15,12 @@ import { useConfetti } from '@/hooks/useConfetti'
 import { useSession } from 'next-auth/react'
 
 import { PremiumStatCard, StatCardSkeleton } from '@/components/dashboard/PremiumStatCard'
-import { InsightCard, InsightCardSkeleton } from '@/components/dashboard/InsightCard'
-import { GoalProgress, CircularProgress, GoalProgressSkeleton } from '@/components/dashboard/GoalProgress'
 import { InsightsPanel } from '@/components/dashboard/InsightsPanel'
-import { DevFlowScore } from '@/components/dashboard/DevFlowScore'
 import { AliveCard } from '@/components/ui/AliveCard'
 import { TodaysDirective } from '@/components/dashboard/TodaysDirective'
-import { DailyMissions } from '@/components/dashboard/DailyMissions'
+import { DailyMissionsEnhanced } from '@/components/dashboard/DailyMissionsEnhanced'
+import { StreakDangerBanner } from '@/components/dashboard/StreakDangerBanner'
+import { DevScoreRing } from '@/components/dashboard/DevScoreRing'
 
 // Animation variants
 const containerVariants = {
@@ -53,6 +52,9 @@ export default function DashboardPage() {
     const [weekTrend, setWeekTrend] = useState(0)
     const [todayCommits, setTodayCommits] = useState(0)
     const [weekCommits, setWeekCommits] = useState(0)
+    const [lastWeekCommits, setLastWeekCommits] = useState(0)
+    const [thisWeekPRs, setThisWeekPRs] = useState(0)
+    const [activeDaysThisWeek, setActiveDaysThisWeek] = useState(0)
 
     // Trigger Streak Update on Mount
     useEffect(() => {
@@ -131,16 +133,24 @@ export default function DashboardPage() {
                         setTodayCommits(todayData?.total_commits || 0)
 
                         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-                        const weekTotal = data.dailyStats
-                            .filter((d: any) => d.date >= weekAgo)
-                            .reduce((sum: number, d: any) => sum + d.total_commits, 0)
+                        const thisWeekData = data.dailyStats.filter((d: any) => d.date >= weekAgo)
+                        const weekTotal = thisWeekData.reduce((sum: number, d: any) => sum + (d.total_commits || 0), 0)
                         setWeekCommits(weekTotal)
+
+                        // This week PRs
+                        const weekPRs = thisWeekData.reduce((sum: number, d: any) => sum + (d.total_prs || 0), 0)
+                        setThisWeekPRs(weekPRs)
+
+                        // Active days this week
+                        const activeDays = thisWeekData.filter((d: any) => (d.total_commits || 0) > 0).length
+                        setActiveDaysThisWeek(activeDays)
 
                         // Week-over-week trend
                         const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
                         const lastWeek = data.dailyStats
                             .filter((d: any) => d.date >= twoWeeksAgo && d.date < weekAgo)
-                            .reduce((sum: number, d: any) => sum + d.total_commits, 0)
+                            .reduce((sum: number, d: any) => sum + (d.total_commits || 0), 0)
+                        setLastWeekCommits(lastWeek)
                         if (lastWeek > 0) {
                             setWeekTrend(Math.round(((weekTotal - lastWeek) / lastWeek) * 100))
                         }
@@ -170,15 +180,21 @@ export default function DashboardPage() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="space-y-8"
+            className="space-y-6"
         >
+            {/* STREAK DANGER BANNER - Loss Aversion Hook */}
+            <StreakDangerBanner
+                currentStreak={stats?.current_streak || 0}
+                todayCommits={todayCommits}
+            />
+
             {/* TODAY'S DIRECTIVE - Top Priority */}
-            <motion.div variants={itemVariants} className="mb-8">
+            <motion.div variants={itemVariants}>
                 <TodaysDirective className="w-full" />
             </motion.div>
 
             {/* Header with Sync */}
-            <motion.div variants={itemVariants} className="flex items-center justify-between gap-4 mb-4">
+            <motion.div variants={itemVariants} className="flex items-center justify-between gap-4">
                 <h2 className="text-lg font-heading font-semibold text-white">Performance Overview</h2>
                 <button
                     onClick={syncGitHubData}
@@ -325,17 +341,25 @@ export default function DashboardPage() {
                     </AliveCard>
                 </motion.div>
 
-                {/* Right Column (Score + Goals) */}
+                {/* Right Column (Score + Missions) */}
                 <div className="space-y-6">
-                    {/* Dev Flow Score */}
-                    <AliveCard className="p-1" glass>
-                        <DevFlowScore />
-                    </AliveCard>
+                    {/* DEV Score Ring - Real Formula */}
+                    <motion.div variants={itemVariants}>
+                        <AliveCard className="p-4" glass>
+                            <DevScoreRing
+                                streak={stats?.current_streak || 0}
+                                thisWeekCommits={weekCommits}
+                                lastWeekCommits={lastWeekCommits}
+                                thisWeekPRs={thisWeekPRs}
+                                activeDaysThisWeek={activeDaysThisWeek}
+                            />
+                        </AliveCard>
+                    </motion.div>
 
-                    {/* Daily Missions */}
+                    {/* Daily Missions Enhanced */}
                     <motion.div variants={itemVariants}>
                         <AliveCard className="p-6" glass>
-                            <DailyMissions />
+                            <DailyMissionsEnhanced />
                         </AliveCard>
                     </motion.div>
                 </div>
