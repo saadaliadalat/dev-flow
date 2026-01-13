@@ -18,7 +18,8 @@ import {
     Bot,
     Calculator,
     Shield,
-    Share2
+    Share2,
+    Zap
 } from 'lucide-react'
 import { DevFlowLogo } from '@/components/ui/DevFlowLogo'
 import { cn } from '@/lib/utils'
@@ -35,7 +36,7 @@ const sidebarLinks = [
     { name: 'Simulator', href: '/dashboard/simulator', icon: Calculator },
     { name: 'AI Coach', href: '/dashboard/coach', icon: Brain },
     { name: 'Repo Health', href: '/dashboard/health', icon: Shield },
-    { name: 'Constellation', href: '/dashboard/constellation', icon: Sparkles },
+    { name: 'Focus Zone', href: '/dashboard/constellation', icon: Zap },
     { name: 'Your LORE', href: '/dashboard/lore', icon: Flame },
     { name: 'Share', href: '/dashboard/share', icon: Share2 },
 ]
