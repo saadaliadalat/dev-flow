@@ -17,7 +17,8 @@ import {
     Flame,
     Bot,
     Calculator,
-    Shield
+    Shield,
+    Share2
 } from 'lucide-react'
 import { DevFlowLogo } from '@/components/ui/DevFlowLogo'
 import { cn } from '@/lib/utils'
@@ -37,6 +38,7 @@ const sidebarLinks = [
     { name: 'Repo Health', href: '/dashboard/health', icon: Shield },
     { name: 'Constellation', href: '/dashboard/constellation', icon: Sparkles },
     { name: 'Your LORE', href: '/dashboard/lore', icon: Flame },
+    { name: 'Share', href: '/dashboard/share', icon: Share2 },
 ]
 
 // 🧲 MAGNETIC LINK COMPONENT
