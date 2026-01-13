@@ -12,6 +12,10 @@ interface ShadowData {
     realization: { commits: number; prs: number; reviews: number; overall: number }
     message: string
     daysSinceJoin: number
+    shadowPercentage?: number
+    avgCommitsPerActiveDay?: number
+    activeDays?: number
+    formula?: string
 }
 
 interface ShadowSelfProps {
@@ -21,6 +25,7 @@ interface ShadowSelfProps {
 export function ShadowSelf({ className }: ShadowSelfProps) {
     const [data, setData] = useState<ShadowData | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [showFormula, setShowFormula] = useState(false)
 
     useEffect(() => {
         async function fetchShadow() {
@@ -57,6 +62,8 @@ export function ShadowSelf({ className }: ShadowSelfProps) {
         { label: 'Reviews', shipped: data.shipped.reviews, shadow: data.shadow.reviews, icon: Eye, color: '#10B981' },
     ]
 
+    const shadowPct = data.shadowPercentage ?? Math.round((1 - data.realization.overall) * 100)
+
     return (
         <AliveCard className={`p-6 ${className}`} glass>
             {/* Header */}
@@ -70,14 +77,22 @@ export function ShadowSelf({ className }: ShadowSelfProps) {
                     </motion.div>
                     <div>
                         <h3 className="font-heading font-semibold text-white">Shadow Self</h3>
-                        <p className="text-xs text-zinc-500">The version that never shipped</p>
+                        <p className="text-xs text-zinc-500">
+                            {data.activeDays ? `${data.activeDays} active days` : 'The version that never shipped'}
+                        </p>
                     </div>
                 </div>
-                <div className="text-right">
-                    <span className="text-2xl font-mono font-bold text-white">
-                        {Math.round(data.realization.overall * 100)}%
+                <div
+                    className="text-right cursor-pointer group"
+                    onClick={() => setShowFormula(!showFormula)}
+                    title="Click to see formula"
+                >
+                    <span className={`text-2xl font-mono font-bold ${shadowPct > 60 ? 'text-orange-400' : shadowPct > 30 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                        {shadowPct}%
                     </span>
-                    <p className="text-[10px] text-zinc-600 uppercase tracking-wider">Realized</p>
+                    <p className="text-[10px] text-zinc-600 uppercase tracking-wider group-hover:text-zinc-400 transition-colors">
+                        Shadow
+                    </p>
                 </div>
             </div>
 

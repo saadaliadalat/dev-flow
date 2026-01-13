@@ -35,52 +35,73 @@ export async function GET() {
         }
 
         // Calculate "shadow" metrics (potential that wasn't realized)
-        // Get earliest activity date to properly calculate "Shadow" potential
-        // If user imported history, their activity might predate their account creation
-        const { data: firstStat } = await supabaseAdmin
+        // Get activity stats to calculate PERSONALIZED potential
+        const { data: dailyStats } = await supabaseAdmin
             .from('daily_stats')
-            .select('date')
+            .select('date, total_commits, total_prs')
             .eq('user_id', user.id)
             .order('date', { ascending: true })
-            .limit(1)
-            .single()
 
         const createdAt = new Date(user.created_at).getTime()
-        const firstActivity = firstStat ? new Date(firstStat.date).getTime() : createdAt
+        const firstActivity = dailyStats?.[0] ? new Date(dailyStats[0].date).getTime() : createdAt
         const startTime = Math.min(createdAt, firstActivity)
 
-        // Shadow = theoretical max based on time vs actual output
         const daysSinceJoin = Math.floor(
             (Date.now() - startTime) / (1000 * 60 * 60 * 24)
         )
 
-        // Theoretical: 2 commits/day, 1 PR/week, 1 review every 2 days
+        // Calculate user's ACTUAL average daily rate on active days
+        const activeDays = dailyStats?.filter(d => (d.total_commits || 0) > 0) || []
+        const avgCommitsPerActiveDay = activeDays.length > 0
+            ? shipped.commits / activeDays.length
+            : 2 // fallback
+        const avgPRsPerActiveDay = activeDays.length > 0
+            ? shipped.prs / Math.max(activeDays.length / 7, 1)
+            : 0.5
+
+        // Shadow = what if they maintained their BEST daily average every day?
+        // This makes it personal - not a generic 2/day, but YOUR potential
+        const bestDayCommits = Math.max(...(dailyStats?.map(d => d.total_commits || 0) || [1]))
+        const sustainablePace = Math.max(avgCommitsPerActiveDay * 1.5, 3) // 50% above average or min 3
+
         const shadow = {
-            commits: Math.round(daysSinceJoin * 2),            // Could have committed 2x/day
-            prs: Math.round(daysSinceJoin / 7),                // Could have opened 1 PR/week
-            reviews: Math.round(daysSinceJoin / 2),            // Could have reviewed every 2 days
-            issues: Math.round(daysSinceJoin / 14),            // Could have opened issue biweekly
+            commits: Math.round(daysSinceJoin * sustainablePace),
+            prs: Math.round(daysSinceJoin / 5),                // 1 PR per 5 days
+            reviews: Math.round(daysSinceJoin / 3),            // Review every 3 days
+            issues: Math.round(daysSinceJoin / 10),
         }
 
-        // Calculate realization ratio (how much of potential was realized)
+        // Calculate realization ratio: (actual / potential) × 100
+        // Formula: Shadow Self % = (potential - actual) / potential × 100
         const realization = {
             commits: shadow.commits > 0 ? Math.min(1, shipped.commits / shadow.commits) : 1,
             prs: shadow.prs > 0 ? Math.min(1, shipped.prs / shadow.prs) : 1,
             reviews: shadow.reviews > 0 ? Math.min(1, shipped.reviews / shadow.reviews) : 1,
             overall: 0,
         }
-        realization.overall = (realization.commits + realization.prs + realization.reviews) / 3
 
-        // Generate confrontation message
+        // Weighted average: commits matter most, then PRs, then reviews
+        realization.overall = (
+            realization.commits * 0.5 +
+            realization.prs * 0.3 +
+            realization.reviews * 0.2
+        )
+
+        // Shadow percentage = what remains unrealized
+        const shadowPercentage = Math.round((1 - realization.overall) * 100)
+
+        // Generate confrontation message based on shadow %
         let message: string
-        if (realization.overall >= 0.8) {
+        if (shadowPercentage <= 20) {
             message = "Your shadow has almost nothing on you. You've shipped what you started."
-        } else if (realization.overall >= 0.5) {
+        } else if (shadowPercentage <= 40) {
             message = "Your shadow whispers of projects half-done. But you've come far."
-        } else if (realization.overall >= 0.2) {
-            message = "The shadow holds many drafts. But you chose to ship some. That's what counts."
+        } else if (shadowPercentage <= 60) {
+            message = "The shadow holds drafts and dreams. Each commit shrinks its power."
+        } else if (shadowPercentage <= 80) {
+            message = "The shadow looms large. But every line of code reclaims your potential."
         } else {
-            message = "The shadow is vast. But every ship voyage starts from the shore."
+            message = "The shadow is vast. But every journey starts from the shore."
         }
 
         return NextResponse.json({
@@ -88,10 +109,16 @@ export async function GET() {
             shadow,
             realization,
             daysSinceJoin,
+            activeDays: activeDays.length,
+            avgCommitsPerActiveDay: Math.round(avgCommitsPerActiveDay * 10) / 10,
+            bestDayCommits,
+            shadowPercentage,
             message,
             // For visualization
             shippedTotal: shipped.commits + shipped.prs * 5 + shipped.reviews * 2,
             shadowTotal: shadow.commits + shadow.prs * 5 + shadow.reviews * 2,
+            // Formula explanation
+            formula: `Shadow% = (potential_${Math.round(sustainablePace)}×${daysSinceJoin}days - actual_${shipped.commits}) / potential × 100`,
         })
     } catch (error) {
         console.error('Shadow self error:', error)
