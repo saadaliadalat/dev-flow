@@ -37,13 +37,14 @@ export async function GET() {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        // Calculate eternal flame days (days since account creation)
-        const createdAt = new Date(user.created_at)
-        const now = new Date()
-        const eternityDays = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
+        // Eternal Flame now shows the ACTUAL current streak (not days since creation)
+        // This is what users expect to see - their coding streak
+        const eternityDays = user.current_streak || 0
 
         // Calculate presence streak (considers any form of engagement)
         // The eternal flame never dies - it just dims
+        const now = new Date()
+        const createdAt = new Date(user.created_at)
         const lastActive = user.last_active_date ? new Date(user.last_active_date) : createdAt
         const daysSinceActive = Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24))
 
