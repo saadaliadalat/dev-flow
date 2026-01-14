@@ -4,6 +4,7 @@ import React from 'react'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Sidebar } from '@/components/dashboard/Sidebar'
+import { StreakWarning } from '@/components/dashboard/StreakWarning'
 import {
     LayoutDashboard,
     BarChart3,
@@ -27,6 +28,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     return (
         <div className="min-h-screen bg-void flex">
+            {/* 🔥 Streak Warning Notification */}
+            <StreakWarning />
+
             {/* 🧬 2026 MAGNET SIDEBAR (Desktop) */}
             <Sidebar />
 
@@ -61,3 +65,4 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
     )
 }
+

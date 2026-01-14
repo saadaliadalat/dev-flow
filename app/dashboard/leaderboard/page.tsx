@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import confetti from 'canvas-confetti'
+import { ChallengeButton } from '@/components/dashboard/ChallengeModal'
 
 /**
  * 💎 ULTRA-PREMIUM LEADERBOARD V2.0 (2026 EDITION)
@@ -518,7 +519,16 @@ export default function LeaderboardPage() {
                             <List className="w-4 h-4" />
                             Global Ranking
                         </div>
-                        <div className="text-xs text-zinc-600">Updated Live</div>
+                        <div className="flex items-center gap-4">
+                            {currentUser && (
+                                <ChallengeButton
+                                    userName={currentUser.name || currentUser.username}
+                                    userRank={currentUser.rank}
+                                    userScore={currentUser.productivity_score}
+                                />
+                            )}
+                            <span className="text-xs text-zinc-600">Updated Live</span>
+                        </div>
                     </div>
 
                     <AnimatePresence mode="wait">

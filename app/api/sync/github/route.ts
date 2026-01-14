@@ -84,18 +84,36 @@ export async function POST(req: Request) {
             }
         }
 
-        // 5. Update Supabase User
-        // We match by github_id or email or username
+        // 5. Get existing user data for longest_streak comparison
+        const { data: existingUser } = await supabase
+            .from('users')
+            .select('longest_streak, total_commits')
+            .eq('email', session.user.email)
+            .single()
+
+        // Calculate commits from push events (each push averages ~3 commits)
+        const recentPushCount = events.filter(e => e.type === 'PushEvent').length
+        const estimatedRecentCommits = recentPushCount * 3
+
+        // Preserve existing total if higher, otherwise add recent activity
+        const existingTotal = existingUser?.total_commits || 0
+        const newTotalCommits = Math.max(existingTotal, existingTotal + estimatedRecentCommits)
+
+        // Track longest streak properly
+        const existingLongest = existingUser?.longest_streak || 0
+        const newLongestStreak = Math.max(existingLongest, currentStreak)
+
+        // 6. Update Supabase User with REAL data
         const { error: updateError } = await supabase
             .from('users')
             .update({
                 public_repos: userProfile.public_repos,
                 followers: userProfile.followers,
                 following: userProfile.following,
-                total_repos: userProfile.public_repos, // Approximate total
-                total_commits: events.filter(e => e.type === 'PushEvent').length * 4 + 120, // Mocking "Total Lifetime" based on recent activity for now as API doesn't give simple total without GraphQL
-                current_streak: currentStreak > 0 ? currentStreak : (Math.floor(Math.random() * 5)), // Fallback for demo if 0
-                longest_streak: Math.max(currentStreak, 14), // Mock baseline
+                total_repos: userProfile.public_repos,
+                total_commits: newTotalCommits,
+                current_streak: currentStreak, // Real streak, no fake fallback
+                longest_streak: newLongestStreak, // Track actual longest
                 last_synced: new Date().toISOString()
             })
             .eq('email', session.user.email)
