@@ -4,75 +4,130 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 
 /**
  * 🔥 ETERNAL FLAME
- * The streak that cannot die. Measures creative presence, not just commits.
+ * Shows the user's actual coding streak
  */
 
 export async function GET() {
     try {
         const session = await auth()
         if (!session?.user) {
-            console.error('Eternal flame: No session found')
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         const githubId = (session.user as any).githubId
-        if (!githubId) {
-            console.error('Eternal flame: No githubId in session', { user: session.user })
-            return NextResponse.json({ error: 'No GitHub ID in session' }, { status: 400 })
+        const email = session.user.email
+
+        // Get user - try by githubId first, fallback to email
+        let user = null
+
+        if (githubId) {
+            const { data } = await supabaseAdmin
+                .from('users')
+                .select('id, created_at, current_streak, longest_streak')
+                .eq('github_id', githubId)
+                .single()
+            user = data
         }
 
-        const { data: user, error: userError } = await supabaseAdmin
-            .from('users')
-            .select('id, created_at, current_streak, longest_streak, last_active_date')
-            .eq('github_id', githubId)
-            .single()
-
-        if (userError) {
-            console.error('Eternal flame: Supabase user query failed', userError)
-            return NextResponse.json({ error: 'Database error' }, { status: 500 })
+        if (!user && email) {
+            const { data } = await supabaseAdmin
+                .from('users')
+                .select('id, created_at, current_streak, longest_streak')
+                .eq('email', email)
+                .single()
+            user = data
         }
 
         if (!user) {
-            console.error('Eternal flame: User not found', { githubId })
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        // Eternal Flame now shows the ACTUAL current streak (not days since creation)
-        // This is what users expect to see - their coding streak
-        const eternityDays = user.current_streak || 0
+        // Helper functions
+        const getLocalDateStr = (date: Date): string => {
+            const year = date.getFullYear()
+            const month = String(date.getMonth() + 1).padStart(2, '0')
+            const day = String(date.getDate()).padStart(2, '0')
+            return `${year}-${month}-${day}`
+        }
 
-        // Calculate presence streak (considers any form of engagement)
-        // The eternal flame never dies - it just dims
+        const dateToDays = (dateStr: string): number => {
+            const [year, month, day] = dateStr.split('-').map(Number)
+            return Math.floor(new Date(year, month - 1, day).getTime() / (1000 * 60 * 60 * 24))
+        }
+
+        // Get activity days from daily_stats to calculate REAL streak
+        const { data: activityDays } = await supabaseAdmin
+            .from('daily_stats')
+            .select('date, total_commits')
+            .eq('user_id', user.id)
+            .gt('total_commits', 0)
+            .order('date', { ascending: false })
+
         const now = new Date()
-        const createdAt = new Date(user.created_at)
-        const lastActive = user.last_active_date ? new Date(user.last_active_date) : createdAt
-        const daysSinceActive = Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24))
+        const todayStr = getLocalDateStr(now)
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayStr = getLocalDateStr(yesterday)
 
-        // Flame intensity (1.0 = fully active, 0.1 = ember)
+        // Calculate REAL streak from daily_stats
+        let currentStreak = 0
+        let daysSinceActive = 999
+
+        if (activityDays && activityDays.length > 0) {
+            const mostRecent = activityDays[0].date
+            daysSinceActive = dateToDays(todayStr) - dateToDays(mostRecent)
+
+            // Only count streak if most recent is today or yesterday
+            if (mostRecent === todayStr || mostRecent === yesterdayStr) {
+                let expectedDays = dateToDays(mostRecent)
+                const sortedDates = activityDays.map(d => d.date)
+
+                for (const dateStr of sortedDates) {
+                    const dayNum = dateToDays(dateStr)
+                    if (dayNum === expectedDays) {
+                        currentStreak++
+                        expectedDays--
+                    } else if (dayNum < expectedDays) {
+                        break
+                    }
+                }
+            }
+        }
+
+        // Update users table with accurate streak
+        if (currentStreak > 0 || currentStreak !== user.current_streak) {
+            const longestStreak = Math.max(user.longest_streak || 0, currentStreak)
+            supabaseAdmin
+                .from('users')
+                .update({ current_streak: currentStreak, longest_streak: longestStreak })
+                .eq('id', user.id)
+                .then(() => { /* fire and forget */ })
+        }
+
+        // Flame intensity based on days since last activity
         let intensity = 1.0
-        if (daysSinceActive > 0) intensity = Math.max(0.1, 1 - (daysSinceActive * 0.1))
+        if (daysSinceActive > 0) intensity = Math.max(0.1, 1 - (daysSinceActive * 0.15))
 
         // Flame status
         let status: 'blazing' | 'burning' | 'glowing' | 'ember'
-        if (intensity >= 0.8) status = 'blazing'
-        else if (intensity >= 0.5) status = 'burning'
-        else if (intensity >= 0.3) status = 'glowing'
+        if (currentStreak >= 7) status = 'blazing'
+        else if (currentStreak >= 3) status = 'burning'
+        else if (currentStreak >= 1) status = 'glowing'
         else status = 'ember'
 
-        // Wisdom message based on status
         const messages = {
-            blazing: "The flame burns bright. You're fully present.",
-            burning: "The fire persists. Keep the warmth alive.",
-            glowing: "Embers glow softly. A spark can reignite all.",
-            ember: "The flame never truly dies. It waits for you.",
+            blazing: "The flame burns bright. You're on fire! 🔥",
+            burning: "The fire persists. Keep building momentum!",
+            glowing: "Embers glow softly. Push some code to reignite!",
+            ember: "The flame waits for you. Start coding to light it up!",
         }
 
         return NextResponse.json({
-            eternityDays,
+            eternityDays: currentStreak,
             intensity,
             status,
-            currentStreak: user.current_streak || 0,
-            longestStreak: user.longest_streak || 0,
+            currentStreak,
+            longestStreak: Math.max(user.longest_streak || 0, currentStreak),
             daysSinceActive,
             message: messages[status],
             createdAt: user.created_at,
