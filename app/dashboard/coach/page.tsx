@@ -159,23 +159,7 @@ export default function AICoachPage() {
                 </div>
             )}
 
-            {/* Pro Feature Banner */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="p-6 rounded-2xl bg-gradient-to-r from-violet-500/10 to-purple-500/5 border border-violet-500/20 text-center"
-            >
-                <h3 className="font-heading font-semibold text-white mb-2">
-                    🚀 Unlock Full AI Coach (PRO)
-                </h3>
-                <p className="text-sm text-zinc-400 mb-4 max-w-md mx-auto">
-                    Get code review suggestions, refactoring tips, and personalized learning paths based on your commit history.
-                </p>
-                <button className="btn-primary">
-                    Upgrade to PRO
-                </button>
-            </motion.div>
+
         </motion.div>
     )
 }

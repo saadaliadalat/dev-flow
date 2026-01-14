@@ -25,7 +25,7 @@ export function ComingSoon({ featureName, description }: ComingSoonProps) {
                     {featureName} is Locked
                 </h2>
                 <p className="text-text-secondary max-w-md mb-8 leading-relaxed">
-                    {description || "This premium feature is currently in development and will be available to all pro members in the upcoming release."}
+                    {description || "This feature is currently in development and will be available in an upcoming release."}
                 </p>
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-mono tracking-widest uppercase">
                     Unlocking Q1 2026
