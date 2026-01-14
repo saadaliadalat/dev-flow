@@ -528,11 +528,11 @@ export default function LeaderboardPage() {
                             </div>
                         ) : (
                             <div className="space-y-2 pb-12">
-                                {users.slice(3).map((user, i) => (
+                                {users.map((user, i) => (
                                     <LeaderboardRow
                                         key={user.id}
                                         user={user}
-                                        index={i + 3}
+                                        index={i}
                                         isMe={user.id === currentUser?.id}
                                     />
                                 ))}
