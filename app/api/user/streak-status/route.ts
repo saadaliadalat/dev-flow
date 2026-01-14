@@ -37,25 +37,37 @@ export async function GET() {
             .limit(1)
             .single()
 
+        // Helper: Get local date string YYYY-MM-DD
+        const getLocalDateStr = (date: Date): string => {
+            const year = date.getFullYear()
+            const month = String(date.getMonth() + 1).padStart(2, '0')
+            const day = String(date.getDate()).padStart(2, '0')
+            return `${year}-${month}-${day}`
+        }
+
         // Calculate hours until streak breaks
         const now = new Date()
-        const todayStr = now.toISOString().split('T')[0]
+        const todayStr = getLocalDateStr(now)
         const lastActivityDate = lastActivity?.date || null
 
         let hoursUntilStreakBreak = 24
 
         if (lastActivityDate) {
-            const lastActivityDateObj = new Date(lastActivityDate + 'T23:59:59Z')
+            // Parse the date and set to end of day in local time
+            const [year, month, day] = lastActivityDate.split('-').map(Number)
+            const lastActivityDateObj = new Date(year, month - 1, day, 23, 59, 59, 999)
+
+            // Streak breaks at end of the NEXT day (grace period)
             const endOfGracePeriod = new Date(lastActivityDateObj)
             endOfGracePeriod.setDate(endOfGracePeriod.getDate() + 1)
-            endOfGracePeriod.setHours(23, 59, 59, 999)
 
             const msUntilBreak = endOfGracePeriod.getTime() - now.getTime()
             hoursUntilStreakBreak = Math.max(0, Math.floor(msUntilBreak / (1000 * 60 * 60)))
 
             // If last activity is today, streak is safe for the day
             if (lastActivityDate === todayStr) {
-                hoursUntilStreakBreak = 24 + (24 - now.getHours())
+                const hoursLeftToday = 24 - now.getHours()
+                hoursUntilStreakBreak = hoursLeftToday + 24 // Today's remaining + full tomorrow
             }
         }
 

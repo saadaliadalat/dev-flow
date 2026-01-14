@@ -151,7 +151,11 @@ export async function POST(req: Request) {
                 // Process commits for daily stats
                 for (const item of searchResult.items) {
                     const commitDate = new Date(item.commit.author?.date || item.commit.committer?.date || '')
-                    const dateKey = commitDate.toISOString().split('T')[0]
+                    // Use local date to ensure consistency with streak calculation
+                    const year = commitDate.getFullYear()
+                    const month = String(commitDate.getMonth() + 1).padStart(2, '0')
+                    const day = String(commitDate.getDate()).padStart(2, '0')
+                    const dateKey = `${year}-${month}-${day}`
                     const hour = commitDate.getHours()
                     const repoName = item.repository?.full_name || 'unknown'
 
@@ -354,32 +358,54 @@ async function calculateStreaks(userId: string) {
         return
     }
 
+    // Helper: Get local date string YYYY-MM-DD (user's timezone approximation)
+    // Since we don't have user timezone, we use server local time which is good enough
+    const getLocalDateStr = (date: Date): string => {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+    }
+
+    // Helper: Parse date string to comparable number (days since epoch)
+    const dateToDays = (dateStr: string): number => {
+        const [year, month, day] = dateStr.split('-').map(Number)
+        return new Date(year, month - 1, day).getTime() / (1000 * 60 * 60 * 24)
+    }
+
     const today = new Date()
-    const todayStr = today.toISOString().split('T')[0]
+    const todayStr = getLocalDateStr(today)
 
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayStr = yesterday.toISOString().split('T')[0]
+    const yesterdayStr = getLocalDateStr(yesterday)
 
-    const sortedDates = stats.map(s => s.date).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+    // Get unique sorted dates (newest first)
+    const sortedDates = Array.from(new Set(stats.map(s => s.date))).sort((a, b) => dateToDays(b) - dateToDays(a))
+
+    console.log(`Streak calc: today=${todayStr}, yesterday=${yesterdayStr}, lastActivity=${sortedDates[0]}`)
 
     let currentStreak = 0
     let longestStreak = 0
     let tempStreak = 0
 
-    // Current streak: must have activity today or yesterday
-    if (sortedDates[0] === todayStr || sortedDates[0] === yesterdayStr) {
-        let expectedDate = new Date(sortedDates[0])
+    // Current streak: must have activity today or yesterday to count
+    const mostRecentActivity = sortedDates[0]
+    if (mostRecentActivity === todayStr || mostRecentActivity === yesterdayStr) {
+        // Count consecutive days backwards from most recent activity
+        let expectedDays = dateToDays(mostRecentActivity)
 
         for (const dateStr of sortedDates) {
-            const expectedStr = expectedDate.toISOString().split('T')[0]
+            const dayNum = dateToDays(dateStr)
 
-            if (dateStr === expectedStr) {
+            if (dayNum === expectedDays) {
                 tempStreak++
-                expectedDate.setDate(expectedDate.getDate() - 1)
-            } else {
+                expectedDays-- // Move to previous day
+            } else if (dayNum < expectedDays) {
+                // Gap found, streak broken
                 break
             }
+            // Skip duplicate days (dayNum > expectedDays shouldn't happen with sorted data)
         }
         currentStreak = tempStreak
     }
@@ -387,9 +413,9 @@ async function calculateStreaks(userId: string) {
     // Longest streak calculation
     tempStreak = 1
     for (let i = 1; i < sortedDates.length; i++) {
-        const curr = new Date(sortedDates[i])
-        const prev = new Date(sortedDates[i - 1])
-        const diffDays = Math.round((prev.getTime() - curr.getTime()) / (1000 * 60 * 60 * 24))
+        const currDays = dateToDays(sortedDates[i])
+        const prevDays = dateToDays(sortedDates[i - 1])
+        const diffDays = prevDays - currDays
 
         if (diffDays === 1) {
             tempStreak++
