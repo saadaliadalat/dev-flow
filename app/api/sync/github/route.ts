@@ -8,6 +8,66 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// GraphQL query for accurate contribution calendar
+const CONTRIBUTION_QUERY = `
+query($username: String!) {
+  user(login: $username) {
+    contributionsCollection {
+      contributionCalendar {
+        totalContributions
+        weeks {
+          contributionDays {
+            date
+            contributionCount
+          }
+        }
+      }
+    }
+  }
+}
+`
+
+// Fetch real contribution data from GitHub GraphQL API
+async function fetchContributionCalendar(token: string, username: string): Promise<{ date: string, count: number }[]> {
+    try {
+        const response = await fetch('https://api.github.com/graphql', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: CONTRIBUTION_QUERY,
+                variables: { username }
+            })
+        })
+
+        const data = await response.json()
+
+        if (data.errors) {
+            console.error('GraphQL errors:', data.errors)
+            return []
+        }
+
+        const weeks = data?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || []
+        const contributions: { date: string, count: number }[] = []
+
+        for (const week of weeks) {
+            for (const day of week.contributionDays) {
+                if (day.contributionCount > 0) {
+                    contributions.push({ date: day.date, count: day.contributionCount })
+                }
+            }
+        }
+
+        console.log(`GraphQL fetched ${contributions.length} days with contributions`)
+        return contributions
+    } catch (error) {
+        console.error('GraphQL contribution fetch failed:', error)
+        return []
+    }
+}
+
 export async function POST(req: Request) {
     try {
         const session = await auth()
@@ -56,33 +116,80 @@ export async function POST(req: Request) {
             }
         })
 
-        // Calculate Streak (Simplified: Check recent events)
-        // Note: Exact contribution graph requires GraphQL API or scraping, 
-        // using events gives us "recent streak" approximation.
-        const { data: events } = await octokit.activity.listPublicEventsForUser({
-            username,
-            per_page: 100
-        })
+        // Helper: Get local date string YYYY-MM-DD
+        const getLocalDateStr = (date: Date): string => {
+            const year = date.getFullYear()
+            const month = String(date.getMonth() + 1).padStart(2, '0')
+            const day = String(date.getDate()).padStart(2, '0')
+            return `${year}-${month}-${day}`
+        }
 
-        let currentStreak = 0
-        const today = new Date().toISOString().split('T')[0]
-        const eventDates = new Set(events.map(e => (e.created_at ? e.created_at.split('T')[0] : '')))
+        // ACCURATE STREAK: Use GraphQL contribution calendar (real GitHub contribution graph data!)
+        let contributionDates: Set<string> = new Set()
 
-        // Simple streak logic (check continuous days backwards)
-        let checkDate = new Date()
-        while (true) {
-            const dateStr = checkDate.toISOString().split('T')[0]
-            if (eventDates.has(dateStr)) {
-                currentStreak++
-                checkDate.setDate(checkDate.getDate() - 1)
-            } else if (dateStr === today && !eventDates.has(today)) {
-                // Allow "today not done yet" if yesterday was done
-                checkDate.setDate(checkDate.getDate() - 1)
-                continue
-            } else {
-                break
+        // Try GraphQL first (most accurate)
+        if (githubToken) {
+            const contributions = await fetchContributionCalendar(githubToken, username)
+            if (contributions.length > 0) {
+                contributions.forEach(c => contributionDates.add(c.date))
+                console.log(`✅ Using GraphQL contribution data: ${contributions.length} days with activity`)
             }
         }
+
+        // Fallback to Events API if GraphQL failed
+        if (contributionDates.size === 0) {
+            console.log('⚠️ GraphQL failed, falling back to Events API...')
+            const { data: events } = await octokit.activity.listPublicEventsForUser({
+                username,
+                per_page: 100
+            })
+
+            events
+                .filter(e => e.type === 'PushEvent' && e.created_at)
+                .forEach(e => {
+                    const d = new Date(e.created_at!)
+                    contributionDates.add(getLocalDateStr(d))
+                })
+        }
+
+        // Calculate streak
+        let currentStreak = 0
+        const today = new Date()
+        const todayStr = getLocalDateStr(today)
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayStr = getLocalDateStr(yesterday)
+
+        // Sort dates (newest first)
+        const sortedDates = Array.from(contributionDates).sort((a, b) => b.localeCompare(a))
+
+        console.log(`Contribution dates (recent 5): ${sortedDates.slice(0, 5).join(', ')}`)
+        console.log(`Today: ${todayStr}, Yesterday: ${yesterdayStr}`)
+
+        // Streak logic: check continuous days backwards
+        if (sortedDates.length > 0) {
+            // Start from most recent contribution
+            const mostRecent = sortedDates[0]
+
+            // Only count if most recent is today or yesterday
+            if (mostRecent === todayStr || mostRecent === yesterdayStr) {
+                let expectedDate = new Date(mostRecent)
+
+                for (const dateStr of sortedDates) {
+                    const expectedStr = getLocalDateStr(expectedDate)
+
+                    if (dateStr === expectedStr) {
+                        currentStreak++
+                        expectedDate.setDate(expectedDate.getDate() - 1)
+                    } else if (dateStr < expectedStr) {
+                        // Gap found
+                        break
+                    }
+                }
+            }
+        }
+
+        console.log(`🔥 Calculated streak: ${currentStreak}`)
 
         // 5. Get existing user data for longest_streak comparison
         const { data: existingUser } = await supabase
@@ -91,13 +198,9 @@ export async function POST(req: Request) {
             .eq('email', session.user.email)
             .single()
 
-        // Calculate commits from push events (each push averages ~3 commits)
-        const recentPushCount = events.filter(e => e.type === 'PushEvent').length
-        const estimatedRecentCommits = recentPushCount * 3
-
-        // Preserve existing total if higher, otherwise add recent activity
+        // Preserve existing total commits (accurate count comes from main sync)
         const existingTotal = existingUser?.total_commits || 0
-        const newTotalCommits = Math.max(existingTotal, existingTotal + estimatedRecentCommits)
+        const newTotalCommits = existingTotal // Don't estimate, let main sync handle this
 
         // Track longest streak properly
         const existingLongest = existingUser?.longest_streak || 0
