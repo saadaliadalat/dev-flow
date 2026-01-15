@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Flame, Clock, AlertTriangle, X } from 'lucide-react'
+import { Flame, Clock, AlertTriangle, X, Shield, Loader2 } from 'lucide-react'
 
 interface StreakBannerProps {
     currentStreak: number
@@ -13,6 +13,27 @@ interface StreakBannerProps {
 export function StreakDangerBanner({ currentStreak, todayCommits, className }: StreakBannerProps) {
     const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 })
     const [isDismissed, setIsDismissed] = useState(false)
+    const [freezesAvailable, setFreezesAvailable] = useState(0)
+    const [isUsingFreeze, setIsUsingFreeze] = useState(false)
+    const [freezeUsed, setFreezeUsed] = useState(false)
+
+    // Fetch freeze status
+    useEffect(() => {
+        async function fetchFreezes() {
+            try {
+                const res = await fetch('/api/user/streak-freeze')
+                if (res.ok) {
+                    const data = await res.json()
+                    setFreezesAvailable(data.freezesAvailable || 0)
+                }
+            } catch (error) {
+                console.error('Error fetching freezes:', error)
+            }
+        }
+        if (currentStreak > 0 && todayCommits === 0) {
+            fetchFreezes()
+        }
+    }, [currentStreak, todayCommits])
 
     // Calculate time until midnight (streak death)
     useEffect(() => {
@@ -34,11 +55,57 @@ export function StreakDangerBanner({ currentStreak, todayCommits, className }: S
         return () => clearInterval(timer)
     }, [])
 
+    const handleUseFreeze = async () => {
+        if (freezesAvailable <= 0 || isUsingFreeze) return
+
+        setIsUsingFreeze(true)
+        try {
+            const res = await fetch('/api/user/streak-freeze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'use' }),
+            })
+            if (res.ok) {
+                const data = await res.json()
+                if (data.success) {
+                    setFreezeUsed(true)
+                    setFreezesAvailable(data.freezesRemaining)
+                }
+            }
+        } catch (error) {
+            console.error('Error using freeze:', error)
+        } finally {
+            setIsUsingFreeze(false)
+        }
+    }
+
     // Don't show if:
     // - Already committed today
     // - No streak to lose
     // - User dismissed
-    if (todayCommits > 0 || currentStreak === 0 || isDismissed) {
+    // - Freeze was just used
+    if (todayCommits > 0 || currentStreak === 0 || isDismissed || freezeUsed) {
+        // Show success message if freeze was used
+        if (freezeUsed) {
+            return (
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="relative overflow-hidden rounded-2xl bg-emerald-500/10 border border-emerald-500/30 px-6 py-4"
+                >
+                    <div className="flex items-center gap-3">
+                        <Shield className="text-emerald-400" size={24} />
+                        <div>
+                            <p className="font-semibold text-emerald-300">Streak Protected! 🛡️</p>
+                            <p className="text-sm text-zinc-400">
+                                Your {currentStreak}-day streak is safe. You have {freezesAvailable} freeze{freezesAvailable !== 1 ? 's' : ''} remaining.
+                            </p>
+                        </div>
+                    </div>
+                </motion.div>
+            )
+        }
         return null
     }
 
@@ -56,10 +123,10 @@ export function StreakDangerBanner({ currentStreak, todayCommits, className }: S
                 {/* Background with animated gradient */}
                 <motion.div
                     className={`absolute inset-0 ${isCritical
-                            ? 'bg-gradient-to-r from-red-600/30 via-orange-500/20 to-red-600/30'
-                            : isWarning
-                                ? 'bg-gradient-to-r from-orange-500/20 via-amber-500/15 to-orange-500/20'
-                                : 'bg-gradient-to-r from-violet-500/15 via-indigo-500/10 to-violet-500/15'
+                        ? 'bg-gradient-to-r from-red-600/30 via-orange-500/20 to-red-600/30'
+                        : isWarning
+                            ? 'bg-gradient-to-r from-orange-500/20 via-amber-500/15 to-orange-500/20'
+                            : 'bg-gradient-to-r from-violet-500/15 via-indigo-500/10 to-violet-500/15'
                         }`}
                     animate={isCritical ? {
                         opacity: [0.8, 1, 0.8],
@@ -72,7 +139,7 @@ export function StreakDangerBanner({ currentStreak, todayCommits, className }: S
                 <div className={`absolute inset-0 rounded-2xl border ${isCritical ? 'border-red-500/50' : isWarning ? 'border-orange-500/30' : 'border-violet-500/20'
                     }`} />
 
-                <div className="relative px-6 py-4 flex items-center justify-between">
+                <div className="relative px-6 py-4 flex items-center justify-between flex-wrap gap-4">
                     <div className="flex items-center gap-4">
                         {/* Animated Flame */}
                         <motion.div
@@ -90,8 +157,8 @@ export function StreakDangerBanner({ currentStreak, todayCommits, className }: S
                             <Flame
                                 size={28}
                                 className={`${isCritical ? 'text-red-400 fill-red-400' :
-                                        isWarning ? 'text-orange-400 fill-orange-400' :
-                                            'text-violet-400'
+                                    isWarning ? 'text-orange-400 fill-orange-400' :
+                                        'text-violet-400'
                                     }`}
                             />
                             {isCritical && (
@@ -127,8 +194,29 @@ export function StreakDangerBanner({ currentStreak, todayCommits, className }: S
                         </div>
                     </div>
 
-                    {/* Countdown Timer */}
+                    {/* Actions: Freeze + Timer */}
                     <div className="flex items-center gap-4">
+                        {/* Streak Freeze Button */}
+                        {freezesAvailable > 0 && (
+                            <motion.button
+                                onClick={handleUseFreeze}
+                                disabled={isUsingFreeze}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 text-blue-300 font-medium hover:from-blue-500/30 hover:to-cyan-500/30 transition-all disabled:opacity-50"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                {isUsingFreeze ? (
+                                    <Loader2 size={16} className="animate-spin" />
+                                ) : (
+                                    <Shield size={16} />
+                                )}
+                                <span className="text-sm">
+                                    Use Freeze ({freezesAvailable})
+                                </span>
+                            </motion.button>
+                        )}
+
+                        {/* Countdown Timer */}
                         <div className="text-right">
                             <div className="flex items-center gap-1 text-xs text-zinc-500 mb-1">
                                 <Clock size={12} />

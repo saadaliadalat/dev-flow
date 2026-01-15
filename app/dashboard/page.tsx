@@ -23,6 +23,7 @@ import { DailyMissionsEnhanced } from '@/components/dashboard/DailyMissionsEnhan
 import { StreakDangerBanner } from '@/components/dashboard/StreakDangerBanner'
 import { FreezeDayBanner } from '@/components/dashboard/FreezeDayBanner'
 import { DevScoreRing } from '@/components/dashboard/DevScoreRing'
+import { LevelBadge } from '@/components/dashboard/LevelBadge'
 
 // Animation variants
 const containerVariants = {
@@ -202,8 +203,11 @@ export default function DashboardPage() {
             </motion.div>
 
             {/* Header with Sync */}
-            <motion.div variants={itemVariants} className="flex items-center justify-between gap-4">
-                <h2 className="text-lg font-heading font-semibold text-white">Performance Overview</h2>
+            <motion.div variants={itemVariants} className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-4">
+                    <h2 className="text-lg font-heading font-semibold text-white">Performance Overview</h2>
+                    <LevelBadge />
+                </div>
                 <button
                     onClick={syncGitHubData}
                     disabled={isSyncing}
