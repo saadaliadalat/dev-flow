@@ -24,6 +24,9 @@ import { StreakDangerBanner } from '@/components/dashboard/StreakDangerBanner'
 import { FreezeDayBanner } from '@/components/dashboard/FreezeDayBanner'
 import { DevScoreRing } from '@/components/dashboard/DevScoreRing'
 import { LevelBadge } from '@/components/dashboard/LevelBadge'
+import { AICoach } from '@/components/coach/AICoach'
+import { AutoBurnoutAlert } from '@/components/burnout/BurnoutAlert'
+import { SeasonCard } from '@/components/seasons/SeasonCard'
 
 // Animation variants
 const containerVariants = {
@@ -382,6 +385,20 @@ export default function DashboardPage() {
                 <AliveCard className="overflow-hidden" glass>
                     <InsightsPanel />
                 </AliveCard>
+            </motion.div>
+
+            {/* AI Coach & Season Card Row */}
+            <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* AI Coach */}
+                <AICoach compact />
+
+                {/* Season Leaderboard */}
+                <SeasonCard />
+            </motion.div>
+
+            {/* Burnout Alert (auto-detecting) */}
+            <motion.div variants={itemVariants}>
+                <AutoBurnoutAlert />
             </motion.div>
 
             {/* Recent Activity */}

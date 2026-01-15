@@ -19,7 +19,9 @@ import {
     Calculator,
     Share2,
     Zap,
-    Award
+    Award,
+    Swords,
+    Calendar
 } from 'lucide-react'
 import { DevFlowLogo } from '@/components/ui/DevFlowLogo'
 import { cn } from '@/lib/utils'
@@ -31,6 +33,7 @@ const sidebarLinks = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
     { name: 'Leaderboard', href: '/dashboard/leaderboard', icon: Crown },
+    { name: 'Challenges', href: '/dashboard/challenges', icon: Swords },
     { name: 'Achievements', href: '/dashboard/achievements', icon: Trophy },
     { name: 'Goals', href: '/dashboard/goals', icon: Target },
     { name: 'Simulator', href: '/dashboard/simulator', icon: Calculator },
