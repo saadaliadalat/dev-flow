@@ -131,7 +131,11 @@ export async function POST(req: NextRequest) {
 
         if (error) {
             console.error('Error creating challenge:', error)
-            return NextResponse.json({ error: 'Failed to create challenge' }, { status: 500 })
+            return NextResponse.json({ 
+                error: 'Failed to create challenge', 
+                details: error.message,
+                code: error.code 
+            }, { status: 500 })
         }
 
         // Create invite link
