@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { Octokit } from '@octokit/rest'
 import { createClient } from '@supabase/supabase-js'
+import { calculateLevel, XP_REWARDS } from '@/lib/xp'
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -311,12 +312,63 @@ export async function POST(req: Request) {
             })
             .eq('id', userData.id)
 
+        // STEP 10: CALCULATE AND AWARD XP
+        // Get current streak from database (calculated in step 6)
+        const { data: updatedUserData } = await supabase
+            .from('users')
+            .select('current_streak, xp')
+            .eq('id', userData.id)
+            .single()
+
+        const currentStreak = updatedUserData?.current_streak || 0
+        const previousXp = updatedUserData?.xp || 0
+
+        // Calculate XP based on all-time activity (retroactive calculation)
+        // This ensures veteran users get proper XP even if they never synced before
+        let calculatedXp = 0
+
+        // Commits: 10 XP each (capped at 100 XP per day, ~10 commits/day max reward)
+        // For simplicity, we use total commits with a reasonable multiplier
+        const commitXp = Math.min(totalCommits * XP_REWARDS.DAILY_COMMIT, totalCommits * 10)
+        calculatedXp += commitXp
+
+        // PRs: 50 XP each (merged PRs are valuable)
+        const prXp = totalPRs * XP_REWARDS.PR_MERGED
+        calculatedXp += prXp
+
+        // Streak bonus: 5 XP per day of current streak
+        const streakXp = currentStreak * XP_REWARDS.STREAK_MULTIPLIER
+        calculatedXp += streakXp
+
+        // Perfect weeks bonus: Estimate based on active days in daily stats
+        const activeDaysCount = commitsByDay.size
+        const estimatedPerfectWeeks = Math.floor(activeDaysCount / 7)
+        const perfectWeekXp = estimatedPerfectWeeks * XP_REWARDS.WEEK_SHIPPED
+        calculatedXp += perfectWeekXp
+
+        // Calculate level from XP
+        const levelInfo = calculateLevel(calculatedXp)
+
+        console.log(`XP Calculation: commits=${commitXp}, PRs=${prXp}, streak=${streakXp}, perfectWeeks=${perfectWeekXp}`)
+        console.log(`Total XP: ${calculatedXp} (was ${previousXp}), Level: ${levelInfo.level} (${levelInfo.title})`)
+
+        // Update user with XP and level
+        await supabase
+            .from('users')
+            .update({
+                xp: calculatedXp,
+                level: levelInfo.level,
+                level_title: levelInfo.title
+            })
+            .eq('id', userData.id)
+
         console.log('=== SYNC COMPLETE ===')
         console.log(`Commits: ${totalCommits}`)
         console.log(`Total Contributions: ${totalContributions}`)
         console.log(`Score: ${productivityScore}`)
+        console.log(`XP: ${calculatedXp} | Level: ${levelInfo.level} (${levelInfo.title})`)
 
-        // STEP 10: Background tasks
+        // STEP 11: Background tasks
         checkAndUnlockAchievements(userData.id).catch(console.error)
         generateInsights(userData.id).catch(console.error)
         updateChallengeScores().catch(console.error)
@@ -332,7 +384,10 @@ export async function POST(req: Request) {
                 repos_synced: allRepos.length,
                 repos_with_commits: reposWithCommits.size,
                 days_with_activity: commitsByDay.size,
-                productivity_score: productivityScore
+                productivity_score: productivityScore,
+                xp: calculatedXp,
+                level: levelInfo.level,
+                level_title: levelInfo.title
             }
         })
 
