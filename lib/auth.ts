@@ -91,7 +91,8 @@ export const authConfig: NextAuthConfig = {
 
         async session({ session, token }: any) {
             if (token && session.user) {
-                session.user.id = token.sub!
+                // Use the Supabase user ID, not the JWT sub
+                session.user.id = token.supabaseUserId as string
                 session.user.username = token.username as string
                 session.user.githubId = token.githubId as string
             }
@@ -102,6 +103,17 @@ export const authConfig: NextAuthConfig = {
             if (account && profile) {
                 token.username = profile.login
                 token.githubId = profile.id.toString()
+
+                // Fetch the actual Supabase user ID
+                const { data: dbUser } = await supabase
+                    .from('users')
+                    .select('id')
+                    .eq('github_id', profile.id.toString())
+                    .single()
+
+                if (dbUser) {
+                    token.supabaseUserId = dbUser.id
+                }
             }
             return token
         }
