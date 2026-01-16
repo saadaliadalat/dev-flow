@@ -53,7 +53,7 @@ export default function ChallengesPage() {
             await fetch('/api/challenges', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ challengeId: id, action: 'accept' })
+                body: JSON.stringify({ challenge_id: id, action: 'accept' })
             })
             fetchChallenges()
         } catch (error) {
@@ -66,7 +66,7 @@ export default function ChallengesPage() {
             await fetch('/api/challenges', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ challengeId: id, action: 'decline' })
+                body: JSON.stringify({ challenge_id: id, action: 'decline' })
             })
             fetchChallenges()
         } catch (error) {
@@ -116,8 +116,8 @@ export default function ChallengesPage() {
                         key={f}
                         onClick={() => setFilter(f)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === f
-                                ? 'bg-purple-500/20 border border-purple-500/30 text-purple-300'
-                                : 'bg-white/5 border border-white/10 text-zinc-400 hover:text-white'
+                            ? 'bg-purple-500/20 border border-purple-500/30 text-purple-300'
+                            : 'bg-white/5 border border-white/10 text-zinc-400 hover:text-white'
                             }`}
                     >
                         {f.charAt(0).toUpperCase() + f.slice(1)}
