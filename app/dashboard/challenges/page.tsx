@@ -33,6 +33,9 @@ export default function ChallengesPage() {
     const fetchChallenges = async () => {
         setIsLoading(true)
         try {
+            // Update scores before fetching (ensures real data)
+            await fetch('/api/challenges/update-scores', { method: 'POST' }).catch(() => { })
+
             const params = new URLSearchParams()
             if (filter !== 'all') params.set('status', filter)
 

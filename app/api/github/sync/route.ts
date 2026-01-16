@@ -319,6 +319,7 @@ export async function POST(req: Request) {
         // STEP 10: Background tasks
         checkAndUnlockAchievements(userData.id).catch(console.error)
         generateInsights(userData.id).catch(console.error)
+        updateChallengeScores().catch(console.error)
 
         return NextResponse.json({
             success: true,
@@ -449,5 +450,13 @@ async function generateInsights(userId: string) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId })
+    })
+}
+
+async function updateChallengeScores() {
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    await fetch(`${baseUrl}/api/challenges/update-scores`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
     })
 }
