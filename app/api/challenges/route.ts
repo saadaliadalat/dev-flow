@@ -113,6 +113,35 @@ export async function POST(req: NextRequest) {
         const endDate = new Date(startDate)
         endDate.setDate(endDate.getDate() + duration_days)
 
+        // Debug: Log the insert payload
+        console.log('Creating challenge with:', {
+            challenger_id: session.user.id,
+            challenged_id: challengedUserId,
+            challenged_email: !challengedUserId ? challenged_email : null,
+            challenge_type,
+            duration_days,
+            start_date: startDate.toISOString().split('T')[0],
+            end_date: endDate.toISOString().split('T')[0],
+        })
+
+        // Verify challenger exists in users table
+        const { data: challengerUser, error: userError } = await supabase
+            .from('users')
+            .select('id, username')
+            .eq('id', session.user.id)
+            .single()
+
+        if (userError || !challengerUser) {
+            console.error('Challenger not found in users table:', session.user.id, userError)
+            return NextResponse.json({
+                error: 'Your user profile is not set up. Please sync your GitHub data first.',
+                details: 'User not found in database',
+                userId: session.user.id
+            }, { status: 400 })
+        }
+
+        console.log('Challenger verified:', challengerUser)
+
         // Create the challenge
         const { data: challenge, error } = await supabase
             .from('challenges')
@@ -131,10 +160,10 @@ export async function POST(req: NextRequest) {
 
         if (error) {
             console.error('Error creating challenge:', error)
-            return NextResponse.json({ 
-                error: 'Failed to create challenge', 
+            return NextResponse.json({
+                error: 'Failed to create challenge',
                 details: error.message,
-                code: error.code 
+                code: error.code
             }, { status: 500 })
         }
 
