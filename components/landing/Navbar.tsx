@@ -34,13 +34,13 @@ export function Navbar() {
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed top-0 inset-x-0 z-50 flex justify-center pt-4 pointer-events-none"
+            className="fixed top-0 inset-x-0 z-50 flex justify-center pointer-events-none"
         >
             <div className={cn(
-                "pointer-events-auto relative flex items-center justify-between w-[95%] max-w-7xl px-4 py-3 rounded-full transition-all duration-500",
+                "pointer-events-auto relative flex items-center justify-between w-full px-6 py-4 transition-all duration-500",
                 isScrolled
-                    ? "bg-black/80 border border-white/[0.08] backdrop-blur-md shadow-lg shadow-black/20"
-                    : "bg-transparent border border-transparent"
+                    ? "bg-black/80 border-b border-white/[0.08] backdrop-blur-md"
+                    : "bg-transparent border-b border-transparent"
             )}>
                 {/* 1. LOGO */}
                 <Link href="/" className="flex items-center gap-2 group relative z-10">
