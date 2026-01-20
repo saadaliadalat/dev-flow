@@ -117,10 +117,9 @@ export const Hero = () => {
                         )}
 
                         {/* Secondary CTA */}
-                        <Link href="https://github.com/saadaliadalat/dev-flow" target="_blank" className="w-full sm:w-auto">
+                        <Link href="#how-it-works" className="w-full sm:w-auto">
                             <button className="group w-full sm:w-auto px-8 py-3.5 rounded-lg bg-transparent border border-white/20 text-white font-medium hover:bg-white/5 transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-sm">
-                                <Github className="w-4 h-4" />
-                                <span className="text-sm">View on GitHub</span>
+                                <span className="text-sm">How it Works</span>
                             </button>
                         </Link>
                     </motion.div>
