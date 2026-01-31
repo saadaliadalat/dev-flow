@@ -6,26 +6,26 @@ import { GitCommit, Zap, BarChart3 } from 'lucide-react'
 
 const features = [
     {
-        title: "Connect & Sync",
-        description: "Link your GitHub in seconds. We automatically backfill your history and start tracking velocity.",
+        title: "Connect GitHub",
+        description: "One-click sign in with GitHub. We automatically sync your history and start tracking.",
         icon: <GitCommit className="w-6 h-6 text-purple-400" />,
-        code: "git commit -m 'feat: next-level shit'",
+        code: "Syncing 2,847 commits...",
         color: "from-purple-500/20 to-zinc-500/20",
         delay: 0
     },
     {
-        title: "AI Analysis",
-        description: "Our neural engine scans your patterns to identify peak flow hours and potential burnout risks.",
+        title: "Get Insights",
+        description: "We analyze your commits, PRs, and coding patterns to surface personalized insights.",
         icon: <Zap className="w-6 h-6 text-purple-300" />,
-        code: "Analyzing... Flow State: 98%",
+        code: "Flow State Detected: 98%",
         color: "from-purple-500/20 to-zinc-500/20",
         delay: 0.2
     },
     {
-        title: "Level Up",
-        description: "Unlock achievements, visualize your growth, and flex your Year in Review.",
+        title: "Share & Flex",
+        description: "Get your Year-in-Review card. Share it everywhere. Watch the likes roll in.",
         icon: <BarChart3 className="w-6 h-6 text-white" />,
-        code: "Achievement Unlocked: 10x Dev",
+        code: "Year-in-Review: Generated ✓",
         color: "from-zinc-500/20 to-purple-500/20",
         delay: 0.4
     }
@@ -56,7 +56,7 @@ export function HowItWorks() {
                         viewport={{ once: true }}
                         className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight"
                     >
-                        From Commit to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-white">Insight</span>
+                        3 Steps to Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-white">Year in Code</span>
                     </motion.h2>
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
@@ -65,7 +65,7 @@ export function HowItWorks() {
                         viewport={{ once: true }}
                         className="text-zinc-400 text-lg"
                     >
-                        Automated, invisible, and designed for flow. No manual entry required.
+                        Takes 30 seconds. No credit card. No manual tracking ever.
                     </motion.p>
                 </div>
 

@@ -38,7 +38,7 @@ export function FinalCTA() {
                     viewport={{ once: true }}
                     className="text-xl text-zinc-400 mb-12 max-w-xl mx-auto"
                 >
-                    Connect your GitHub in seconds. No credit card, no trial period, no hidden fees.
+                    Join 2,500+ developers who've already uncovered their coding story. Takes 30 seconds.
                 </motion.p>
 
                 <motion.div

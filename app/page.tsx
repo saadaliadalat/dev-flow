@@ -3,6 +3,7 @@ import { Navbar } from '@/components/landing/Navbar'
 import { Hero } from '@/components/landing/Hero'
 import { HowItWorks } from '@/components/landing/HowItWorks'
 import { TrustedBy } from '@/components/landing/TrustedBy'
+import { ValueProp } from '@/components/landing/ValueProp'
 import { Pricing } from '@/components/landing/Pricing'
 import { FinalCTA } from '@/components/landing/FinalCTA'
 import { Footer } from '@/components/landing/Footer'
@@ -30,6 +31,7 @@ export default function Home() {
                 <Navbar />
                 <Hero />
                 <TrustedBy />
+                <ValueProp />
                 <StorytellingFeatures />
                 <HowItWorks />
                 <Pricing />

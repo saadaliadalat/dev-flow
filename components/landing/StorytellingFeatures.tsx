@@ -539,8 +539,8 @@ export function StorytellingFeatures() {
                         transition={{ delay: 0.1 }}
                         className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 font-display leading-[1.1] tracking-tight"
                     >
-                        Engineering Intelligence <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-200 via-purple-300 to-white">Reimagined.</span>
+                        Everything to Flex Your <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-200 via-purple-300 to-white">Code Journey</span>
                     </motion.h2>
                 </div>
 
@@ -555,7 +555,7 @@ export function StorytellingFeatures() {
                         {/* LIVE ANALYTICS - Double Width */}
                         <PremiumBentoCard
                             title="Live Analytics"
-                            description="Real-time velocity and performance tracking."
+                            description="See commits, streaks, and productivity visualized beautifully."
                             icon={<BarChart2 size={18} strokeWidth={1.5} />}
                             accentColor="#8b5cf6"
                             colSpan="md:col-span-2"
@@ -564,8 +564,8 @@ export function StorytellingFeatures() {
                         </PremiumBentoCard>
 
                         <PremiumBentoCard
-                            title="Neural Engine"
-                            description="AI-powered pattern recognition."
+                            title="AI Insights"
+                            description="Personalized tips to code smarter, not harder."
                             icon={<Brain size={18} strokeWidth={1.5} />}
                             accentColor="#8b5cf6"
                         >
@@ -573,8 +573,8 @@ export function StorytellingFeatures() {
                         </PremiumBentoCard>
 
                         <PremiumBentoCard
-                            title="Vitality Score"
-                            description="Predictive burnout prevention."
+                            title="Burnout Shield"
+                            description="Know when to take a break before burnout hits."
                             icon={<Activity size={18} strokeWidth={1.5} />}
                             accentColor="#ffffff" // Silver/White for Vitality
                         >
@@ -583,8 +583,8 @@ export function StorytellingFeatures() {
 
                         {/* GLOBAL MESH - Double Width */}
                         <PremiumBentoCard
-                            title="Global Mesh"
-                            description="Elite distributed network connectivity."
+                            title="Leaderboards"
+                            description="Compare your stats with developers worldwide."
                             icon={<Network size={18} strokeWidth={1.5} />}
                             accentColor="#8b5cf6"
                             colSpan="md:col-span-2"
@@ -593,8 +593,8 @@ export function StorytellingFeatures() {
                         </PremiumBentoCard>
 
                         <PremiumBentoCard
-                            title="Mastery"
-                            description="Gamified skill progression."
+                            title="Achievements"
+                            description="Unlock badges. Celebrate milestones. Share everywhere."
                             icon={<Trophy size={18} strokeWidth={1.5} />}
                             accentColor="#8b5cf6"
                         >
@@ -602,8 +602,8 @@ export function StorytellingFeatures() {
                         </PremiumBentoCard>
 
                         <PremiumBentoCard
-                            title="Time Travel"
-                            description="Complete evolution history."
+                            title="Commit History"
+                            description="Your complete coding timeline at a glance."
                             icon={<Clock size={18} strokeWidth={1.5} />}
                             accentColor="#8b5cf6"
                         >

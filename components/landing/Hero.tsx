@@ -62,7 +62,7 @@ export const Hero = () => {
                         transition={{ delay: 0.1, duration: 0.6 }}
                         className="text-xs font-mono text-purple-400 tracking-widest uppercase mb-6"
                     >
-                        SHIP DAILY · BUILD PROOF · LEVEL UP
+                        YOUR YEAR IN CODE — WRAPPED
                     </motion.p>
 
                     {/* Main Headline */}
@@ -72,7 +72,7 @@ export const Hero = () => {
                         initial="hidden"
                         animate="show"
                     >
-                        {"Your code tells a story.".split(" ").map((word, i) => (
+                        {"Spotify Wrapped for Developers".split(" ").map((word, i) => (
                             <motion.span key={i} variants={textItem} className="inline-block mr-[0.2em] last:mr-0">
                                 {word}
                             </motion.span>
@@ -84,12 +84,24 @@ export const Hero = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4, duration: 0.8 }}
-                        className="max-w-xl text-lg md:text-xl text-zinc-400 font-light leading-relaxed mb-8"
+                        className="max-w-xl text-lg md:text-xl text-zinc-400 font-light leading-relaxed mb-6"
                     >
-                        Every commit. Every streak. Every shipped week.
-                        <br className="hidden lg:block" />
-                        Transformed into proof that opens doors.
+                        Connect GitHub. Get stunning Year-in-Review cards, productivity analytics, achievements, and burnout alerts — automatically.
                     </motion.p>
+
+                    {/* Feature Badges */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5, duration: 0.6 }}
+                        className="flex flex-wrap justify-center lg:justify-start gap-3 mb-8"
+                    >
+                        {['📊 Analytics', '🏆 Achievements', '🔥 Streaks', '📸 Shareable Cards'].map((badge, i) => (
+                            <span key={i} className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-zinc-300 font-medium">
+                                {badge}
+                            </span>
+                        ))}
+                    </motion.div>
 
                     {/* CTA Buttons */}
                     <motion.div
@@ -111,18 +123,28 @@ export const Hero = () => {
                                 onClick={handleGithubLogin}
                                 className="group w-full sm:w-auto px-8 py-3.5 rounded-lg bg-white text-black font-semibold hover:bg-zinc-200 transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
                             >
-                                <span>Start Building</span>
-                                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                                <Github className="w-4 h-4" />
+                                <span>Connect GitHub — Free</span>
                             </button>
                         )}
 
                         {/* Secondary CTA */}
-                        <Link href="#how-it-works" className="w-full sm:w-auto">
+                        <Link href="#features" className="w-full sm:w-auto">
                             <button className="group w-full sm:w-auto px-8 py-3.5 rounded-lg bg-transparent border border-white/20 text-white font-medium hover:bg-white/5 transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-sm">
-                                <span className="text-sm">How it Works</span>
+                                <span className="text-sm">See What You Get</span>
                             </button>
                         </Link>
                     </motion.div>
+
+                    {/* Social Proof */}
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8, duration: 0.6 }}
+                        className="mt-6 text-sm text-zinc-500"
+                    >
+                        Join <span className="text-zinc-300 font-medium">2,500+</span> developers tracking their journey
+                    </motion.p>
                 </div>
 
                 {/* RIGHT COLUMN: Bento Image Composition */}
