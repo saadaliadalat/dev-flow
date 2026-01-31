@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
-import { ArrowRight, Terminal, Activity, GitBranch, Zap, ChevronRight, Github } from 'lucide-react'
+import { ArrowRight, Terminal, Activity, GitBranch, Zap, ChevronRight, Github, BarChart3, Trophy, Flame, Camera } from 'lucide-react'
 import { GlassButton } from '@/components/ui/GlassButton'
 import { useSession, signIn } from 'next-auth/react'
 import Link from 'next/link'
@@ -96,9 +96,15 @@ export const Hero = () => {
                         transition={{ delay: 0.5, duration: 0.6 }}
                         className="flex flex-wrap justify-center lg:justify-start gap-3 mb-8"
                     >
-                        {['📊 Analytics', '🏆 Achievements', '🔥 Streaks', '📸 Shareable Cards'].map((badge, i) => (
-                            <span key={i} className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-zinc-300 font-medium">
-                                {badge}
+                        {[
+                            { icon: <BarChart3 className="w-3.5 h-3.5" />, label: 'Analytics' },
+                            { icon: <Trophy className="w-3.5 h-3.5" />, label: 'Achievements' },
+                            { icon: <Flame className="w-3.5 h-3.5" />, label: 'Streaks' },
+                            { icon: <Camera className="w-3.5 h-3.5" />, label: 'Shareable Cards' }
+                        ].map((badge, i) => (
+                            <span key={i} className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-zinc-300 font-medium flex items-center gap-2">
+                                <span className="text-purple-400">{badge.icon}</span>
+                                {badge.label}
                             </span>
                         ))}
                     </motion.div>
